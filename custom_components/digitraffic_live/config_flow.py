@@ -339,7 +339,7 @@ class RoadMaintenanceFeedFlow(AreaFeedFlow):
                 vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:snowplow")),
                 vol.Optional(CONF_TASKS): SelectSelector(
                     SelectSelectorConfig(
-                        options=list(MAINTENANCE_TASKS),
+                        options=[task.lower() for task in MAINTENANCE_TASKS],
                         multiple=True,
                         translation_key=CONF_TASKS,
                         mode=SelectSelectorMode.DROPDOWN,

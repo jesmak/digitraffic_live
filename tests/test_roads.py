@@ -197,7 +197,7 @@ async def test_maintenance_routes_are_requested_only_when_shown() -> None:
     assert len(vehicles) == 2 and routes == []
 
     client.calls.clear()
-    shown = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "tasks": ["SALTING"], "route_hours": 99})
+    shown = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "tasks": ["salting"], "route_hours": 99})
     assert shown.route_hours == 24
     await fetch_maintenance(client, shown, NOW)
     assert client.calls[1] == ("maintenance_routes", ("2026-09-14T12:00:00Z", ("SALTING",)))
