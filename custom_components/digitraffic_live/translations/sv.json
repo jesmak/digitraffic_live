@@ -1,0 +1,500 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Digitraffic Live",
+        "description": "Fartyg, tåg och vägtrafikdata i realtid från Fintraffics Digitraffic, som kartflöden. Lägg till flöden från integrationens sida när detta är klart.",
+        "data": {
+          "language": "Språk"
+        },
+        "data_description": {
+          "language": "Språket för texterna i flödena, till exempel fartygstyper och rader i popupfönster."
+        }
+      },
+      "reconfigure": {
+        "title": "Digitraffic Live",
+        "data": {
+          "language": "Språk"
+        },
+        "data_description": {
+          "language": "Språket för texterna i flödena, till exempel fartygstyper och rader i popupfönster."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Digitraffic Live är redan konfigurerat. Lägg till fler flöden från integrationens sida.",
+      "reconfigure_successful": "Inställningarna har sparats."
+    }
+  },
+  "config_subentries": {
+    "ships": {
+      "entry_type": "Fartygsflöde",
+      "initiate_flow": {
+        "user": "Lägg till fartygsflöde",
+        "reconfigure": "Ändra fartygsflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Fartygsflöde",
+          "description": "Fartyg vars AIS-position finns inom området. De flesta små fritidsbåtar sänder inte AIS.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "ship_types": "Fartygstyper",
+            "include_moored": "Ta med förtöjda och ankrade fartyg",
+            "icebreakers": "Framhäv isbrytare",
+            "max_age_minutes": "Positionens maximala ålder",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "ship_types": "Lämna tomt för alla typer.",
+            "icebreakers": "Använder data om vintersjöfart. Isbrytare visas oavsett övriga filter.",
+            "max_age_minutes": "Fartyg vars senaste position är äldre än detta utelämnas."
+          }
+        },
+        "reconfigure": {
+          "title": "Fartygsflöde",
+          "description": "Fartyg vars AIS-position finns inom området. De flesta små fritidsbåtar sänder inte AIS.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "ship_types": "Fartygstyper",
+            "include_moored": "Ta med förtöjda och ankrade fartyg",
+            "icebreakers": "Framhäv isbrytare",
+            "max_age_minutes": "Positionens maximala ålder",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "ship_types": "Lämna tomt för alla typer.",
+            "icebreakers": "Använder data om vintersjöfart. Isbrytare visas oavsett övriga filter.",
+            "max_age_minutes": "Fartyg vars senaste position är äldre än detta utelämnas."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
+    "trains": {
+      "entry_type": "Tågflöde",
+      "initiate_flow": {
+        "user": "Lägg till tågflöde",
+        "reconfigure": "Ändra tågflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Tågflöde",
+          "description": "Tåg i trafik med GPS-position. Begränsa flödet med stationer på rutten, ett område eller båda.",
+          "data": {
+            "name": "Namn",
+            "route": "Stationer på rutten",
+            "categories": "Tågkategorier",
+            "use_area": "Begränsa till ett område",
+            "area": "Område",
+            "max_age_minutes": "Positionens maximala ålder",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "route": "Endast tåg som stannar vid alla valda stationer, t.ex. Helsingfors och Villmanstrand.",
+            "categories": "Lämna tomt för alla kategorier.",
+            "area": "Används endast när \"Begränsa till ett område\" är på.",
+            "max_age_minutes": "Tåg vars senaste position är äldre än detta utelämnas."
+          }
+        },
+        "reconfigure": {
+          "title": "Tågflöde",
+          "description": "Tåg i trafik med GPS-position. Begränsa flödet med stationer på rutten, ett område eller båda.",
+          "data": {
+            "name": "Namn",
+            "route": "Stationer på rutten",
+            "categories": "Tågkategorier",
+            "use_area": "Begränsa till ett område",
+            "area": "Område",
+            "max_age_minutes": "Positionens maximala ålder",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "route": "Endast tåg som stannar vid alla valda stationer, t.ex. Helsingfors och Villmanstrand.",
+            "categories": "Lämna tomt för alla kategorier.",
+            "area": "Används endast när \"Begränsa till ett område\" är på.",
+            "max_age_minutes": "Tåg vars senaste position är äldre än detta utelämnas."
+          }
+        }
+      },
+      "error": {
+        "route_too_short": "Välj minst två stationer på rutten, eller ingen.",
+        "route_or_area": "Välj stationer på rutten, slå på \"Begränsa till ett område\", eller båda.",
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "cannot_connect": "Stationslistan kunde inte hämtas från Digitraffic. Försök igen om en stund.",
+        "entry_not_loaded": "Digitraffic Live körs inte. Aktivera det och lägg sedan till flödet.",
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
+    "traffic_messages": {
+      "entry_type": "Trafikmeddelandeflöde",
+      "initiate_flow": {
+        "user": "Lägg till trafikmeddelandeflöde",
+        "reconfigure": "Ändra trafikmeddelandeflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Trafikmeddelandeflöde",
+          "description": "Vägarbeten, trafikmeddelanden, viktbegränsningar och specialtransporter som berör området. Meddelandena publiceras på finska.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "message_types": "Meddelandetyper",
+            "upcoming_days": "Vägarbeten som börjar inom",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "message_types": "Lämna tomt för alla typer.",
+            "upcoming_days": "Dagar framåt. 0 visar bara vägarbeten som pågår nu."
+          }
+        },
+        "reconfigure": {
+          "title": "Trafikmeddelandeflöde",
+          "description": "Vägarbeten, trafikmeddelanden, viktbegränsningar och specialtransporter som berör området. Meddelandena publiceras på finska.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "message_types": "Meddelandetyper",
+            "upcoming_days": "Vägarbeten som börjar inom",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "message_types": "Lämna tomt för alla typer.",
+            "upcoming_days": "Dagar framåt. 0 visar bara vägarbeten som pågår nu."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
+    "road_maintenance": {
+      "entry_type": "Vägunderhållsflöde",
+      "initiate_flow": {
+        "user": "Lägg till vägunderhållsflöde",
+        "reconfigure": "Ändra vägunderhållsflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Vägunderhållsflöde",
+          "description": "Underhållsfordon, som plogbilar och sandningsbilar, på statliga vägar i området, och var de har arbetat. De flesta gator i städerna ingår inte.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "tasks": "Uppgifter",
+            "max_age_minutes": "Positionens maximala ålder",
+            "show_routes": "Visa var fordonen har arbetat",
+            "route_hours": "Rutter från de senaste",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "tasks": "Lämna tomt för alla uppgifter.",
+            "max_age_minutes": "Fordon vars senaste position är äldre än detta utelämnas.",
+            "route_hours": "Timmar, högst 24. Används bara när rutterna visas."
+          }
+        },
+        "reconfigure": {
+          "title": "Vägunderhållsflöde",
+          "description": "Underhållsfordon, som plogbilar och sandningsbilar, på statliga vägar i området, och var de har arbetat. De flesta gator i städerna ingår inte.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "tasks": "Uppgifter",
+            "max_age_minutes": "Positionens maximala ålder",
+            "show_routes": "Visa var fordonen har arbetat",
+            "route_hours": "Rutter från de senaste",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "tasks": "Lämna tomt för alla uppgifter.",
+            "max_age_minutes": "Fordon vars senaste position är äldre än detta utelämnas.",
+            "route_hours": "Timmar, högst 24. Används bara när rutterna visas."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
+    "road_conditions": {
+      "entry_type": "Väglagsflöde",
+      "initiate_flow": {
+        "user": "Lägg till väglagsflöde",
+        "reconfigure": "Ändra väglagsflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Väglagsflöde",
+          "description": "Fintraffics körförhållanden för avsnitt av huvudvägarna i området, nu eller som prognos upp till 12 timmar framåt. Sensorns tillstånd är antalet avsnitt med dåliga förhållanden.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "forecast": "Tidpunkt",
+            "only_poor": "Endast dåliga förhållanden",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "only_poor": "Utelämna avsnitt med normala körförhållanden."
+          }
+        },
+        "reconfigure": {
+          "title": "Väglagsflöde",
+          "description": "Fintraffics körförhållanden för avsnitt av huvudvägarna i området, nu eller som prognos upp till 12 timmar framåt. Sensorns tillstånd är antalet avsnitt med dåliga förhållanden.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "forecast": "Tidpunkt",
+            "only_poor": "Endast dåliga förhållanden",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "only_poor": "Utelämna avsnitt med normala körförhållanden."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
+    "weather_stations": {
+      "entry_type": "Vägväderstationsflöde",
+      "initiate_flow": {
+        "user": "Lägg till vägväderstationsflöde",
+        "reconfigure": "Ändra vägväderstationsflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Vägväderstationsflöde",
+          "description": "Vägväderstationer i området: väg- och lufttemperatur, vägbana, friktion, vind och nederbörd.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "marker_value": "Värde på kartan",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "marker_value": "Visas i stationens markör. Båda temperaturerna finns i popup-fönstret."
+          }
+        },
+        "reconfigure": {
+          "title": "Vägväderstationsflöde",
+          "description": "Vägväderstationer i området: väg- och lufttemperatur, vägbana, friktion, vind och nederbörd.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "marker_value": "Värde på kartan",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor.",
+            "marker_value": "Visas i stationens markör. Båda temperaturerna finns i popup-fönstret."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
+    "weather_cameras": {
+      "entry_type": "Väderkameraflöde",
+      "initiate_flow": {
+        "user": "Lägg till väderkameraflöde",
+        "reconfigure": "Ändra väderkameraflöde"
+      },
+      "step": {
+        "user": {
+          "title": "Väderkameraflöde",
+          "description": "Fintraffics vägväderkameror i området, med den senaste bilden från varje vy.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor."
+          }
+        },
+        "reconfigure": {
+          "title": "Väderkameraflöde",
+          "description": "Fintraffics vägväderkameror i området, med den senaste bilden från varje vy.",
+          "data": {
+            "name": "Namn",
+            "area": "Område",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Även namnet på flödets sensor."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Dra i cirkelns kant på kartan för att ange en radie."
+      },
+      "abort": {
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "fi": "Suomi",
+        "sv": "Svenska",
+        "en": "English"
+      }
+    },
+    "ship_types": {
+      "options": {
+        "cargo": "Lastfartyg",
+        "tanker": "Tankfartyg",
+        "passenger": "Passagerarfartyg",
+        "pilot": "Lotsbåtar",
+        "tug": "Bogserbåtar",
+        "fishing": "Fiskefartyg",
+        "pleasure": "Fritidsbåtar",
+        "other": "Övriga fartyg"
+      }
+    },
+    "categories": {
+      "options": {
+        "long_distance": "Fjärrtrafik",
+        "commuter": "Närtrafik",
+        "cargo": "Godstrafik",
+        "locomotive": "Lok",
+        "test_drive": "Provkörning",
+        "on_track_machines": "Spårmaskiner",
+        "shunting": "Växling"
+      }
+    },
+    "message_types": {
+      "options": {
+        "road_works": "Vägarbeten",
+        "traffic_announcements": "Trafikmeddelanden",
+        "weight_restrictions": "Viktbegränsningar",
+        "exempted_transports": "Specialtransporter"
+      }
+    },
+    "forecast": {
+      "options": {
+        "0h": "Nu",
+        "2h": "Om 2 timmar",
+        "4h": "Om 4 timmar",
+        "6h": "Om 6 timmar",
+        "12h": "Om 12 timmar"
+      }
+    },
+    "tasks": {
+      "options": {
+        "BRUSHING": "Borstning",
+        "BRUSH_CLEARING": "Slyklippning",
+        "CLEANSING_OF_BRIDGES": "Rengöring av broar",
+        "CLEANSING_OF_REST_AREAS": "Rast- och parkeringsplatsernas rengöring",
+        "CLEANSING_OF_TRAFFIC_SIGNS": "Rengöring av trafikmärken",
+        "CLIENTS_QUALITY_CONTROL": "Beställarens kvalitetsövervakning",
+        "COMPACTION_BY_ROLLING": "Vibrering",
+        "CRACK_FILLING": "Fyllning av sprickor i beläggningen",
+        "DITCHING": "Dikning",
+        "DUST_BINDING_OF_GRAVEL_ROAD_SURFACE": "Dammbindning av grusväg",
+        "DUST_BINDING_OF_PAVED_ROAD_SURFACE": "Dammbindning av belagda väg",
+        "ENSURING_TRAFFIC_IN_RASPUTITSA": "Säkra trafik i menföre",
+        "FILLING_OF_GRAVEL_ROAD_SHOULDERS": "Fyllning av grusväg gruskanter",
+        "FILLING_OF_ROAD_SHOULDERS": "Belagda vägars kantfyllning",
+        "GARBAGE_OLLECTION": "Sophämtning",
+        "GROUP_REPLACEMENT_OF_LAMPS": "Gruppbyte av lampor",
+        "HEATING": "Upphettning",
+        "LEVELLING_GRAVEL_ROAD_SURFACE": "Utjämning av grusväg",
+        "LEVELLING_OF_ROAD_SHOULDERS": "Kantskärning",
+        "LEVELLING_OF_ROAD_SHOULDERS_UNDER_RAILING": "Kantskärning från under räcket",
+        "LEVELLING_OF_ROAD_SURFACE": "Utjämning av vägytan",
+        "LINE_SANDING": "Linjesandning",
+        "LOWERING_OF_SNOWBANKS": "Nedsänkning av plogvall",
+        "MAINTENANCE_OF_GUIDE_SIGNS_AND_REFLECTOR_POSTS": "Trafikanordningars och kantpålars underhåll",
+        "MECHANICAL_CUT": "Mekanisk klippning",
+        "MIXING_OR_STABILIZATION": "Blandning och stabilisering",
+        "OTHER": "Annat dylikt",
+        "OTHER_OPERATIONS_OF_LIGHTING_CONTRACTS": "Andra mått på belysningskontrakt",
+        "PATCHING": "Lappning av beläggning",
+        "PAVING": "Asfaltering",
+        "PLOUGHING_AND_SLUSH_REMOVAL": "Plog- och sörjröjning",
+        "PLOUGHING_OF_SLUSH_DITCH": "Plöjning av slask dike",
+        "PREVENTING_MELTING_WATER_PROBLEMS": "Smältvattensbekämpning",
+        "REMOVAL_OF_BULGE_ICE": "Borttagning av svall-is",
+        "RENEWAL_OF_EDGE_COLUMNS": "Förnyelse av reflektorstolpe",
+        "RESHAPING_GRAVEL_ROAD_SURFACE": "Grusvägsytans omblandning ",
+        "ROAD_INSPECTIONS": "Väggranskning",
+        "ROAD_MARKINGS": "Vägmarkering",
+        "ROAD_STATE_CHECKING": "Väglagsgranskning",
+        "SAFETY_EQUIPMENT": "Säkerhetsanordning",
+        "SALTING": "Saltning",
+        "SERVICE_ROUND": "Servicerunda",
+        "SNOW_PLOUGHING_STICKS_AND_SNOW_FENCES": "Plogkäppsmarkering och snödrivor",
+        "SPOT_SANDING": "Punktsandning",
+        "SPREADING_OF_CRUSH": "Grusning",
+        "TRANSFER_OF_SNOW": "Bortforsling av snömassor",
+        "UNKNOWN": "Obekant"
+      }
+    },
+    "marker_value": {
+      "options": {
+        "air_temperature": "Lufttemperatur",
+        "road_temperature": "Vägtemperatur"
+      }
+    }
+  },
+  "services": {
+    "get_train_composition": {
+      "name": "Hämta tågets sammansättning",
+      "description": "Returnerar tågets vagnar och tjänster som rader för kartflödets popupfönster. Kartkortet anropar detta när ett tågs popupfönster öppnas.",
+      "fields": {
+        "departure_date": {
+          "name": "Avgångsdatum",
+          "description": "Datumet då tåget lämnade sin första station."
+        },
+        "train_number": {
+          "name": "Tågnummer",
+          "description": "Till exempel 8 för IC 8."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Digitraffic Live är inte konfigurerat eller är inaktiverat."
+    },
+    "request_failed": {
+      "message": "Digitraffic-förfrågan misslyckades: {error}"
+    }
+  }
+}

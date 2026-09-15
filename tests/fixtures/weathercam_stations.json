@@ -1,0 +1,38 @@
+{
+ "type": "FeatureCollection",
+ "dataUpdatedTime": "2026-09-15T11:00:00Z",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "C03558",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.307574,
+     61.071041
+    ]
+   },
+   "properties": {
+    "id": "C03558",
+    "name": "vt6_Lappeenranta_Saimaan_kanava",
+    "collectionStatus": "GATHERING",
+    "dataUpdatedTime": "2026-09-15T03:27:36Z",
+    "presets": [
+     {
+      "id": "C0355801",
+      "inCollection": true
+     },
+     {
+      "id": "C0355802",
+      "inCollection": true
+     },
+     {
+      "id": "C0355809",
+      "inCollection": true
+     }
+    ],
+    "state": null
+   }
+  }
+ ]
+}

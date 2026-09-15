@@ -1,0 +1,500 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Digitraffic Live",
+        "description": "Fintrafficin Digitrafficin laivat, junat ja tieliikenteen tiedot reaaliajassa karttasyötteinä. Lisää syötteet integraation sivulta, kun tämä on valmis.",
+        "data": {
+          "language": "Kieli"
+        },
+        "data_description": {
+          "language": "Kieli, jolla syötteisiin kirjoitetaan tekstit, kuten alustyypit ja ponnahdusikkunan rivit."
+        }
+      },
+      "reconfigure": {
+        "title": "Digitraffic Live",
+        "data": {
+          "language": "Kieli"
+        },
+        "data_description": {
+          "language": "Kieli, jolla syötteisiin kirjoitetaan tekstit, kuten alustyypit ja ponnahdusikkunan rivit."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Digitraffic Live on jo käytössä. Lisää syötteitä integraation sivulta.",
+      "reconfigure_successful": "Asetukset tallennettu."
+    }
+  },
+  "config_subentries": {
+    "ships": {
+      "entry_type": "Laivasyöte",
+      "initiate_flow": {
+        "user": "Lisää laivasyöte",
+        "reconfigure": "Muokkaa laivasyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Laivasyöte",
+          "description": "Alukset, joiden AIS-sijainti on alueella. Useimmat pienet huviveneet eivät lähetä AIS-tietoja.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "ship_types": "Alustyypit",
+            "include_moored": "Näytä myös kiinnittyneet ja ankkuroidut alukset",
+            "icebreakers": "Korosta jäänmurtajat",
+            "max_age_minutes": "Sijainnin enimmäisikä",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "ship_types": "Jätä tyhjäksi, niin mukana ovat kaikki tyypit.",
+            "icebreakers": "Käyttää talvimerenkulun tietoja. Jäänmurtajat näytetään muista suodattimista riippumatta.",
+            "max_age_minutes": "Alukset, joiden viimeisin sijainti on tätä vanhempi, jätetään pois."
+          }
+        },
+        "reconfigure": {
+          "title": "Laivasyöte",
+          "description": "Alukset, joiden AIS-sijainti on alueella. Useimmat pienet huviveneet eivät lähetä AIS-tietoja.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "ship_types": "Alustyypit",
+            "include_moored": "Näytä myös kiinnittyneet ja ankkuroidut alukset",
+            "icebreakers": "Korosta jäänmurtajat",
+            "max_age_minutes": "Sijainnin enimmäisikä",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "ship_types": "Jätä tyhjäksi, niin mukana ovat kaikki tyypit.",
+            "icebreakers": "Käyttää talvimerenkulun tietoja. Jäänmurtajat näytetään muista suodattimista riippumatta.",
+            "max_age_minutes": "Alukset, joiden viimeisin sijainti on tätä vanhempi, jätetään pois."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
+    "trains": {
+      "entry_type": "Junasyöte",
+      "initiate_flow": {
+        "user": "Lisää junasyöte",
+        "reconfigure": "Muokkaa junasyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Junasyöte",
+          "description": "Kulussa olevat junat, joilla on GPS-sijainti. Rajaa syötettä reitin asemilla, alueella tai molemmilla.",
+          "data": {
+            "name": "Nimi",
+            "route": "Reitin asemat",
+            "categories": "Junatyypit",
+            "use_area": "Rajaa alueeseen",
+            "area": "Alue",
+            "max_age_minutes": "Sijainnin enimmäisikä",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "route": "Vain junat, jotka pysähtyvät jokaisella valitulla asemalla, esim. Helsinki ja Lappeenranta.",
+            "categories": "Jätä tyhjäksi, niin mukana ovat kaikki junatyypit.",
+            "area": "Käytössä vain, kun \"Rajaa alueeseen\" on päällä.",
+            "max_age_minutes": "Junat, joiden viimeisin sijainti on tätä vanhempi, jätetään pois."
+          }
+        },
+        "reconfigure": {
+          "title": "Junasyöte",
+          "description": "Kulussa olevat junat, joilla on GPS-sijainti. Rajaa syötettä reitin asemilla, alueella tai molemmilla.",
+          "data": {
+            "name": "Nimi",
+            "route": "Reitin asemat",
+            "categories": "Junatyypit",
+            "use_area": "Rajaa alueeseen",
+            "area": "Alue",
+            "max_age_minutes": "Sijainnin enimmäisikä",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "route": "Vain junat, jotka pysähtyvät jokaisella valitulla asemalla, esim. Helsinki ja Lappeenranta.",
+            "categories": "Jätä tyhjäksi, niin mukana ovat kaikki junatyypit.",
+            "area": "Käytössä vain, kun \"Rajaa alueeseen\" on päällä.",
+            "max_age_minutes": "Junat, joiden viimeisin sijainti on tätä vanhempi, jätetään pois."
+          }
+        }
+      },
+      "error": {
+        "route_too_short": "Valitse vähintään kaksi reitin asemaa tai ei yhtään.",
+        "route_or_area": "Valitse reitin asemat, laita \"Rajaa alueeseen\" päälle tai molemmat.",
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "cannot_connect": "Asemaluetteloa ei saatu ladattua Digitrafficista. Yritä hetken päästä uudelleen.",
+        "entry_not_loaded": "Digitraffic Live ei ole käynnissä. Ota se käyttöön ja lisää sitten syöte.",
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
+    "traffic_messages": {
+      "entry_type": "Liikennetiedotesyöte",
+      "initiate_flow": {
+        "user": "Lisää liikennetiedotesyöte",
+        "reconfigure": "Muokkaa liikennetiedotesyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Liikennetiedotesyöte",
+          "description": "Tietyöt, liikennetiedotteet, painorajoitukset ja erikoiskuljetukset, jotka osuvat alueelle.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "message_types": "Tiedotetyypit",
+            "upcoming_days": "Tietyöt, jotka alkavat",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "message_types": "Jätä tyhjäksi, niin mukana ovat kaikki tyypit.",
+            "upcoming_days": "Päivää eteenpäin. 0 näyttää vain nyt voimassa olevat tietyöt."
+          }
+        },
+        "reconfigure": {
+          "title": "Liikennetiedotesyöte",
+          "description": "Tietyöt, liikennetiedotteet, painorajoitukset ja erikoiskuljetukset, jotka osuvat alueelle.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "message_types": "Tiedotetyypit",
+            "upcoming_days": "Tietyöt, jotka alkavat",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "message_types": "Jätä tyhjäksi, niin mukana ovat kaikki tyypit.",
+            "upcoming_days": "Päivää eteenpäin. 0 näyttää vain nyt voimassa olevat tietyöt."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
+    "road_maintenance": {
+      "entry_type": "Kunnossapitosyöte",
+      "initiate_flow": {
+        "user": "Lisää kunnossapitosyöte",
+        "reconfigure": "Muokkaa kunnossapitosyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Kunnossapitosyöte",
+          "description": "Kunnossapitoajoneuvot, kuten aurat ja hiekoitusautot, alueen maanteillä sekä reitit, joilla ne ovat työskennelleet. Useimmat katuverkon kadut eivät ole mukana.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "tasks": "Tehtävät",
+            "max_age_minutes": "Sijainnin enimmäisikä",
+            "show_routes": "Näytä, missä ajoneuvot ovat työskennelleet",
+            "route_hours": "Reitit viimeisiltä",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "tasks": "Jätä tyhjäksi, niin mukana ovat kaikki tehtävät.",
+            "max_age_minutes": "Ajoneuvot, joiden viimeisin sijainti on tätä vanhempi, jätetään pois.",
+            "route_hours": "Tuntia, enintään 24. Käytössä vain, kun reitit näytetään."
+          }
+        },
+        "reconfigure": {
+          "title": "Kunnossapitosyöte",
+          "description": "Kunnossapitoajoneuvot, kuten aurat ja hiekoitusautot, alueen maanteillä sekä reitit, joilla ne ovat työskennelleet. Useimmat katuverkon kadut eivät ole mukana.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "tasks": "Tehtävät",
+            "max_age_minutes": "Sijainnin enimmäisikä",
+            "show_routes": "Näytä, missä ajoneuvot ovat työskennelleet",
+            "route_hours": "Reitit viimeisiltä",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "tasks": "Jätä tyhjäksi, niin mukana ovat kaikki tehtävät.",
+            "max_age_minutes": "Ajoneuvot, joiden viimeisin sijainti on tätä vanhempi, jätetään pois.",
+            "route_hours": "Tuntia, enintään 24. Käytössä vain, kun reitit näytetään."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
+    "road_conditions": {
+      "entry_type": "Kelisyöte",
+      "initiate_flow": {
+        "user": "Lisää kelisyöte",
+        "reconfigure": "Muokkaa kelisyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Kelisyöte",
+          "description": "Fintrafficin ajokeli alueen pääteiden osuuksilla nyt tai ennusteena enintään 12 tunnin päähän. Sensorin tila on huonon kelin osuuksien määrä.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "forecast": "Ajankohta",
+            "only_poor": "Vain huono keli",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "only_poor": "Jätä pois osuudet, joilla on normaali ajokeli."
+          }
+        },
+        "reconfigure": {
+          "title": "Kelisyöte",
+          "description": "Fintrafficin ajokeli alueen pääteiden osuuksilla nyt tai ennusteena enintään 12 tunnin päähän. Sensorin tila on huonon kelin osuuksien määrä.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "forecast": "Ajankohta",
+            "only_poor": "Vain huono keli",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "only_poor": "Jätä pois osuudet, joilla on normaali ajokeli."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
+    "weather_stations": {
+      "entry_type": "Tiesääasemasyöte",
+      "initiate_flow": {
+        "user": "Lisää tiesääasemasyöte",
+        "reconfigure": "Muokkaa tiesääasemasyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Tiesääasemasyöte",
+          "description": "Alueen tiesääasemat: tien ja ilman lämpötila, tienpinta, pito, tuuli ja sade.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "marker_value": "Arvo kartalla",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "marker_value": "Näytetään aseman merkissä. Molemmat lämpötilat näkyvät ponnahdusikkunassa."
+          }
+        },
+        "reconfigure": {
+          "title": "Tiesääasemasyöte",
+          "description": "Alueen tiesääasemat: tien ja ilman lämpötila, tienpinta, pito, tuuli ja sade.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "marker_value": "Arvo kartalla",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "marker_value": "Näytetään aseman merkissä. Molemmat lämpötilat näkyvät ponnahdusikkunassa."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
+    "weather_cameras": {
+      "entry_type": "Kelikamerasyöte",
+      "initiate_flow": {
+        "user": "Lisää kelikamerasyöte",
+        "reconfigure": "Muokkaa kelikamerasyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Kelikamerasyöte",
+          "description": "Alueen Fintrafficin kelikamerat ja kunkin näkymän uusin kuva.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi."
+          }
+        },
+        "reconfigure": {
+          "title": "Kelikamerasyöte",
+          "description": "Alueen Fintrafficin kelikamerat ja kunkin näkymän uusin kuva.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "fi": "Suomi",
+        "sv": "Svenska",
+        "en": "English"
+      }
+    },
+    "ship_types": {
+      "options": {
+        "cargo": "Rahtialukset",
+        "tanker": "Säiliöalukset",
+        "passenger": "Matkustaja-alukset",
+        "pilot": "Luotsiveneet",
+        "tug": "Hinaajat",
+        "fishing": "Kalastusalukset",
+        "pleasure": "Huviveneet",
+        "other": "Muut alukset"
+      }
+    },
+    "categories": {
+      "options": {
+        "long_distance": "Kaukoliikenne",
+        "commuter": "Lähiliikenne",
+        "cargo": "Tavaraliikenne",
+        "locomotive": "Veturit",
+        "test_drive": "Koeajot",
+        "on_track_machines": "Ratatyökoneet",
+        "shunting": "Vaihtotyö"
+      }
+    },
+    "message_types": {
+      "options": {
+        "road_works": "Tietyöt",
+        "traffic_announcements": "Liikennetiedotteet",
+        "weight_restrictions": "Painorajoitukset",
+        "exempted_transports": "Erikoiskuljetukset"
+      }
+    },
+    "forecast": {
+      "options": {
+        "0h": "Nyt",
+        "2h": "2 tunnin päästä",
+        "4h": "4 tunnin päästä",
+        "6h": "6 tunnin päästä",
+        "12h": "12 tunnin päästä"
+      }
+    },
+    "tasks": {
+      "options": {
+        "BRUSHING": "Harjaus",
+        "BRUSH_CLEARING": "Koneellinen vesakonraivaus",
+        "CLEANSING_OF_BRIDGES": "Siltojen puhdistus",
+        "CLEANSING_OF_REST_AREAS": "L- ja p-alueiden puhdistus",
+        "CLEANSING_OF_TRAFFIC_SIGNS": "Liikennemerkkien puhdistus",
+        "CLIENTS_QUALITY_CONTROL": "Tilaajan laadunvalvonta",
+        "COMPACTION_BY_ROLLING": "Jyräys",
+        "CRACK_FILLING": "Päällysteiden juotostyöt",
+        "DITCHING": "Ojitus",
+        "DUST_BINDING_OF_GRAVEL_ROAD_SURFACE": "Sorateiden pölynsidonta",
+        "DUST_BINDING_OF_PAVED_ROAD_SURFACE": "Paallystetyn tien polynsidonta",
+        "ENSURING_TRAFFIC_IN_RASPUTITSA": "Liikenteen varmistaminen kelirikkokohteessa",
+        "FILLING_OF_GRAVEL_ROAD_SHOULDERS": "Sorapientareen täyttö",
+        "FILLING_OF_ROAD_SHOULDERS": "Päällystetyn tien sorapientareen täyttö",
+        "GARBAGE_OLLECTION": "Roskien keruu",
+        "GROUP_REPLACEMENT_OF_LAMPS": "Valaisimien ryhmavaihto",
+        "HEATING": "Kuumennus",
+        "LEVELLING_GRAVEL_ROAD_SURFACE": "Sorateiden tasaus",
+        "LEVELLING_OF_ROAD_SHOULDERS": "Palteen poisto",
+        "LEVELLING_OF_ROAD_SHOULDERS_UNDER_RAILING": "Palteen poisto kaiteen alta",
+        "LEVELLING_OF_ROAD_SURFACE": "Pinnan tasaus",
+        "LINE_SANDING": "Linjahiekoitus",
+        "LOWERING_OF_SNOWBANKS": "Lumivallien madaltaminen",
+        "MAINTENANCE_OF_GUIDE_SIGNS_AND_REFLECTOR_POSTS": "Liikenteen opasteiden ja ohjauslaitteiden hoito sekä reunapaalujen kunnossapito",
+        "MECHANICAL_CUT": "Koneellinen niitto",
+        "MIXING_OR_STABILIZATION": "Sekoitus tai stabilointi",
+        "OTHER": "Muu",
+        "OTHER_OPERATIONS_OF_LIGHTING_CONTRACTS": "Muut valaistusurakoiden toimenpiteet",
+        "PATCHING": "Päällysteiden paikkaus",
+        "PAVING": "Asfaltointi",
+        "PLOUGHING_AND_SLUSH_REMOVAL": "Auraus ja sohjonpoisto",
+        "PLOUGHING_OF_SLUSH_DITCH": "Sohjo-ojien teko",
+        "PREVENTING_MELTING_WATER_PROBLEMS": "Sulamisveden haittojen torjunta",
+        "REMOVAL_OF_BULGE_ICE": "Paannejään poisto",
+        "RENEWAL_OF_EDGE_COLUMNS": "Reunapaalujen uusiminen",
+        "RESHAPING_GRAVEL_ROAD_SURFACE": "Sorateiden muokkaushöyläys",
+        "ROAD_INSPECTIONS": "Tiestötarkastus",
+        "ROAD_MARKINGS": "Tiemerkintä",
+        "ROAD_STATE_CHECKING": "Kelintarkastus",
+        "SAFETY_EQUIPMENT": "Turvalaite",
+        "SALTING": "Suolaus",
+        "SERVICE_ROUND": "Huoltokierros",
+        "SNOW_PLOUGHING_STICKS_AND_SNOW_FENCES": "Aurausviitoitus ja kinostimet",
+        "SPOT_SANDING": "Pistehiekoitus",
+        "SPREADING_OF_CRUSH": "Sorastus",
+        "TRANSFER_OF_SNOW": "Lumensiirto",
+        "UNKNOWN": "Tuntematon"
+      }
+    },
+    "marker_value": {
+      "options": {
+        "air_temperature": "Ilman lämpötila",
+        "road_temperature": "Tien lämpötila"
+      }
+    }
+  },
+  "services": {
+    "get_train_composition": {
+      "name": "Hae junan kokoonpano",
+      "description": "Palauttaa junan vaunut ja palvelut karttasyötteen ponnahdusikkunan riveinä. Korttikartta kutsuu tätä, kun junan ponnahdusikkuna avataan.",
+      "fields": {
+        "departure_date": {
+          "name": "Lähtöpäivä",
+          "description": "Päivä, jona juna lähti ensimmäiseltä asemaltaan."
+        },
+        "train_number": {
+          "name": "Junan numero",
+          "description": "Esimerkiksi 8 junalle IC 8."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Digitraffic Live ei ole käytössä."
+    },
+    "request_failed": {
+      "message": "Digitraffic-pyyntö epäonnistui: {error}"
+    }
+  }
+}

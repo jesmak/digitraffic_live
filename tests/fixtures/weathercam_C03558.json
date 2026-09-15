@@ -1,0 +1,53 @@
+{
+ "type": "Feature",
+ "id": "C03558",
+ "geometry": {
+  "type": "Point",
+  "coordinates": [
+   28.307574,
+   61.071041
+  ]
+ },
+ "properties": {
+  "id": "C03558",
+  "name": "vt6_Lappeenranta_Saimaan_kanava",
+  "nearestWeatherStationId": 5008,
+  "collectionStatus": "GATHERING",
+  "municipality": "Lappeenranta",
+  "names": {
+   "fi": "Tie 6 Lappeenranta, Saimaan kanava",
+   "sv": "Väg 6 Villmanstrand,Saima kanal",
+   "en": "Road 6 Lappeenranta, Saimaa channel"
+  },
+  "presets": [
+   {
+    "id": "C0355801",
+    "presentationName": "Imatralle",
+    "inCollection": true,
+    "resolution": "1280x720",
+    "directionCode": "1",
+    "imageUrl": "https://weathercam.digitraffic.fi/C0355801.jpg",
+    "direction": "INCREASING_DIRECTION"
+   },
+   {
+    "id": "C0355802",
+    "presentationName": "Lappeenrantaan",
+    "inCollection": true,
+    "resolution": "1280x720",
+    "directionCode": "2",
+    "imageUrl": "https://weathercam.digitraffic.fi/C0355802.jpg",
+    "direction": "DECREASING_DIRECTION"
+   },
+   {
+    "id": "C0355809",
+    "presentationName": "Tienpinta",
+    "inCollection": true,
+    "resolution": "1280x720",
+    "directionCode": "9",
+    "imageUrl": "https://weathercam.digitraffic.fi/C0355809.jpg",
+    "direction": "SPECIAL_DIRECTION"
+   }
+  ],
+  "state": null
+ }
+}

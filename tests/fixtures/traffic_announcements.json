@@ -1,0 +1,98 @@
+{
+ "type": "FeatureCollection",
+ "dataUpdatedTime": "2026-09-15T11:00:00Z",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.43,
+     60.93
+    ]
+   },
+   "properties": {
+    "situationId": "GUID50470746",
+    "situationType": "traffic announcement",
+    "trafficAnnouncementType": "accident report",
+    "version": 35,
+    "releaseTime": "2026-09-15T06:07:26.904Z",
+    "versionTime": "2026-09-15T10:50:48.449Z",
+    "announcements": [
+     {
+      "language": "fi",
+      "title": "Tie 4, eli Sodankyläntie, Rovaniemi. Liikennetiedote onnettomuudesta. Tilanne jatkuu. ",
+      "location": {
+       "countryCode": 6,
+       "locationTableNumber": 17,
+       "locationTableVersion": "1.11.45",
+       "description": "Tie 4, eli Sodankyläntie, Rovaniemi.\nTarkempi paikka: Välillä Lentokentäntie - Olkkajärvi. Napapiiriltä 4 km pohjoisen suuntaan."
+      },
+      "locationDetails": {
+       "roadAddressLocation": {
+        "primaryPoint": {
+         "municipality": "Rovaniemi",
+         "province": "Lappi",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 4,
+          "roadSection": 503,
+          "distance": 1
+         },
+         "roadName": "Sodankyläntie",
+         "alertCLocation": {
+          "locationCode": 37738,
+          "name": "Lentokentäntie",
+          "distance": 0
+         }
+        },
+        "secondaryPoint": {
+         "municipality": "Rovaniemi",
+         "province": "Lappi",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 4,
+          "roadSection": 504,
+          "distance": 1715
+         },
+         "roadName": "Sodankyläntie",
+         "alertCLocation": {
+          "locationCode": 1261,
+          "name": "Olkkajärvi",
+          "distance": 0
+         }
+        },
+        "direction": "unknown"
+       }
+      },
+      "features": [
+       {
+        "name": "Onnettomuus"
+       },
+       {
+        "name": "Onnettomuuspaikan pelastus- ja raivaustyöt käynnissä"
+       },
+       {
+        "name": "Ajokaista suljettu liikenteeltä"
+       },
+       {
+        "name": "Tapahtumapaikalla liikenteenohjaus"
+       }
+      ],
+      "roadWorkPhases": [],
+      "timeAndDuration": {
+       "startTime": "2026-09-15T06:07:00.000Z"
+      },
+      "additionalInformation": "Liikenne- ja kelitiedot verkossa: https://liikennetilanne.fintraffic.fi/",
+      "sender": "Fintraffic Tieliikennekeskus"
+     }
+    ],
+    "contact": {
+     "phone": "02002100",
+     "email": "tampere.liikennekeskus@fintraffic.fi"
+    },
+    "dataUpdatedTime": null
+   }
+  }
+ ]
+}

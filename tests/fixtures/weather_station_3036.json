@@ -1,0 +1,33 @@
+{
+ "type": "Feature",
+ "id": 3036,
+ "geometry": {
+  "type": "Point",
+  "coordinates": [
+   28.1243,
+   61.036434
+  ]
+ },
+ "properties": {
+  "id": 3036,
+  "name": "vt6_Lappeenranta_Kärki",
+  "collectionStatus": "GATHERING",
+  "municipality": "Lappeenranta",
+  "names": {
+   "fi": "Tie 6 Lappeenranta, Kärki",
+   "sv": "Väg 6 Villmanstrand, Kärki",
+   "en": "Road 6 Lappeenranta, Kärki"
+  },
+  "province": "Etelä-Karjala",
+  "roadAddress": {
+   "roadNumber": 6,
+   "roadSection": 216,
+   "distanceFromRoadSectionStart": 526,
+   "carriageway": "DUAL_CARRIAGEWAY_LEFT_IN_INCREASING_DIRECTION",
+   "side": "LEFT",
+   "contractArea": "Lappeenranta",
+   "contractAreaCode": 334
+  },
+  "state": "OK"
+ }
+}

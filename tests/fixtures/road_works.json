@@ -1,0 +1,645 @@
+{
+ "type": "FeatureCollection",
+ "dataUpdatedTime": "2026-09-15T11:00:00Z",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiLineString",
+    "coordinates": [
+     [
+      [
+       27.191903,
+       60.615097
+      ],
+      [
+       27.191737,
+       60.614961
+      ],
+      [
+       27.190753,
+       60.613993
+      ],
+      [
+       27.190158,
+       60.613178
+      ],
+      [
+       27.189562,
+       60.611957
+      ],
+      [
+       27.188799,
+       60.60998
+      ],
+      [
+       27.188165,
+       60.608367
+      ],
+      [
+       27.187605,
+       60.607035
+      ],
+      [
+       27.187379,
+       60.606577
+      ],
+      [
+       27.18701,
+       60.605942
+      ],
+      [
+       27.186586,
+       60.605099
+      ],
+      [
+       27.186501,
+       60.604851
+      ]
+     ],
+     [
+      [
+       27.259959,
+       60.659441
+      ],
+      [
+       27.254082,
+       60.655475
+      ],
+      [
+       27.246054,
+       60.650564
+      ],
+      [
+       27.238718,
+       60.646103
+      ],
+      [
+       27.234998,
+       60.643089
+      ],
+      [
+       27.232339,
+       60.638331
+      ],
+      [
+       27.229193,
+       60.635322
+      ],
+      [
+       27.219721,
+       60.631656
+      ],
+      [
+       27.215031,
+       60.630196
+      ],
+      [
+       27.210769,
+       60.628324
+      ],
+      [
+       27.200037,
+       60.620823
+      ],
+      [
+       27.191903,
+       60.615097
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "situationId": "GUID50470660",
+    "situationType": "road work",
+    "trafficAnnouncementType": null,
+    "version": 1,
+    "releaseTime": "2026-09-14T04:54:35.208Z",
+    "versionTime": "2026-09-14T04:54:35.207Z",
+    "announcements": [
+     {
+      "language": "fi",
+      "title": "Tie 26, Hamina, Luumäki. Tietyö. ",
+      "location": {
+       "countryCode": 6,
+       "locationTableNumber": 17,
+       "locationTableVersion": "1.11.45",
+       "description": "Tie 26 välillä Hamina - Lappeenranta.\nTarkempi paikka: Paikasta Taavetin liittymä 200 m, vaikutusalue 45,3 km, suuntaan Husulan liittymä."
+      },
+      "locationDetails": {
+       "roadAddressLocation": {
+        "primaryPoint": {
+         "municipality": "Luumäki",
+         "province": "Etelä-Karjala",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 26,
+          "roadSection": 11,
+          "distance": 4050
+         },
+         "alertCLocation": {
+          "locationCode": 2536,
+          "name": "Taavetin liittymä",
+          "distance": 196
+         }
+        },
+        "secondaryPoint": {
+         "municipality": "Hamina",
+         "province": "Kymenlaakso",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 26,
+          "roadSection": 3,
+          "distance": 645
+         },
+         "alertCLocation": {
+          "locationCode": 2534,
+          "name": "Husulan liittymä",
+          "distance": 645
+         }
+        },
+        "direction": "both"
+       }
+      },
+      "features": [
+       {
+        "name": "Ajokaista suljettu liikenteeltä"
+       }
+      ],
+      "roadWorkPhases": [
+       {
+        "id": "GUID50473472",
+        "location": {
+         "countryCode": 6,
+         "locationTableNumber": 17,
+         "locationTableVersion": "1.11.45",
+         "description": "Tie 26 välillä Hamina - Lappeenranta.\nTarkempi paikka: Paikasta Taavetin liittymä 200 m, vaikutusalue 45,3 km, suuntaan Husulan liittymä."
+        },
+        "locationDetails": {
+         "roadAddressLocation": {
+          "primaryPoint": {
+           "municipality": "Luumäki",
+           "province": "Etelä-Karjala",
+           "country": "Suomi",
+           "roadAddress": {
+            "road": 26,
+            "roadSection": 11,
+            "distance": 4050
+           },
+           "alertCLocation": {
+            "locationCode": 2536,
+            "name": "Taavetin liittymä",
+            "distance": 196
+           }
+          },
+          "secondaryPoint": {
+           "municipality": "Hamina",
+           "province": "Kymenlaakso",
+           "country": "Suomi",
+           "roadAddress": {
+            "road": 26,
+            "roadSection": 3,
+            "distance": 645
+           },
+           "alertCLocation": {
+            "locationCode": 2534,
+            "name": "Husulan liittymä",
+            "distance": 645
+           }
+          },
+          "direction": "both"
+         }
+        },
+        "workingHours": [
+         {
+          "weekday": "Tuesday",
+          "startTime": "18:00",
+          "endTime": "06:00"
+         },
+         {
+          "weekday": "Thursday",
+          "startTime": "18:00",
+          "endTime": "06:00"
+         },
+         {
+          "weekday": "Monday",
+          "startTime": "18:00",
+          "endTime": "06:00"
+         },
+         {
+          "weekday": "Wednesday",
+          "startTime": "18:00",
+          "endTime": "06:00"
+         },
+         {
+          "weekday": "Friday",
+          "startTime": "18:00",
+          "endTime": "06:00"
+         }
+        ],
+        "timeAndDuration": {
+         "startTime": "2026-09-20T21:00:00.000Z",
+         "endTime": "2026-10-02T20:59:59.999Z"
+        },
+        "workTypes": [
+         {
+          "type": "roadside equipment",
+          "description": "Tienvarsilaitteiden huolto"
+         },
+         {
+          "type": "other",
+          "description": ""
+         }
+        ],
+        "restrictions": [
+         {
+          "type": "single lane closed",
+          "restriction": {
+           "name": "Yksi ajokaista suljettu"
+          }
+         },
+         {
+          "type": "slow moving maintenance vehicle",
+          "restriction": {
+           "name": "Työkoneita liikenteen seassa"
+          }
+         }
+        ],
+        "restrictionsLiftable": false,
+        "severity": "high",
+        "slowTrafficTimes": [],
+        "queuingTrafficTimes": []
+       }
+      ],
+      "timeAndDuration": {
+       "startTime": "2026-09-20T21:00:00.000Z",
+       "endTime": "2026-10-02T20:59:59.999Z"
+      },
+      "additionalInformation": "Liikenne- ja kelitiedot verkossa: https://liikennetilanne.fintraffic.fi/",
+      "sender": "Fintraffic Tieliikennekeskus"
+     }
+    ],
+    "contact": {
+     "phone": "02002100",
+     "email": "tampere.liikennekeskus@fintraffic.fi"
+    },
+    "dataUpdatedTime": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.155918,
+     60.587843
+    ]
+   },
+   "properties": {
+    "situationId": "GUID50469235",
+    "situationType": "road work",
+    "trafficAnnouncementType": null,
+    "version": 1,
+    "releaseTime": "2026-08-19T08:38:09.612Z",
+    "versionTime": "2026-08-19T08:38:09.611Z",
+    "announcements": [
+     {
+      "language": "fi",
+      "title": "Tie 7, Hamina. Tietyö. ",
+      "location": {
+       "countryCode": 6,
+       "locationTableNumber": 17,
+       "locationTableVersion": "1.11.45",
+       "description": "Tie 7 välillä Kotka - Hamina, Hamina.\nTarkempi paikka: Paikasta Ruissalon liittymä 200 m, suuntaan Husulan tunneli."
+      },
+      "locationDetails": {
+       "roadAddressLocation": {
+        "primaryPoint": {
+         "municipality": "Hamina",
+         "province": "Kymenlaakso",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 7,
+          "roadSection": 34,
+          "distance": 198
+         },
+         "alertCLocation": {
+          "locationCode": 1585,
+          "name": "Ruissalon liittymä",
+          "distance": 182
+         }
+        },
+        "secondaryPoint": {
+         "municipality": "Hamina",
+         "province": "Kymenlaakso",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 7,
+          "roadSection": 34,
+          "distance": 198
+         },
+         "alertCLocation": {
+          "locationCode": 42029,
+          "name": "Husulan tunneli",
+          "distance": 1381
+         }
+        },
+        "direction": "unknown"
+       }
+      },
+      "features": [],
+      "roadWorkPhases": [
+       {
+        "id": "GUID50472027",
+        "location": {
+         "countryCode": 6,
+         "locationTableNumber": 17,
+         "locationTableVersion": "1.11.45",
+         "description": "Tie 7 välillä Kotka - Hamina, Hamina.\nTarkempi paikka: Paikasta Ruissalon liittymä 200 m, suuntaan Husulan tunneli."
+        },
+        "locationDetails": {
+         "roadAddressLocation": {
+          "primaryPoint": {
+           "municipality": "Hamina",
+           "province": "Kymenlaakso",
+           "country": "Suomi",
+           "roadAddress": {
+            "road": 7,
+            "roadSection": 34,
+            "distance": 198
+           },
+           "alertCLocation": {
+            "locationCode": 1585,
+            "name": "Ruissalon liittymä",
+            "distance": 182
+           }
+          },
+          "secondaryPoint": {
+           "municipality": "Hamina",
+           "province": "Kymenlaakso",
+           "country": "Suomi",
+           "roadAddress": {
+            "road": 7,
+            "roadSection": 34,
+            "distance": 198
+           },
+           "alertCLocation": {
+            "locationCode": 42029,
+            "name": "Husulan tunneli",
+            "distance": 1381
+           }
+          },
+          "direction": "unknown"
+         }
+        },
+        "locationOpenLr": {
+         "binary": "IzXXkAIm4g=="
+        },
+        "workingHours": [
+         {
+          "weekday": "Monday",
+          "startTime": "07:00",
+          "endTime": "16:00"
+         },
+         {
+          "weekday": "Wednesday",
+          "startTime": "07:00",
+          "endTime": "16:00"
+         },
+         {
+          "weekday": "Thursday",
+          "startTime": "07:00",
+          "endTime": "16:00"
+         },
+         {
+          "weekday": "Tuesday",
+          "startTime": "07:00",
+          "endTime": "16:00"
+         },
+         {
+          "weekday": "Friday",
+          "startTime": "07:00",
+          "endTime": "16:00"
+         }
+        ],
+        "timeAndDuration": {
+         "startTime": "2026-08-20T21:00:00.000Z",
+         "endTime": "2026-09-21T20:59:59.999Z"
+        },
+        "workTypes": [
+         {
+          "type": "buried cables",
+          "description": "Kaapelityö"
+         },
+         {
+          "type": "other",
+          "description": "Suuntaporaus"
+         }
+        ],
+        "restrictions": [],
+        "restrictionsLiftable": false,
+        "severity": "low",
+        "slowTrafficTimes": [],
+        "queuingTrafficTimes": []
+       }
+      ],
+      "timeAndDuration": {
+       "startTime": "2026-08-20T21:00:00.000Z",
+       "endTime": "2026-09-21T20:59:59.999Z"
+      },
+      "additionalInformation": "Liikenne- ja kelitiedot verkossa: https://liikennetilanne.fintraffic.fi/",
+      "sender": "Fintraffic Tieliikennekeskus"
+     }
+    ],
+    "contact": {
+     "phone": "02002100",
+     "email": "tampere.liikennekeskus@fintraffic.fi"
+    },
+    "dataUpdatedTime": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.078975,
+     60.374146
+    ]
+   },
+   "properties": {
+    "situationId": "GUID50470759",
+    "situationType": "road work",
+    "trafficAnnouncementType": null,
+    "version": 1,
+    "releaseTime": "2026-09-15T08:11:13.070Z",
+    "versionTime": "2026-09-15T08:11:13.069Z",
+    "announcements": [
+     {
+      "language": "fi",
+      "title": "Tie 11587, eli Saviontie, Vantaa. Tietyö. ",
+      "location": {
+       "countryCode": 6,
+       "locationTableNumber": 17,
+       "locationTableVersion": "1.11.45",
+       "description": "Tie 11587, eli Saviontie, Vantaa.\nTarkempi paikka: Paikasta Fallbackantie 500 m, suuntaan Pääskytie."
+      },
+      "locationDetails": {
+       "roadAddressLocation": {
+        "primaryPoint": {
+         "municipality": "Vantaa",
+         "province": "Uusimaa",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 11587,
+          "roadSection": 1,
+          "distance": 2778
+         },
+         "roadName": "Saviontie",
+         "alertCLocation": {
+          "locationCode": 984,
+          "name": "Fallbackantie",
+          "distance": 529
+         }
+        },
+        "secondaryPoint": {
+         "municipality": "Vantaa",
+         "province": "Uusimaa",
+         "country": "Suomi",
+         "roadAddress": {
+          "road": 11587,
+          "roadSection": 1,
+          "distance": 2778
+         },
+         "roadName": "Saviontie",
+         "alertCLocation": {
+          "locationCode": 7487,
+          "name": "Pääskytie",
+          "distance": 27
+         }
+        },
+        "direction": "both"
+       }
+      },
+      "features": [
+       {
+        "name": "Ajokaista suljettu liikenteeltä"
+       }
+      ],
+      "roadWorkPhases": [
+       {
+        "id": "GUID50473571",
+        "location": {
+         "countryCode": 6,
+         "locationTableNumber": 17,
+         "locationTableVersion": "1.11.45",
+         "description": "Tie 11587, eli Saviontie, Vantaa.\nTarkempi paikka: Paikasta Fallbackantie 500 m, suuntaan Pääskytie."
+        },
+        "locationDetails": {
+         "roadAddressLocation": {
+          "primaryPoint": {
+           "municipality": "Vantaa",
+           "province": "Uusimaa",
+           "country": "Suomi",
+           "roadAddress": {
+            "road": 11587,
+            "roadSection": 1,
+            "distance": 2778
+           },
+           "roadName": "Saviontie",
+           "alertCLocation": {
+            "locationCode": 984,
+            "name": "Fallbackantie",
+            "distance": 529
+           }
+          },
+          "secondaryPoint": {
+           "municipality": "Vantaa",
+           "province": "Uusimaa",
+           "country": "Suomi",
+           "roadAddress": {
+            "road": 11587,
+            "roadSection": 1,
+            "distance": 2778
+           },
+           "roadName": "Saviontie",
+           "alertCLocation": {
+            "locationCode": 7487,
+            "name": "Pääskytie",
+            "distance": 27
+           }
+          },
+          "direction": "both"
+         }
+        },
+        "locationOpenLr": {
+         "binary": "IzW47wGsHg=="
+        },
+        "workingHours": [
+         {
+          "weekday": "Monday",
+          "startTime": "06:00",
+          "endTime": "18:00"
+         },
+         {
+          "weekday": "Tuesday",
+          "startTime": "06:00",
+          "endTime": "18:00"
+         },
+         {
+          "weekday": "Thursday",
+          "startTime": "06:00",
+          "endTime": "18:00"
+         },
+         {
+          "weekday": "Wednesday",
+          "startTime": "06:00",
+          "endTime": "18:00"
+         },
+         {
+          "weekday": "Friday",
+          "startTime": "06:00",
+          "endTime": "18:00"
+         }
+        ],
+        "timeAndDuration": {
+         "startTime": "2026-09-10T21:00:00.000Z",
+         "endTime": "2026-09-18T20:59:59.999Z"
+        },
+        "workTypes": [
+         {
+          "type": "other",
+          "description": "vesi ja viemärijohdon rakentaminen"
+         }
+        ],
+        "restrictions": [
+         {
+          "type": "single lane closed",
+          "restriction": {
+           "name": "Yksi ajokaista suljettu"
+          }
+         }
+        ],
+        "restrictionsLiftable": false,
+        "severity": "high",
+        "slowTrafficTimes": [],
+        "queuingTrafficTimes": []
+       }
+      ],
+      "timeAndDuration": {
+       "startTime": "2026-09-10T21:00:00.000Z",
+       "endTime": "2026-09-18T20:59:59.999Z"
+      },
+      "additionalInformation": "Liikenne- ja kelitiedot verkossa: https://liikennetilanne.fintraffic.fi/",
+      "sender": "Fintraffic Tieliikennekeskus"
+     }
+    ],
+    "contact": {
+     "phone": "02002100",
+     "email": "helsinki.liikennekeskus@fintraffic.fi"
+    },
+    "dataUpdatedTime": null
+   }
+  }
+ ]
+}
