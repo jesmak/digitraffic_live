@@ -2,6 +2,8 @@
 
 Each feed is a config subentry with its own coordinator and sensor. The sensor
 writes the Map Feed format, which the map feed plugin for ha-map-card draws.
+Road weather stations and weather cameras are subentries too, each a device
+with its own sensors or image entities.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ import asyncio
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
@@ -24,7 +27,7 @@ from .ships import VesselRegister, icebreaker_mmsis
 from .texts import async_load_texts
 from .trains import passenger_notice_index
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.IMAGE]
 
 # Icebreaker assignments and passenger notices change slowly, and every feed shares them.
 ICEBREAKER_REFRESH_SECONDS = 600
@@ -69,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
         camera_details=DetailCache("weather camera", client.weathercam_station),
     )
 
+    remove_stale_devices(hass, entry)
     for subentry in entry.subentries.values():
         if coordinator_class := COORDINATORS.get(subentry.subentry_type):
             entry.runtime_data.coordinators[subentry.subentry_id] = coordinator_class(hass, entry, subentry)
@@ -81,6 +85,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
     # Adding, changing or removing a feed (subentry), or changing the language, reloads everything.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
+
+
+def remove_stale_devices(hass: HomeAssistant, entry: DigitrafficConfigEntry) -> None:
+    """Removes devices that belong to no subentry, such as those an earlier version created, with their entities."""
+    device_registry = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if not any(domain == DOMAIN and identifier in entry.subentries for domain, identifier in device.identifiers):
+            device_registry.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) -> None:

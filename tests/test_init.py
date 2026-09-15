@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import MATCH_ALL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.digitraffic_live.api import MARINE_API, RAILWAY_API
 from custom_components.digitraffic_live.const import DOMAIN
+from custom_components.digitraffic_live.coordinator import WeatherCameraCoordinator
 from custom_components.digitraffic_live.sensor import MapFeedSensor
 
 from .conftest import HAMINA_AREA, ROAD_AREA, VESSELS, ais_locations
@@ -69,6 +73,22 @@ async def test_feeds_create_map_feed_sensors(hass: HomeAssistant, digitraffic_ap
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_devices_without_a_subentry_are_removed(
+    hass: HomeAssistant, digitraffic_api: AiohttpClientMocker
+) -> None:
+    entry = feed_entry(hass)
+    device_registry = dr.async_get(hass)
+    stale = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "weather_station_3036")}
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(stale.id) is None
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert {identifier for device in devices for _, identifier in device.identifiers} == set(entry.subentries)
 
 
 async def test_feeds_are_kept_out_of_the_recorder() -> None:
@@ -159,6 +179,18 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
                 unique_id=None,
                 data={"area": ROAD_AREA, "refresh_seconds": 600},
             ),
+            ConfigSubentryData(
+                subentry_type="road_weather_station",
+                title="Road 6 Lappeenranta, Kärki",
+                unique_id="3036",
+                data={"station": "3036", "refresh_seconds": 300},
+            ),
+            ConfigSubentryData(
+                subentry_type="weather_camera",
+                title="Road 6 Lappeenranta, Saimaa channel",
+                unique_id="C03558",
+                data={"camera": "C03558", "refresh_seconds": 600},
+            ),
         ],
     )
     entry.add_to_hass(hass)
@@ -179,3 +211,30 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
     cameras = hass.states.get("sensor.road_cameras")
     assert cameras.state == "1"
     assert len(cameras.attributes["geojson"]["features"][0]["properties"]["images"]) == 3
+
+    # A road weather station is a device with its own sensors.
+    road_temperature = hass.states.get("sensor.road_6_lappeenranta_karki_road_temperature")
+    assert road_temperature.state == "22.9"
+    assert road_temperature.attributes["unit_of_measurement"] == "°C"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_air_temperature").state == "14.6"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_road_surface").state == "dry"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_grip").state == "0.82"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_road_weather_warning").state == "ok"
+
+    # Each view of a weather camera is an image entity; its state is when the picture was taken.
+    view = "image.road_6_lappeenranta_saimaa_channel_imatralle"
+    assert hass.states.get(view).state == "2026-09-15T11:47:33+00:00"
+    assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_tienpinta") is not None
+
+    camera = next(
+        coordinator
+        for coordinator in entry.runtime_data.coordinators.values()
+        if isinstance(coordinator, WeatherCameraCoordinator)
+    )
+    image = hass.data["image"].get_entity(view)
+    image._cached_image = object()
+    camera.async_set_updated_data(replace(camera.data, picture_times={"C0355801": "2026-09-15T11:57:33Z"}))
+    await hass.async_block_till_done()
+    assert hass.states.get(view).state == "2026-09-15T11:57:33+00:00"
+    assert image._cached_image is None, "a new picture replaces the cached one"
+    assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_tienpinta").state == STATE_UNAVAILABLE

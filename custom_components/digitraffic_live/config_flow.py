@@ -7,6 +7,7 @@ stations or weather cameras), added and changed from the integration page.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import voluptuous as vol
@@ -36,8 +37,10 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import DigitrafficError
+from .cache import details_name
 from .const import (
     CONF_AREA,
+    CONF_CAMERA,
     CONF_CATEGORIES,
     CONF_FORECAST,
     CONF_ICEBREAKERS,
@@ -52,6 +55,7 @@ from .const import (
     CONF_ROUTE_HOURS,
     CONF_SHIP_TYPES,
     CONF_SHOW_ROUTES,
+    CONF_STATION,
     CONF_TASKS,
     CONF_UPCOMING_DAYS,
     CONF_USE_AREA,
@@ -70,9 +74,11 @@ from .const import (
     MIN_REFRESH_SECONDS,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
+    SUBENTRY_ROAD_WEATHER_STATION,
     SUBENTRY_SHIPS,
     SUBENTRY_TRAFFIC_MESSAGES,
     SUBENTRY_TRAINS,
+    SUBENTRY_WEATHER_CAMERA,
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
 )
@@ -81,7 +87,8 @@ from .road_conditions import FORECAST_TIMES
 from .ships import SHIP_TYPES
 from .traffic_messages import MESSAGE_TYPES
 from .trains import TRAIN_CATEGORIES, station_name
-from .weather_stations import DEFAULT_MARKER_VALUE, MARKER_VALUES
+from .weather_cameras import camera_options
+from .weather_stations import DEFAULT_MARKER_VALUE, MARKER_VALUES, station_options
 
 DEFAULT_SHIP_RADIUS_M = 15_000
 DEFAULT_TRAIN_RADIUS_M = 30_000
@@ -137,6 +144,8 @@ class DigitrafficLiveConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_ROAD_CONDITIONS: RoadConditionFeedFlow,
             SUBENTRY_WEATHER_STATIONS: WeatherStationFeedFlow,
             SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedFlow,
+            SUBENTRY_ROAD_WEATHER_STATION: RoadWeatherStationFlow,
+            SUBENTRY_WEATHER_CAMERA: WeatherCameraFlow,
         }
 
 
@@ -170,7 +179,8 @@ class FeedFlow(ConfigSubentryFlow):
         if user_input is not None:
             values = user_input
         elif current is not None:
-            values = {CONF_NAME: current.title, **current.data}
+            # Defaults fill in settings added after the feed was created.
+            values = {**self.defaults(), CONF_NAME: current.title, **current.data}
         else:
             values = self.defaults()
         return self.async_show_form(
@@ -429,3 +439,105 @@ class WeatherCameraFeedFlow(AreaFeedFlow):
             CONF_AREA: self.home_area(DEFAULT_ROAD_RADIUS_M),
             CONF_REFRESH_SECONDS: DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
         }
+
+
+async def choice_options(
+    flow: ConfigSubentryFlow, list_name: str, to_options: Callable[[Any], list[tuple[str, str]]]
+) -> list[SelectOptionDict] | SubentryFlowResult:
+    """Options for choosing a station or camera from a list the integration keeps; an abort when unavailable."""
+    entry = flow._get_entry()
+    if entry.state is not ConfigEntryState.LOADED:
+        return flow.async_abort(reason="entry_not_loaded")
+    shared = getattr(entry.runtime_data, list_name)
+    data = await shared.get()
+    if not shared.loaded:
+        return flow.async_abort(reason="cannot_connect")
+    return [SelectOptionDict(value=value, label=label) for value, label in to_options(data)]
+
+
+class RoadDeviceFlow(ConfigSubentryFlow):
+    """Adding one road weather station or camera, which becomes a device. Changing it only changes the update interval.
+
+    The subentry's unique id is the station or camera id, so the same one can't be added twice.
+    """
+
+    choice_key: str
+    list_name: str
+    details_cache: str
+    default_refresh_seconds: int
+    to_options: Callable[[Any], list[tuple[str, str]]]
+    _options: list[SelectOptionDict] | None = None
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        if self._options is None:
+            options = await choice_options(self, self.list_name, type(self).to_options)
+            if isinstance(options, dict):  # an abort result
+                return options
+            self._options = options
+
+        if user_input is not None:
+            chosen = str(user_input[self.choice_key])
+            subentry_type = self.handler[1]
+            if any(
+                subentry.subentry_type == subentry_type and subentry.unique_id == chosen
+                for subentry in self._get_entry().subentries.values()
+            ):
+                return self.async_abort(reason="already_configured")
+            return self.async_create_entry(
+                title=await self._async_title(chosen),
+                data={self.choice_key: chosen, CONF_REFRESH_SECONDS: int(user_input[CONF_REFRESH_SECONDS])},
+                unique_id=chosen,
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(self.choice_key): SelectSelector(
+                        SelectSelectorConfig(options=self._options, mode=SelectSelectorMode.DROPDOWN, sort=False)
+                    ),
+                    vol.Required(CONF_REFRESH_SECONDS, default=self.default_refresh_seconds): REFRESH_SELECTOR,
+                }
+            ),
+        )
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                data={**subentry.data, CONF_REFRESH_SECONDS: int(user_input[CONF_REFRESH_SECONDS])},
+            )
+        refresh_seconds = subentry.data.get(CONF_REFRESH_SECONDS, self.default_refresh_seconds)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_REFRESH_SECONDS, default=refresh_seconds): REFRESH_SELECTOR}),
+            description_placeholders={"name": subentry.title},
+        )
+
+    async def _async_title(self, chosen: str) -> str:
+        """The station's or camera's name in the integration's language, or its name in the list."""
+        runtime = self._get_entry().runtime_data
+        details = getattr(runtime, self.details_cache)
+        await details.ensure([chosen])
+        if name := details_name(details.get(chosen), runtime.texts.language):
+            return name
+        label = next((option["label"] for option in self._options or [] if option["value"] == chosen), chosen)
+        return label.removesuffix(f" ({chosen})")
+
+
+class RoadWeatherStationFlow(RoadDeviceFlow):
+    choice_key = CONF_STATION
+    list_name = "weather_station_list"
+    details_cache = "weather_station_details"
+    default_refresh_seconds = DEFAULT_WEATHER_STATION_REFRESH_SECONDS
+    to_options = staticmethod(station_options)
+
+
+class WeatherCameraFlow(RoadDeviceFlow):
+    choice_key = CONF_CAMERA
+    list_name = "camera_list"
+    details_cache = "camera_details"
+    default_refresh_seconds = DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS
+    to_options = staticmethod(camera_options)
