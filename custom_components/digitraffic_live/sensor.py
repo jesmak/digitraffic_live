@@ -1,15 +1,20 @@
-"""Map feed sensors: one per feed.
+"""Map feed sensors, one per feed, and the sensors of road weather stations.
 
-The state is the number of items; the items are in the `geojson` attribute, in
-the Map Feed format (docs/map-feed-format.md in ha-map-card-plugin-map-feed).
+A feed sensor's state is the number of items; the items are in the `geojson`
+attribute, in the Map Feed format (docs/map-feed-format.md in ha-map-card-plugin-map-feed).
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import MATCH_ALL
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import MATCH_ALL, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,8 +32,9 @@ from .const import (
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
 )
-from .coordinator import DigitrafficConfigEntry, FeedCoordinator
+from .coordinator import DigitrafficConfigEntry, FeedCoordinator, WeatherStationCoordinator
 from .feed import feature_collection
+from .weather_stations import SURFACE_STATES, WARNING_STATES, station_readings
 
 ICONS = {
     SUBENTRY_SHIPS: "mdi:ferry",
@@ -41,13 +47,60 @@ ICONS = {
 }
 
 
+# Sensors every road weather station gets. The keys are those of station_readings().
+STATION_SENSORS = (
+    SensorEntityDescription(
+        key="road_temperature",
+        translation_key="road_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="air_temperature",
+        translation_key="air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="road_surface",
+        translation_key="road_surface",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(SURFACE_STATES.values()),
+        icon="mdi:road-variant",
+    ),
+    SensorEntityDescription(
+        key="grip",
+        translation_key="grip",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="µ",
+        suggested_display_precision=2,
+        icon="mdi:car-traction-control",
+    ),
+    SensorEntityDescription(
+        key="road_warning",
+        translation_key="road_warning",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(WARNING_STATES.values()),
+        icon="mdi:alert",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DigitrafficConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     for subentry_id, coordinator in entry.runtime_data.coordinators.items():
-        async_add_entities([MapFeedSensor(coordinator)], config_subentry_id=subentry_id)
+        if isinstance(coordinator, FeedCoordinator):
+            async_add_entities([MapFeedSensor(coordinator)], config_subentry_id=subentry_id)
+        elif isinstance(coordinator, WeatherStationCoordinator):
+            async_add_entities(
+                [StationSensor(coordinator, description) for description in STATION_SENSORS],
+                config_subentry_id=subentry_id,
+            )
 
 
 class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
@@ -87,3 +140,27 @@ class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
             attributes["updated"] = data.updated.isoformat(timespec="seconds")
             attributes["geojson"] = feature_collection(data.features)
         return attributes
+
+
+class StationSensor(CoordinatorEntity[WeatherStationCoordinator], SensorEntity):
+    """One value of a road weather station. Values the station doesn't measure stay unknown."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: WeatherStationCoordinator, description: SensorEntityDescription) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        subentry = coordinator.subentry
+        self._attr_unique_id = f"{subentry.subentry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            manufacturer="Fintraffic",
+            model_id=coordinator.station_id,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def native_value(self) -> float | str | None:
+        return station_readings(self.coordinator.data or {}).get(self.entity_description.key)

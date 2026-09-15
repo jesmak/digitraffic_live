@@ -365,6 +365,72 @@
       "abort": {
         "reconfigure_successful": "Flödet har sparats."
       }
+    },
+    "road_weather_station": {
+      "entry_type": "Vägväderstation",
+      "initiate_flow": {
+        "user": "Lägg till vägväderstation",
+        "reconfigure": "Ändra vägväderstation"
+      },
+      "step": {
+        "user": {
+          "title": "Vägväderstation",
+          "description": "Sensorer för en av Fintraffics vägväderstationer: väg- och lufttemperatur, vägbana, friktion och vägvädervarning.",
+          "data": {
+            "station": "Station",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "station": "Stationerna är namngivna efter väg, kommun och plats, till exempel vt6 Lappeenranta Kärki."
+          }
+        },
+        "reconfigure": {
+          "title": "Vägväderstation",
+          "description": "Hur ofta värdena för {name} hämtas.",
+          "data": {
+            "refresh_seconds": "Uppdateringsintervall"
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Stationen har sparats.",
+        "already_configured": "Stationen har redan lagts till.",
+        "cannot_connect": "Stationslistan kunde inte hämtas från Digitraffic. Försök igen om en stund.",
+        "entry_not_loaded": "Digitraffic Live körs inte. Aktivera den och lägg sedan till stationen."
+      }
+    },
+    "weather_camera": {
+      "entry_type": "Väderkamera",
+      "initiate_flow": {
+        "user": "Lägg till väderkamera",
+        "reconfigure": "Ändra väderkamera"
+      },
+      "step": {
+        "user": {
+          "title": "Väderkamera",
+          "description": "En bildentitet för varje vy från en av Fintraffics väderkameror. Bilden uppdateras när kameran tar en ny, ungefär var tionde minut.",
+          "data": {
+            "camera": "Kamera",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "camera": "Kamerorna är namngivna efter väg, kommun och plats, till exempel vt6 Lappeenranta Saimaan kanava."
+          }
+        },
+        "reconfigure": {
+          "title": "Väderkamera",
+          "description": "Hur ofta {name} kontrolleras för nya bilder.",
+          "data": {
+            "refresh_seconds": "Uppdateringsintervall"
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Kameran har sparats.",
+        "already_configured": "Kameran har redan lagts till.",
+        "cannot_connect": "Kameralistan kunde inte hämtas från Digitraffic. Försök igen om en stund.",
+        "entry_not_loaded": "Digitraffic Live körs inte. Aktivera den och lägg sedan till kameran."
+      }
     }
   },
   "selector": {
@@ -495,6 +561,43 @@
     },
     "request_failed": {
       "message": "Digitraffic-förfrågan misslyckades: {error}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "road_temperature": {
+        "name": "Vägtemperatur"
+      },
+      "air_temperature": {
+        "name": "Lufttemperatur"
+      },
+      "road_surface": {
+        "name": "Vägbana",
+        "state": {
+          "dry": "Torr",
+          "moist": "Fuktig",
+          "wet": "Våt",
+          "wet_salty": "Våt och saltad",
+          "frost": "Rimfrost",
+          "snow": "Snö",
+          "ice": "Is",
+          "probably_moist_salty": "Troligen fuktig och saltad",
+          "slushy": "Snömoddig"
+        }
+      },
+      "grip": {
+        "name": "Friktion"
+      },
+      "road_warning": {
+        "name": "Vägvädervarning",
+        "state": {
+          "ok": "OK",
+          "beware": "Varning",
+          "alarm": "Larm",
+          "frost": "Rimfrost",
+          "rain": "Regn"
+        }
+      }
     }
   }
 }

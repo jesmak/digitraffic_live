@@ -1,4 +1,4 @@
-"""Update coordinators: one per map feed (config subentry).
+"""Update coordinators: one per config subentry, which is a map feed, a road weather station or a camera.
 
 Data that several feeds need (vessel register, icebreakers, passenger notices,
 road station lists and details) lives in DigitrafficRuntimeData and is shared.
@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -22,15 +22,21 @@ from homeassistant.util import dt as dt_util
 from .api import DigitrafficClient, DigitrafficError
 from .cache import DetailCache
 from .const import (
+    CONF_CAMERA,
     CONF_REFRESH_SECONDS,
+    CONF_STATION,
     DEFAULT_REFRESH_SECONDS,
+    DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
+    DEFAULT_WEATHER_STATION_REFRESH_SECONDS,
     DOMAIN,
     MIN_REFRESH_SECONDS,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
+    SUBENTRY_ROAD_WEATHER_STATION,
     SUBENTRY_SHIPS,
     SUBENTRY_TRAFFIC_MESSAGES,
     SUBENTRY_TRAINS,
+    SUBENTRY_WEATHER_CAMERA,
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
 )
@@ -46,6 +52,9 @@ from .weather_cameras import (
     build_weather_camera_features,
     cameras_in_area,
     fetch_picture_times,
+    picture_times,
+    view_names,
+    views_in_collection,
 )
 from .weather_stations import (
     WeatherStationFeedConfig,
@@ -109,7 +118,7 @@ class DigitrafficRuntimeData:
     weather_station_details: DetailCache[str]
     camera_list: PeriodicValue[dict[str, Any]]
     camera_details: DetailCache[str]
-    coordinators: dict[str, FeedCoordinator] = field(default_factory=dict)
+    coordinators: dict[str, SubentryCoordinator[Any]] = field(default_factory=dict)
 
 
 type DigitrafficConfigEntry = ConfigEntry[DigitrafficRuntimeData]
@@ -123,14 +132,16 @@ class FeedData:
     count: int | None = None
 
 
-class FeedCoordinator(DataUpdateCoordinator[FeedData]):
-    """Fetches one feed. Subclasses build the features."""
+class SubentryCoordinator[T](DataUpdateCoordinator[T]):
+    """Fetches the data of one config subentry."""
 
     config_entry: DigitrafficConfigEntry
+    # Used when the subentry has no update interval of its own.
+    default_refresh_seconds = DEFAULT_REFRESH_SECONDS
 
     def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
         refresh_seconds = max(
-            MIN_REFRESH_SECONDS, int(subentry.data.get(CONF_REFRESH_SECONDS, DEFAULT_REFRESH_SECONDS))
+            MIN_REFRESH_SECONDS, int(subentry.data.get(CONF_REFRESH_SECONDS, self.default_refresh_seconds))
         )
         super().__init__(
             hass,
@@ -144,6 +155,10 @@ class FeedCoordinator(DataUpdateCoordinator[FeedData]):
     @property
     def runtime(self) -> DigitrafficRuntimeData:
         return self.config_entry.runtime_data
+
+
+class FeedCoordinator(SubentryCoordinator[FeedData]):
+    """Fetches one feed. Subclasses build the features."""
 
     @property
     def area(self) -> Area | None:
@@ -298,7 +313,55 @@ class WeatherCameraFeedCoordinator(FeedCoordinator):
         return build_weather_camera_features(cameras, runtime.camera_details, times, runtime.texts.language)
 
 
-COORDINATORS: dict[str, type[FeedCoordinator]] = {
+class WeatherStationCoordinator(SubentryCoordinator[dict[str, Mapping[str, Any]]]):
+    """The latest sensor values of one road weather station, by sensor name."""
+
+    default_refresh_seconds = DEFAULT_WEATHER_STATION_REFRESH_SECONDS
+
+    def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
+        super().__init__(hass, entry, subentry)
+        self.station_id = str(subentry.data[CONF_STATION])
+
+    async def _async_update_data(self) -> dict[str, Mapping[str, Any]]:
+        try:
+            data = await self.runtime.client.weather_station_data(self.station_id)
+        except DigitrafficError as err:
+            raise UpdateFailed(str(err)) from err
+        return {str(value.get("name")): value for value in data.get("sensorValues") or []}
+
+
+@dataclass(frozen=True)
+class CameraData:
+    # Preset ids of the views being photographed, and the names of those that have one, such as "Imatralle".
+    views: tuple[str, ...]
+    view_names: dict[str, str]
+    # When each view was last photographed, by preset id.
+    picture_times: dict[str, str]
+
+
+class WeatherCameraCoordinator(SubentryCoordinator[CameraData]):
+    """The views of one road weather camera and when each was last photographed."""
+
+    default_refresh_seconds = DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS
+
+    def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
+        super().__init__(hass, entry, subentry)
+        self.camera_id = str(subentry.data[CONF_CAMERA])
+
+    async def _async_update_data(self) -> CameraData:
+        runtime = self.runtime
+        await runtime.camera_details.ensure([self.camera_id])
+        details = runtime.camera_details.get(self.camera_id)
+        if details is None:
+            raise UpdateFailed(f"The details of weather camera {self.camera_id} couldn't be fetched")
+        try:
+            data = await runtime.client.weathercam_station_data(self.camera_id)
+        except DigitrafficError as err:
+            raise UpdateFailed(str(err)) from err
+        return CameraData(views_in_collection(details), view_names(details), picture_times(data))
+
+
+COORDINATORS: dict[str, type[SubentryCoordinator[Any]]] = {
     SUBENTRY_SHIPS: ShipFeedCoordinator,
     SUBENTRY_TRAINS: TrainFeedCoordinator,
     SUBENTRY_TRAFFIC_MESSAGES: TrafficMessageFeedCoordinator,
@@ -306,4 +369,6 @@ COORDINATORS: dict[str, type[FeedCoordinator]] = {
     SUBENTRY_ROAD_CONDITIONS: RoadConditionFeedCoordinator,
     SUBENTRY_WEATHER_STATIONS: WeatherStationFeedCoordinator,
     SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedCoordinator,
+    SUBENTRY_ROAD_WEATHER_STATION: WeatherStationCoordinator,
+    SUBENTRY_WEATHER_CAMERA: WeatherCameraCoordinator,
 }

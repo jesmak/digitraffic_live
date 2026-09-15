@@ -33,13 +33,18 @@ from custom_components.digitraffic_live.traffic_messages import (
 )
 from custom_components.digitraffic_live.weather_cameras import (
     build_weather_camera_features,
+    camera_options,
     cameras_in_area,
     fetch_picture_times,
+    picture_times,
+    views_in_collection,
 )
 from custom_components.digitraffic_live.weather_stations import (
     build_weather_station_features,
     fetch_sensor_values,
     station_color,
+    station_options,
+    station_readings,
     stations_in_area,
 )
 
@@ -304,3 +309,63 @@ async def test_weather_camera_features() -> None:
     assert first["url"].startswith("https://weathercam.digitraffic.fi/C0355801.jpg?t=")
     assert first["caption"] == "Imatralle"
     assert len(props["images"]) == 3
+
+
+def test_station_readings() -> None:
+    values = {value["name"]: value for value in fixture("weather_station_3036_data")["sensorValues"]}
+    assert station_readings(values) == {
+        "road_temperature": 22.9,
+        "air_temperature": 14.6,
+        "road_surface": "dry",
+        "grip": 0.82,
+        "road_warning": "ok",
+    }
+
+
+def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
+    def values(**sensors: float) -> dict[str, dict[str, float]]:
+        return {name.replace("DST_ANT", "DST-ANT"): {"value": value} for name, value in sensors.items()}
+
+    # Many stations lack sensor 1 and have only sensor 2, or only optical sensors.
+    lane_two = station_readings(values(TIE_2=-0.6, KELI_1=0, KELI_2=7, VAROITUS_2=2, KITKA2=0.31))
+    assert lane_two == {
+        "road_temperature": -0.6,
+        "air_temperature": None,
+        "road_surface": "ice",
+        "grip": 0.31,
+        "road_warning": "alarm",
+    }
+    optical = station_readings(
+        values(TIEN_LÄMPÖTILA_DST_ANT=-1.4, ILMA=2.0, OPTISEN_ANTURIN_KELI1=5, OPTISEN_ANTURIN_VAROITUS1=3)
+    )
+    assert optical["road_temperature"] == -1.4
+    assert optical["road_surface"] == "frost"
+    assert optical["road_warning"] == "frost"
+    assert optical["grip"] is None
+    assert station_color(values(TIE_2=-0.6, KELI_2=7)) == "#c62828"
+
+    [feature] = build_weather_station_features(
+        stations_in_area(fixture("weather_stations"), area())[:1],
+        DetailCache("weather station", FakeRoadClient().weather_station),
+        {"3036": [{"name": "TIEN_LÄMPÖTILA_DST-ANT", "value": -1.4}]},
+        TEXTS,
+        "road_temperature",
+    )
+    assert feature["properties"]["badge"] == "-1°"
+    assert feature["properties"]["details"][0]["value"] == "-1.4"
+
+
+def test_station_and_camera_choices() -> None:
+    assert station_options(fixture("weather_stations")) == [
+        ("3036", "vt6 Lappeenranta Kärki (3036)"),
+        ("5007", "vt6 Luumäki kko (5007)"),
+        ("2002", "vt8 Pyhäranta Ihode (2002)"),
+    ]
+    assert camera_options(fixture("weathercam_stations")) == [("C03558", "vt6 Lappeenranta Saimaan kanava (C03558)")]
+
+
+def test_camera_views_and_picture_times() -> None:
+    assert views_in_collection(fixture("weathercam_C03558")) == ("C0355801", "C0355802", "C0355809")
+    times = picture_times(fixture("weathercam_C03558_data"))
+    assert times["C0355801"] == "2026-09-15T11:47:33Z"
+    assert len(times) == 3

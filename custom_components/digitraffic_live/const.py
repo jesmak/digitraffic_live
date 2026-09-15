@@ -24,6 +24,9 @@ SUBENTRY_ROAD_MAINTENANCE: Final = "road_maintenance"
 SUBENTRY_ROAD_CONDITIONS: Final = "road_conditions"
 SUBENTRY_WEATHER_STATIONS: Final = "weather_stations"
 SUBENTRY_WEATHER_CAMERAS: Final = "weather_cameras"
+# A single road weather station or camera, which becomes a device with its own entities
+SUBENTRY_ROAD_WEATHER_STATION: Final = "road_weather_station"
+SUBENTRY_WEATHER_CAMERA: Final = "weather_camera"
 
 # Feed settings (config subentry data)
 CONF_AREA: Final = "area"
@@ -43,6 +46,10 @@ CONF_ROUTE_HOURS: Final = "route_hours"
 CONF_FORECAST: Final = "forecast"
 CONF_ONLY_POOR: Final = "only_poor"
 CONF_MARKER_VALUE: Final = "marker_value"
+
+# Road weather station and camera settings (config subentry data)
+CONF_STATION: Final = "station"
+CONF_CAMERA: Final = "camera"
 
 # Digitraffic caches most responses for about a minute, so polling faster only repeats the same data.
 MIN_REFRESH_SECONDS: Final = 30

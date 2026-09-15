@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Awaitable, Callable, Hashable, Iterable
+from collections.abc import Awaitable, Callable, Hashable, Iterable, Mapping
 from typing import Any
 
 from .api import DigitrafficError
@@ -75,3 +75,9 @@ async def fetch_each[K: Hashable, V](
 
     await asyncio.gather(*(load(key) for key in keys))
     return results
+
+
+def details_name(details: Mapping[str, Any] | None, language: str) -> str | None:
+    """A station's or camera's name in the chosen language, from its details: "Road 6 Lappeenranta, Kärki"."""
+    names = ((details or {}).get("properties") or {}).get("names") or {}
+    return names.get(language) or names.get("fi")

@@ -365,6 +365,72 @@
       "abort": {
         "reconfigure_successful": "Syöte tallennettu."
       }
+    },
+    "road_weather_station": {
+      "entry_type": "Tiesääasema",
+      "initiate_flow": {
+        "user": "Lisää tiesääasema",
+        "reconfigure": "Muokkaa tiesääasemaa"
+      },
+      "step": {
+        "user": {
+          "title": "Tiesääasema",
+          "description": "Anturit yhdelle Fintrafficin tiesääasemalle: tien ja ilman lämpötila, tienpinta, pito ja tiesäävaroitus.",
+          "data": {
+            "station": "Asema",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "station": "Asemat on nimetty tien, kunnan ja paikan mukaan, esimerkiksi vt6 Lappeenranta Kärki."
+          }
+        },
+        "reconfigure": {
+          "title": "Tiesääasema",
+          "description": "Kuinka usein aseman {name} arvot haetaan.",
+          "data": {
+            "refresh_seconds": "Päivitysväli"
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Asema tallennettu.",
+        "already_configured": "Tämä asema on jo lisätty.",
+        "cannot_connect": "Asemaluetteloa ei saatu ladattua Digitrafficista. Yritä hetken kuluttua uudelleen.",
+        "entry_not_loaded": "Digitraffic Live ei ole käynnissä. Ota se käyttöön ja lisää asema sitten."
+      }
+    },
+    "weather_camera": {
+      "entry_type": "Kelikamera",
+      "initiate_flow": {
+        "user": "Lisää kelikamera",
+        "reconfigure": "Muokkaa kelikameraa"
+      },
+      "step": {
+        "user": {
+          "title": "Kelikamera",
+          "description": "Kuvaentiteetti yhden Fintrafficin kelikameran jokaiselle näkymälle. Kuva päivittyy, kun kamera ottaa uuden, noin kymmenen minuutin välein.",
+          "data": {
+            "camera": "Kamera",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "camera": "Kamerat on nimetty tien, kunnan ja paikan mukaan, esimerkiksi vt6 Lappeenranta Saimaan kanava."
+          }
+        },
+        "reconfigure": {
+          "title": "Kelikamera",
+          "description": "Kuinka usein kameran {name} uudet kuvat tarkistetaan.",
+          "data": {
+            "refresh_seconds": "Päivitysväli"
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Kamera tallennettu.",
+        "already_configured": "Tämä kamera on jo lisätty.",
+        "cannot_connect": "Kameraluetteloa ei saatu ladattua Digitrafficista. Yritä hetken kuluttua uudelleen.",
+        "entry_not_loaded": "Digitraffic Live ei ole käynnissä. Ota se käyttöön ja lisää kamera sitten."
+      }
     }
   },
   "selector": {
@@ -495,6 +561,43 @@
     },
     "request_failed": {
       "message": "Digitraffic-pyyntö epäonnistui: {error}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "road_temperature": {
+        "name": "Tien lämpötila"
+      },
+      "air_temperature": {
+        "name": "Ilman lämpötila"
+      },
+      "road_surface": {
+        "name": "Tienpinta",
+        "state": {
+          "dry": "Kuiva",
+          "moist": "Kostea",
+          "wet": "Märkä",
+          "wet_salty": "Märkä ja suolattu",
+          "frost": "Kuura",
+          "snow": "Lumi",
+          "ice": "Jää",
+          "probably_moist_salty": "Todennäköisesti kostea ja suolattu",
+          "slushy": "Sohjoinen"
+        }
+      },
+      "grip": {
+        "name": "Pito"
+      },
+      "road_warning": {
+        "name": "Tiesäävaroitus",
+        "state": {
+          "ok": "OK",
+          "beware": "Varo",
+          "alarm": "Hälytys",
+          "frost": "Kuura",
+          "rain": "Sade"
+        }
+      }
     }
   }
 }

@@ -11,14 +11,30 @@ from dataclasses import dataclass
 from typing import Any
 
 from .api import DigitrafficClient
-from .cache import DetailCache, fetch_each
+from .cache import DetailCache, details_name, fetch_each
 from .const import CONF_AREA, CONF_MARKER_VALUE
 from .feed import number_text, point_feature, row
 from .geo import Area
 from .texts import Texts
 
-# The value shown on a station's marker, and the sensor it comes from. Both are in the popup.
-MARKER_VALUES = {"air_temperature": "ILMA", "road_temperature": "TIE_1"}
+# Stations name their sensors consistently: road sensors numbered 1-4, one per lane or spot, and optical
+# sensors numbered 1-2. Many stations lack sensor 1, so each value comes from the first of these sensors
+# that has one.
+ROAD_TEMPERATURE = ("TIE_1", "TIE_2", "TIE_3", "TIE_4", "TIEN_LÄMPÖTILA_DST-ANT")
+AIR_TEMPERATURE = ("ILMA",)
+SURFACE = ("KELI_1", "KELI_2", "KELI_3", "KELI_4", "OPTISEN_ANTURIN_KELI1", "OPTISEN_ANTURIN_KELI2")
+WARNING = (
+    "VAROITUS_1",
+    "VAROITUS_2",
+    "VAROITUS_3",
+    "VAROITUS_4",
+    "OPTISEN_ANTURIN_VAROITUS1",
+    "OPTISEN_ANTURIN_VAROITUS2",
+)
+GRIP = ("KITKA1", "KITKA2")
+
+# The value shown on a station's marker, and the sensors it comes from. Both are in the popup.
+MARKER_VALUES = {"air_temperature": AIR_TEMPERATURE, "road_temperature": ROAD_TEMPERATURE}
 DEFAULT_MARKER_VALUE = "air_temperature"
 
 # Above this many stations in an area, one request for all of Finland is cheaper than one per station.
@@ -28,13 +44,27 @@ BULK_THRESHOLD = 25
 CAUTION_COLOR = "#f9a825"
 ALARM_COLOR = "#c62828"
 
-# Road surface codes (KELI_1, KELI_2): 0 fault, 1 dry, 2 moist, 3 wet, 4 wet and salty, 5 frost, 6 snow,
+# Road surface codes (KELI_n, OPTISEN_ANTURIN_KELIn): 0 fault, 1 dry, 2 moist, 3 wet, 4 wet and salty, 5 frost, 6 snow,
 # 7 ice, 8 probably moist and salty, 9 slushy.
 SURFACE_FAULT = 0
 SURFACE_CAUTION = frozenset({5, 6, 9})
 SURFACE_ICE = 7
-# Warning codes (VAROITUS_1): 0 OK, 1 beware, 2 alarm, 3 frost, 4 rain.
+# Warning codes (VAROITUS_n, OPTISEN_ANTURIN_VAROITUSn): 0 OK, 1 beware, 2 alarm, 3 frost, 4 rain.
 WARNING_ALARM = 2
+
+# States of the road surface and warning sensors, by code.
+SURFACE_STATES = {
+    1: "dry",
+    2: "moist",
+    3: "wet",
+    4: "wet_salty",
+    5: "frost",
+    6: "snow",
+    7: "ice",
+    8: "probably_moist_salty",
+    9: "slushy",
+}
+WARNING_STATES = {0: "ok", 1: "beware", 2: "alarm", 3: "frost", 4: "rain"}
 
 
 @dataclass(frozen=True)
@@ -59,17 +89,25 @@ class Station:
     name: str
 
 
-def stations_in_area(stations: Any, area: Area) -> list[Station]:
-    """Stations inside the area that are collecting data, from the station list."""
+def all_stations(stations: Any) -> list[Station]:
+    """Stations that are collecting data, from the station list."""
     result = []
     for feature in (stations or {}).get("features") or []:
         props = feature.get("properties") or {}
         coordinates = (feature.get("geometry") or {}).get("coordinates") or []
-        if len(coordinates) < 2 or props.get("collectionStatus") not in (None, "GATHERING"):
-            continue
-        if area.contains(coordinates[1], coordinates[0]):
+        if len(coordinates) >= 2 and props.get("collectionStatus") in (None, "GATHERING"):
             result.append(Station(str(feature.get("id")), coordinates[1], coordinates[0], str(props.get("name") or "")))
     return result
+
+
+def stations_in_area(stations: Any, area: Area) -> list[Station]:
+    return [station for station in all_stations(stations) if area.contains(station.latitude, station.longitude)]
+
+
+def station_options(stations: Any) -> list[tuple[str, str]]:
+    """(id, label) for choosing a station, sorted by name: "vt6 Lappeenranta Kärki (3036)"."""
+    result = sorted(all_stations(stations), key=lambda station: station.name.lower())
+    return [(station.id, f"{station.name.replace('_', ' ')} ({station.id})") for station in result]
 
 
 async def fetch_sensor_values(
@@ -90,8 +128,7 @@ async def fetch_sensor_values(
 
 def station_name(station: Station, details: Mapping[str, Any] | None, language: str) -> str:
     """The station's name in the chosen language: "Road 6 Lappeenranta, Kärki"."""
-    names = ((details or {}).get("properties") or {}).get("names") or {}
-    return names.get(language) or names.get("fi") or station.name.replace("_", " ")
+    return details_name(details, language) or station.name.replace("_", " ")
 
 
 def build_weather_station_features(
@@ -106,7 +143,7 @@ def build_weather_station_features(
         values = {str(value.get("name")): value for value in sensor_values.get(station.id) or []}
         if not values:
             continue
-        marker = numeric(values, MARKER_VALUES.get(marker_value, MARKER_VALUES[DEFAULT_MARKER_VALUE]))
+        marker = first_numeric(values, MARKER_VALUES.get(marker_value, MARKER_VALUES[DEFAULT_MARKER_VALUE]))
         features.append(
             point_feature(
                 f"weather_station:{station.id}",
@@ -132,51 +169,77 @@ def numeric(values: Mapping[str, Mapping[str, Any]], name: str) -> float | None:
     return None
 
 
+def first_numeric(values: Mapping[str, Mapping[str, Any]], names: Sequence[str]) -> float | None:
+    for name in names:
+        if (value := numeric(values, name)) is not None:
+            return value
+    return None
+
+
 def surface_code(values: Mapping[str, Mapping[str, Any]]) -> int | None:
-    """The road surface from the first surface sensor, or the second when the first reports a fault."""
-    for name in ("KELI_1", "KELI_2"):
+    """The road surface from the first surface sensor that isn't reporting a fault."""
+    for name in SURFACE:
         code = numeric(values, name)
         if code is not None and int(code) != SURFACE_FAULT:
             return int(code)
     return None
 
 
+def warning_code(values: Mapping[str, Mapping[str, Any]]) -> int | None:
+    warning = first_numeric(values, WARNING)
+    return int(warning) if warning is not None else None
+
+
 def station_color(values: Mapping[str, Mapping[str, Any]]) -> str | None:
     surface = surface_code(values)
-    warning = numeric(values, "VAROITUS_1")
-    if surface == SURFACE_ICE or (warning is not None and int(warning) == WARNING_ALARM):
+    warning = warning_code(values)
+    if surface == SURFACE_ICE or warning == WARNING_ALARM:
         return ALARM_COLOR
-    if surface in SURFACE_CAUTION or (warning is not None and int(warning) > 0):
+    if surface in SURFACE_CAUTION or (warning is not None and warning > 0):
         return CAUTION_COLOR
     return None
+
+
+def station_readings(values: Mapping[str, Mapping[str, Any]]) -> dict[str, float | str | None]:
+    """The values of a station's sensors, by sensor key. Values the station doesn't measure are None."""
+    surface = surface_code(values)
+    warning = warning_code(values)
+    return {
+        "road_temperature": first_numeric(values, ROAD_TEMPERATURE),
+        "air_temperature": first_numeric(values, AIR_TEMPERATURE),
+        "road_surface": SURFACE_STATES.get(surface) if surface is not None else None,
+        "grip": first_numeric(values, GRIP),
+        "road_warning": WARNING_STATES.get(warning) if warning is not None else None,
+    }
 
 
 def station_details(values: Mapping[str, Mapping[str, Any]], texts: Texts) -> list[dict[str, Any]]:
     rows = []
 
-    def measurement(name: str, label: str, unit: str, decimals: int = 1, skip_zero: bool = False) -> None:
-        value = numeric(values, name)
+    def measurement(names: Sequence[str], label: str, unit: str, decimals: int = 1, skip_zero: bool = False) -> None:
+        value = first_numeric(values, names)
         if value is not None and not (skip_zero and value == 0):
             rows.append(row(texts(label), number_text(value, decimals), unit))
 
-    def coded(name: str, label: str, prefix: str, code: int | None = None, skip: int | None = None) -> None:
-        if code is None:
-            value = numeric(values, name)
-            code = int(value) if value is not None else None
+    def coded(code: int | None, label: str, prefix: str, skip: int | None = None) -> None:
         if code is not None and code != skip and texts.has(f"{prefix}_{code}"):
             rows.append(row(texts(label), texts(f"{prefix}_{code}")))
 
-    measurement("TIE_1", "road_temperature", "°C")
-    measurement("ILMA", "air_temperature", "°C")
-    coded("KELI_1", "road_surface", "surface_code", code=surface_code(values))
-    coded("VAROITUS_1", "warning", "warning_code", skip=0)
-    measurement("KITKA1", "friction", "µ", decimals=2)
-    measurement("LUMEN_MÄÄRÄ1", "snow_on_road", "mm", skip_zero=True)
-    measurement("JÄÄN_MÄÄRÄ1", "ice_on_road", "mm", skip_zero=True)
-    measurement("KESKITUULI", "wind_speed", "m/s")
-    measurement("MAKSIMITUULI", "gusts", "m/s")
-    coded("SADE", "precipitation", "rain_code")
-    measurement("SADE_INTENSITEETTI", "rain_intensity", "mm/h", skip_zero=True)
-    measurement("NÄKYVYYS_KM", "visibility", "km")
-    measurement("ILMAN_KOSTEUS", "humidity", "%", decimals=0)
+    def sensor_code(name: str) -> int | None:
+        value = numeric(values, name)
+        return int(value) if value is not None else None
+
+    measurement(ROAD_TEMPERATURE, "road_temperature", "°C")
+    measurement(AIR_TEMPERATURE, "air_temperature", "°C")
+    coded(surface_code(values), "road_surface", "surface_code")
+    coded(warning_code(values), "warning", "warning_code", skip=0)
+    measurement(GRIP, "friction", "µ", decimals=2)
+    measurement(("LUMEN_MÄÄRÄ1",), "snow_on_road", "mm", skip_zero=True)
+    measurement(("JÄÄN_MÄÄRÄ1",), "ice_on_road", "mm", skip_zero=True)
+    measurement(("KESKITUULI",), "wind_speed", "m/s")
+    measurement(("MAKSIMITUULI",), "gusts", "m/s")
+    coded(sensor_code("SADE"), "precipitation", "rain_code")
+    measurement(("SADE_INTENSITEETTI",), "rain_intensity", "mm/h", skip_zero=True)
+    measurement(("NÄKYVYYS_KM",), "visibility", "km")
+    measurement(("ILMAN_KOSTEUS",), "humidity", "%", decimals=0)
     return rows

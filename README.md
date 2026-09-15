@@ -24,6 +24,8 @@ so other integrations and template entities can produce feeds for the same card.
   ahead.
 - **Road weather station feeds:** road and air temperature, road surface, grip, wind and precipitation.
 - **Weather camera feeds:** the latest picture from each view of Fintraffic's road cameras.
+- **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
+  surface, grip and road weather warnings, and an image entity for each camera view.
 
 ## Installation
 
@@ -125,11 +127,35 @@ by default) and an update interval (300 and 600 seconds). Station markers show t
 temperature if you choose so with **Value on the map**; the popup has both. Markers turn amber or red when the station
 warns about frost, snow or ice.
 
+### Road weather station
+
+Add with **Add road weather station** to get sensors for one station anywhere in Finland, for example to show on a
+dashboard. The station becomes a device named after it, with these sensors:
+
+| Sensor               | Description                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Road temperature     | °C                                                                                   |
+| Air temperature      | °C                                                                                   |
+| Road surface         | Dry, moist, wet, wet and salty, frost, snow, ice, probably moist and salty or slushy |
+| Grip                 | Friction coefficient µ, 0–1                                                          |
+| Road weather warning | OK, beware, alarm, frost or rain                                                     |
+
+Stations have up to four road sensors and two optical sensors, and many lack the first of them. Each value comes from
+the first sensor that has one, road sensors before optical ones. A value that the station doesn't measure at all stays
+unknown. Values are fetched every 300 seconds; change the interval with **Change road weather station**.
+
+### Weather camera
+
+Add with **Add weather camera** to get the pictures of one camera anywhere in Finland. The camera becomes a device with
+an image entity for each of its views, named after the direction it looks, such as *Imatralle*. Cameras take a new
+picture about every ten minutes, and the image entity updates when they do. New pictures are checked for every 600
+seconds; change the interval with **Change weather camera**.
+
 ## Sensors
 
-The state is the number of items in the feed: ships, trains, traffic messages, maintenance vehicles, weather
-stations or cameras. For road condition feeds it is the number of road sections with poor or extremely poor
-conditions, which is handy in automations. The attributes follow the
+Every feed has one sensor, whose state is the number of items in the feed: ships, trains, traffic messages,
+maintenance vehicles, weather stations or cameras. For road condition feeds it is the number of road sections with
+poor or extremely poor conditions, which is handy in automations. The attributes follow the
 [Map Feed format](https://github.com/jesmak/ha-map-card-plugin-map-feed/blob/main/docs/map-feed-format.md):
 
 | Name               | Description                                        |
@@ -142,6 +168,60 @@ conditions, which is handy in automations. The attributes follow the
 
 None of the attributes are stored in the recorder, only the count. A feed that can't be fetched becomes
 unavailable until the next successful update.
+
+## Dashboard cards
+
+Maps are drawn by the [map feed plugin](https://github.com/jesmak/ha-map-card-plugin-map-feed), whose README has
+examples for every feed type. Station sensors and camera images work with Home Assistant's own cards. The examples
+below come from a dashboard in Finnish. Entity IDs are made from the station or camera name and Home Assistant's
+language, so check yours on the device's page.
+
+### A road weather station
+
+<img src="docs/images/road-weather-station-card.png" alt="An entities card with road temperature, road surface, grip and warning" width="400">
+
+```yaml
+type: entities
+title: VT6 Luumäki
+entities:
+  - entity: sensor.tie_6_luumaki_kirkko_tien_lampotila
+    name: Tienpinta
+  - entity: sensor.tie_6_luumaki_kirkko_tienpinta
+    name: Keli
+  - entity: sensor.tie_6_luumaki_kirkko_pito
+    name: Kitka
+  - entity: sensor.tie_6_luumaki_kirkko_tiesaavaroitus
+    name: Varoitus
+```
+
+### Weather cameras
+
+<img src="docs/images/weather-camera-cards.png" alt="Six road camera pictures in two columns" width="400">
+
+Each picture is a `picture-entity` card. This is the YAML of a section in a sections view, where `columns: 6` puts
+two cards side by side:
+
+```yaml
+type: grid
+cards:
+  - type: picture-entity
+    entity: image.tie_6_lappeenranta_viipurintie_imatralle
+    name: VT6 Viipurintie I
+    show_state: false
+    fit_mode: cover
+    grid_options:
+      columns: 6
+  - type: picture-entity
+    entity: image.tie_6_lappeenranta_viipurintie_kouvolaan
+    name: VT6 Viipurintie L
+    show_state: false
+    fit_mode: cover
+    grid_options:
+      columns: 6
+  # ...and the same for image.tie_6_lappeenranta_saimaan_kanava_imatralle,
+  # image.tie_6_lappeenranta_saimaan_kanava_lappeenrantaan,
+  # image.tie_13_savitaipale_lappeenrantaan and image.tie_13_savitaipale_mikkeliin
+```
 
 ## Actions
 
@@ -184,9 +264,10 @@ python3.14 -m venv .venv
 | Path                                | What it contains                                      |
 | ----------------------------------- | ----------------------------------------------------- |
 | `__init__.py`                       | Setup: one coordinator per feed                       |
-| `config_flow.py`                    | The integration and the ship and train feed forms     |
+| `config_flow.py`                    | The integration, feed, station and camera forms       |
 | `coordinator.py`                    | Fetching feeds, and data shared between feeds         |
-| `sensor.py`                         | The feed sensors                                      |
+| `sensor.py`                         | The feed sensors and road weather station sensors     |
+| `image.py`                          | Weather camera image entities                         |
 | `ships.py`, `trains.py`             | Interpreting Digitraffic data and building feed items |
 | `traffic_messages.py`, `maintenance.py`, `road_conditions.py`, `weather_stations.py`, `weather_cameras.py` | The same for road data |
 | `geo.py`                            | Areas, geometry tests and line simplification         |
