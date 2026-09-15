@@ -1,0 +1,48 @@
+{
+ "type": "FeatureCollection",
+ "dataUpdatedTime": "2026-09-15T11:00:00Z",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": 200150638,
+    "time": "2026-09-15T11:10:35Z",
+    "created": "2026-09-15T11:13:04Z",
+    "tasks": [
+     "BRUSH_CLEARING"
+    ],
+    "direction": null,
+    "domain": "state-roads",
+    "source": "Harja/Väylävirasto"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.037322,
+     60.561
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": 200151440,
+    "time": "2026-09-15T11:15:22Z",
+    "created": "2026-09-15T11:18:11Z",
+    "tasks": [
+     "BRUSH_CLEARING"
+    ],
+    "direction": null,
+    "domain": "state-roads",
+    "source": "Harja/Väylävirasto"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.00822,
+     60.743875
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,60 @@
+{
+ "type": "FeatureCollection",
+ "dataUpdatedTime": "2026-09-15T11:00:00Z",
+ "features": [
+  {
+   "type": "Feature",
+   "id": 3036,
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.1243,
+     61.036434
+    ]
+   },
+   "properties": {
+    "id": 3036,
+    "name": "vt6_Lappeenranta_Kärki",
+    "collectionStatus": "GATHERING",
+    "dataUpdatedTime": "2026-03-23T06:45:01Z",
+    "state": "OK"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": 5007,
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.664768,
+     60.934604
+    ]
+   },
+   "properties": {
+    "id": 5007,
+    "name": "vt6_Luumäki_kko",
+    "collectionStatus": "GATHERING",
+    "dataUpdatedTime": "2024-11-27T03:05:18Z",
+    "state": null
+   }
+  },
+  {
+   "type": "Feature",
+   "id": 2002,
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     21.594519,
+     60.96268
+    ]
+   },
+   "properties": {
+    "id": 2002,
+    "name": "vt8_Pyhäranta_Ihode",
+    "collectionStatus": "GATHERING",
+    "dataUpdatedTime": "2025-05-06T03:04:45Z",
+    "state": null
+   }
+  }
+ ]
+}

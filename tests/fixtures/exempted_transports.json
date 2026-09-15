@@ -1,0 +1,123 @@
+{
+ "type": "FeatureCollection",
+ "dataUpdatedTime": "2026-09-15T11:00:00Z",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPolygon",
+    "coordinates": [
+     [
+      [
+       [
+        27.0,
+        60.5
+       ],
+       [
+        28.2,
+        60.5
+       ],
+       [
+        28.2,
+        61.3
+       ],
+       [
+        27.0,
+        61.3
+       ],
+       [
+        27.0,
+        60.5
+       ]
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "situationId": "GUID50470740",
+    "situationType": "exempted transport",
+    "trafficAnnouncementType": null,
+    "version": 4,
+    "releaseTime": "2026-09-15T05:14:24.317Z",
+    "versionTime": "2026-09-15T07:34:37.186Z",
+    "announcements": [
+     {
+      "language": "fi",
+      "title": "Erikoiskuljetus. Kainuu, Pohjois-Pohjanmaa",
+      "location": {
+       "countryCode": 6,
+       "locationTableNumber": 17,
+       "locationTableVersion": "1.11.45",
+       "description": "Kalajoki - Hyrynsalmi"
+      },
+      "locationDetails": {
+       "areaLocation": {
+        "areas": [
+         {
+          "name": "Hyrynsalmi",
+          "locationCode": 82,
+          "type": "municipality"
+         },
+         {
+          "name": "Kalajoki",
+          "locationCode": 123,
+          "type": "municipality"
+         }
+        ]
+       }
+      },
+      "features": [
+       {
+        "name": "Liikenne pysäytetään ajoittain"
+       },
+       {
+        "name": "Erikoiskuljetus"
+       },
+       {
+        "name": "Kuljetuksen pituus",
+        "quantity": 74.0,
+        "unit": "m"
+       }
+      ],
+      "roadWorkPhases": [],
+      "timeAndDuration": {
+       "startTime": "2026-09-15T05:30:00.000Z",
+       "endTime": "2026-09-15T13:00:00.000Z"
+      },
+      "additionalInformation": "Liikenne- ja kelitiedot verkossa: https://liikennetilanne.fintraffic.fi/",
+      "sender": "Fintraffic Tieliikennekeskus",
+      "lastActiveItinerarySegment": {
+       "startTime": "2026-09-15T08:15:00.000Z",
+       "endTime": "2026-09-15T10:15:00.000Z",
+       "legs": [
+        {
+         "roadLeg": {
+          "roadNumber": 28,
+          "roadName": "",
+          "startArea": "Kärsämäki",
+          "endArea": "Mainua"
+         },
+         "streetName": null
+        },
+        {
+         "roadLeg": {
+          "roadNumber": 5,
+          "roadName": "",
+          "startArea": "Mainua",
+          "endArea": "Kajaani"
+         },
+         "streetName": null
+        }
+       ]
+      }
+     }
+    ],
+    "contact": {
+     "phone": "02002100",
+     "email": "tampere.liikennekeskus@fintraffic.fi"
+    },
+    "dataUpdatedTime": null
+   }
+  }
+ ]
+}

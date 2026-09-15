@@ -1,0 +1,26 @@
+[
+ {
+  "id": "BRUSH_CLEARING",
+  "nameFi": "Koneellinen vesakonraivaus",
+  "nameEn": "Brush clearing",
+  "nameSv": "Slyklippning"
+ },
+ {
+  "id": "LEVELLING_GRAVEL_ROAD_SURFACE",
+  "nameFi": "Sorateiden tasaus",
+  "nameEn": "Levelling gravel road surface",
+  "nameSv": "Utjämning av grusväg"
+ },
+ {
+  "id": "PLOUGHING_AND_SLUSH_REMOVAL",
+  "nameFi": "Auraus ja sohjonpoisto",
+  "nameEn": "Ploughing and slush removal",
+  "nameSv": "Plog- och sörjröjning"
+ },
+ {
+  "id": "SPREADING_OF_CRUSH",
+  "nameFi": "Sorastus",
+  "nameEn": "Spreading of crush",
+  "nameSv": "Grusning"
+ }
+]

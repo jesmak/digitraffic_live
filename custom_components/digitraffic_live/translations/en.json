@@ -1,0 +1,500 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Digitraffic Live",
+        "description": "Live ships, trains and road traffic data from Fintraffic's Digitraffic, as map feeds. Once this is set up, add feeds from the integration page.",
+        "data": {
+          "language": "Language"
+        },
+        "data_description": {
+          "language": "Language of the texts written into feeds, such as ship types and popup rows."
+        }
+      },
+      "reconfigure": {
+        "title": "Digitraffic Live",
+        "data": {
+          "language": "Language"
+        },
+        "data_description": {
+          "language": "Language of the texts written into feeds, such as ship types and popup rows."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Digitraffic Live is already set up. Add more feeds from the integration page.",
+      "reconfigure_successful": "Settings saved."
+    }
+  },
+  "config_subentries": {
+    "ships": {
+      "entry_type": "Ship feed",
+      "initiate_flow": {
+        "user": "Add ship feed",
+        "reconfigure": "Change ship feed"
+      },
+      "step": {
+        "user": {
+          "title": "Ship feed",
+          "description": "Ships whose AIS position is inside the area. Most small leisure boats don't send AIS.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "ship_types": "Ship types",
+            "include_moored": "Include moored and anchored ships",
+            "icebreakers": "Highlight icebreakers",
+            "max_age_minutes": "Maximum position age",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "ship_types": "Leave empty for all types.",
+            "icebreakers": "Uses winter navigation data. Icebreakers are shown whatever the other filters say.",
+            "max_age_minutes": "Ships whose latest position is older than this are left out."
+          }
+        },
+        "reconfigure": {
+          "title": "Ship feed",
+          "description": "Ships whose AIS position is inside the area. Most small leisure boats don't send AIS.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "ship_types": "Ship types",
+            "include_moored": "Include moored and anchored ships",
+            "icebreakers": "Highlight icebreakers",
+            "max_age_minutes": "Maximum position age",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "ship_types": "Leave empty for all types.",
+            "icebreakers": "Uses winter navigation data. Icebreakers are shown whatever the other filters say.",
+            "max_age_minutes": "Ships whose latest position is older than this are left out."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
+    "trains": {
+      "entry_type": "Train feed",
+      "initiate_flow": {
+        "user": "Add train feed",
+        "reconfigure": "Change train feed"
+      },
+      "step": {
+        "user": {
+          "title": "Train feed",
+          "description": "Running trains with a GPS position. Limit the feed with route stations, an area, or both.",
+          "data": {
+            "name": "Name",
+            "route": "Route stations",
+            "categories": "Train categories",
+            "use_area": "Limit to an area",
+            "area": "Area",
+            "max_age_minutes": "Maximum position age",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "route": "Only trains that stop at every chosen station, e.g. Helsinki and Lappeenranta.",
+            "categories": "Leave empty for all categories.",
+            "area": "Used only when \"Limit to an area\" is on.",
+            "max_age_minutes": "Trains whose latest position is older than this are left out."
+          }
+        },
+        "reconfigure": {
+          "title": "Train feed",
+          "description": "Running trains with a GPS position. Limit the feed with route stations, an area, or both.",
+          "data": {
+            "name": "Name",
+            "route": "Route stations",
+            "categories": "Train categories",
+            "use_area": "Limit to an area",
+            "area": "Area",
+            "max_age_minutes": "Maximum position age",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "route": "Only trains that stop at every chosen station, e.g. Helsinki and Lappeenranta.",
+            "categories": "Leave empty for all categories.",
+            "area": "Used only when \"Limit to an area\" is on.",
+            "max_age_minutes": "Trains whose latest position is older than this are left out."
+          }
+        }
+      },
+      "error": {
+        "route_too_short": "Choose at least two route stations, or none.",
+        "route_or_area": "Choose route stations, turn on \"Limit to an area\", or both.",
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "cannot_connect": "The station list couldn't be loaded from Digitraffic. Try again in a moment.",
+        "entry_not_loaded": "Digitraffic Live isn't running. Enable it, then add the feed.",
+        "reconfigure_successful": "Feed saved."
+      }
+    },
+    "traffic_messages": {
+      "entry_type": "Traffic message feed",
+      "initiate_flow": {
+        "user": "Add traffic message feed",
+        "reconfigure": "Change traffic message feed"
+      },
+      "step": {
+        "user": {
+          "title": "Traffic message feed",
+          "description": "Road works, traffic announcements, weight restrictions and exempted transports that touch the area. The messages are published in Finnish.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "message_types": "Message types",
+            "upcoming_days": "Road works starting within",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "message_types": "Leave empty for all types.",
+            "upcoming_days": "Days ahead. 0 shows only road works in force now."
+          }
+        },
+        "reconfigure": {
+          "title": "Traffic message feed",
+          "description": "Road works, traffic announcements, weight restrictions and exempted transports that touch the area. The messages are published in Finnish.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "message_types": "Message types",
+            "upcoming_days": "Road works starting within",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "message_types": "Leave empty for all types.",
+            "upcoming_days": "Days ahead. 0 shows only road works in force now."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
+    "road_maintenance": {
+      "entry_type": "Road maintenance feed",
+      "initiate_flow": {
+        "user": "Add road maintenance feed",
+        "reconfigure": "Change road maintenance feed"
+      },
+      "step": {
+        "user": {
+          "title": "Road maintenance feed",
+          "description": "Maintenance vehicles such as snow ploughs and gritters on state roads in the area, and where they have worked. Most city streets are not included.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "tasks": "Tasks",
+            "max_age_minutes": "Maximum position age",
+            "show_routes": "Show where vehicles have worked",
+            "route_hours": "Routes from the last",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "tasks": "Leave empty for all tasks.",
+            "max_age_minutes": "Vehicles whose latest position is older than this are left out.",
+            "route_hours": "Hours, at most 24. Used only when routes are shown."
+          }
+        },
+        "reconfigure": {
+          "title": "Road maintenance feed",
+          "description": "Maintenance vehicles such as snow ploughs and gritters on state roads in the area, and where they have worked. Most city streets are not included.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "tasks": "Tasks",
+            "max_age_minutes": "Maximum position age",
+            "show_routes": "Show where vehicles have worked",
+            "route_hours": "Routes from the last",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "tasks": "Leave empty for all tasks.",
+            "max_age_minutes": "Vehicles whose latest position is older than this are left out.",
+            "route_hours": "Hours, at most 24. Used only when routes are shown."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
+    "road_conditions": {
+      "entry_type": "Road condition feed",
+      "initiate_flow": {
+        "user": "Add road condition feed",
+        "reconfigure": "Change road condition feed"
+      },
+      "step": {
+        "user": {
+          "title": "Road condition feed",
+          "description": "Fintraffic's driving conditions for sections of the main roads in the area, now or forecast up to 12 hours ahead. The sensor's state is the number of sections with poor conditions.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "forecast": "Time",
+            "only_poor": "Only poor conditions",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "only_poor": "Leave out sections with normal driving conditions."
+          }
+        },
+        "reconfigure": {
+          "title": "Road condition feed",
+          "description": "Fintraffic's driving conditions for sections of the main roads in the area, now or forecast up to 12 hours ahead. The sensor's state is the number of sections with poor conditions.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "forecast": "Time",
+            "only_poor": "Only poor conditions",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "only_poor": "Leave out sections with normal driving conditions."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
+    "weather_stations": {
+      "entry_type": "Road weather station feed",
+      "initiate_flow": {
+        "user": "Add road weather station feed",
+        "reconfigure": "Change road weather station feed"
+      },
+      "step": {
+        "user": {
+          "title": "Road weather station feed",
+          "description": "Road weather stations in the area: road and air temperature, road surface, grip, wind and precipitation.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "marker_value": "Value on the map",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "marker_value": "Shown in each station's marker. Both temperatures are in the popup."
+          }
+        },
+        "reconfigure": {
+          "title": "Road weather station feed",
+          "description": "Road weather stations in the area: road and air temperature, road surface, grip, wind and precipitation.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "marker_value": "Value on the map",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "marker_value": "Shown in each station's marker. Both temperatures are in the popup."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
+    "weather_cameras": {
+      "entry_type": "Weather camera feed",
+      "initiate_flow": {
+        "user": "Add weather camera feed",
+        "reconfigure": "Change weather camera feed"
+      },
+      "step": {
+        "user": {
+          "title": "Weather camera feed",
+          "description": "Fintraffic's road weather cameras in the area, with the latest picture from each view.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor."
+          }
+        },
+        "reconfigure": {
+          "title": "Weather camera feed",
+          "description": "Fintraffic's road weather cameras in the area, with the latest picture from each view.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor."
+          }
+        }
+      },
+      "error": {
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "fi": "Suomi",
+        "sv": "Svenska",
+        "en": "English"
+      }
+    },
+    "ship_types": {
+      "options": {
+        "cargo": "Cargo ships",
+        "tanker": "Tankers",
+        "passenger": "Passenger ships",
+        "pilot": "Pilot boats",
+        "tug": "Tugs",
+        "fishing": "Fishing vessels",
+        "pleasure": "Pleasure craft",
+        "other": "Other vessels"
+      }
+    },
+    "categories": {
+      "options": {
+        "long_distance": "Long-distance",
+        "commuter": "Commuter",
+        "cargo": "Cargo",
+        "locomotive": "Locomotive",
+        "test_drive": "Test drive",
+        "on_track_machines": "On-track machines",
+        "shunting": "Shunting"
+      }
+    },
+    "message_types": {
+      "options": {
+        "road_works": "Road works",
+        "traffic_announcements": "Traffic announcements",
+        "weight_restrictions": "Weight restrictions",
+        "exempted_transports": "Exempted transports"
+      }
+    },
+    "forecast": {
+      "options": {
+        "0h": "Now",
+        "2h": "In 2 hours",
+        "4h": "In 4 hours",
+        "6h": "In 6 hours",
+        "12h": "In 12 hours"
+      }
+    },
+    "tasks": {
+      "options": {
+        "BRUSHING": "Brushing",
+        "BRUSH_CLEARING": "Brush clearing",
+        "CLEANSING_OF_BRIDGES": "Cleansing of bridges",
+        "CLEANSING_OF_REST_AREAS": "Cleansing of rest areas",
+        "CLEANSING_OF_TRAFFIC_SIGNS": "Cleansing of traffic signs",
+        "CLIENTS_QUALITY_CONTROL": "Clients quality control",
+        "COMPACTION_BY_ROLLING": "Compaction by rolling",
+        "CRACK_FILLING": "Crack filling",
+        "DITCHING": "Ditching",
+        "DUST_BINDING_OF_GRAVEL_ROAD_SURFACE": "Dust binding of gravel road surface",
+        "DUST_BINDING_OF_PAVED_ROAD_SURFACE": "Dust binding of paved road surface",
+        "ENSURING_TRAFFIC_IN_RASPUTITSA": "Ensuring traffic in frost heave damage location",
+        "FILLING_OF_GRAVEL_ROAD_SHOULDERS": "Filling of gravel road shoulders",
+        "FILLING_OF_ROAD_SHOULDERS": "Filling of paved road shoulders",
+        "GARBAGE_OLLECTION": "Garbage collection",
+        "GROUP_REPLACEMENT_OF_LAMPS": "Group replacement of lamps",
+        "HEATING": "Heating",
+        "LEVELLING_GRAVEL_ROAD_SURFACE": "Levelling gravel road surface",
+        "LEVELLING_OF_ROAD_SHOULDERS": "Levelling of road shoulders",
+        "LEVELLING_OF_ROAD_SHOULDERS_UNDER_RAILING": "Levelling of road shoulders under the railing",
+        "LEVELLING_OF_ROAD_SURFACE": "Levelling of road surface",
+        "LINE_SANDING": "Line sanding",
+        "LOWERING_OF_SNOWBANKS": "Lowering of snowbanks",
+        "MAINTENANCE_OF_GUIDE_SIGNS_AND_REFLECTOR_POSTS": "Maintenance of guide signs and reflector posts",
+        "MECHANICAL_CUT": "Mechanical cut",
+        "MIXING_OR_STABILIZATION": "Mixing or stabilization",
+        "OTHER": "Other",
+        "OTHER_OPERATIONS_OF_LIGHTING_CONTRACTS": "Other operations of lighting contracts",
+        "PATCHING": "Patching",
+        "PAVING": "Paving",
+        "PLOUGHING_AND_SLUSH_REMOVAL": "Ploughing and slush removal",
+        "PLOUGHING_OF_SLUSH_DITCH": "Ploughing of slush ditch",
+        "PREVENTING_MELTING_WATER_PROBLEMS": "Preventing melting water problems",
+        "REMOVAL_OF_BULGE_ICE": "Removal of bulge ice",
+        "RENEWAL_OF_EDGE_COLUMNS": "Renewal of reflector posts",
+        "RESHAPING_GRAVEL_ROAD_SURFACE": "Reshaping gravel road surface",
+        "ROAD_INSPECTIONS": "Road inspections ",
+        "ROAD_MARKINGS": "Road markings",
+        "ROAD_STATE_CHECKING": "Road state checking",
+        "SAFETY_EQUIPMENT": "Safety equipment",
+        "SALTING": "Salting",
+        "SERVICE_ROUND": "Service round",
+        "SNOW_PLOUGHING_STICKS_AND_SNOW_FENCES": "Snow-ploughing sticks and snow fences",
+        "SPOT_SANDING": "Spot sanding",
+        "SPREADING_OF_CRUSH": "Spreading of crush",
+        "TRANSFER_OF_SNOW": "Transfer of snow",
+        "UNKNOWN": "Unknown"
+      }
+    },
+    "marker_value": {
+      "options": {
+        "air_temperature": "Air temperature",
+        "road_temperature": "Road temperature"
+      }
+    }
+  },
+  "services": {
+    "get_train_composition": {
+      "name": "Get train composition",
+      "description": "Returns a train's cars and services as map feed popup rows. The map card calls this when a train's popup opens.",
+      "fields": {
+        "departure_date": {
+          "name": "Departure date",
+          "description": "The date the train left its first station."
+        },
+        "train_number": {
+          "name": "Train number",
+          "description": "For example 8 for IC 8."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Digitraffic Live isn't set up or is disabled."
+    },
+    "request_failed": {
+      "message": "Digitraffic request failed: {error}"
+    }
+  }
+}
