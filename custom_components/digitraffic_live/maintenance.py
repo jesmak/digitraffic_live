@@ -26,7 +26,8 @@ from .feed import point_feature, row, shape_feature, time_range, utc_iso
 from .geo import Area, haversine_km, line_geometry, simplify_path
 from .texts import Texts
 
-# Task ids of the maintenance tracking API, for the task setting.
+# Task ids of the maintenance tracking API. The task setting stores them in lower case, as Home Assistant
+# requires for selector options.
 MAINTENANCE_TASKS = (
     "BRUSHING",
     "BRUSH_CLEARING",
@@ -94,7 +95,7 @@ class MaintenanceFeedConfig:
 
     @classmethod
     def from_data(cls, data: Mapping[str, Any]) -> MaintenanceFeedConfig:
-        chosen = set(data.get(CONF_TASKS) or ())
+        chosen = {str(task).upper() for task in data.get(CONF_TASKS) or ()}
         return cls(
             area=Area.from_selector(data[CONF_AREA]),
             tasks=tuple(task for task in MAINTENANCE_TASKS if task in chosen),
