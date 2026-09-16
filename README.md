@@ -1,5 +1,17 @@
 # Digitraffic Live for Home Assistant
 
+Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds.
+
+[![GitHub Release][releases-shield]][releases]
+[![License][license-shield]](LICENSE)
+[![GitHub Activity][commits-shield]][commits]
+
+## Support
+
+Hey dude! Help me out for a couple of :beers: or a :coffee:!
+
+[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/jesmak)
+
 ## What is it?
 
 A custom component that turns live ships, trains and road traffic data from
@@ -281,3 +293,9 @@ python3.14 -m venv .venv
 To add a language, copy `texts/en.json` and `translations/en.json` to `<code>.json`, translate the values, and
 add the code to `LANGUAGES` in `const.py`. The tests check that every language has the same keys and
 placeholders as English.
+
+[commits-shield]: https://img.shields.io/github/commit-activity/y/jesmak/digitraffic_live.svg?style=for-the-badge
+[commits]: https://github.com/jesmak/digitraffic_live/commits/main
+[license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
+[releases]: https://github.com/jesmak/digitraffic_live/releases
