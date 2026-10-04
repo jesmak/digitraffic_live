@@ -366,6 +366,55 @@
         "reconfigure_successful": "Feed saved."
       }
     },
+    "station_departures": {
+      "entry_type": "Station departures",
+      "initiate_flow": {
+        "user": "Add station departures",
+        "reconfigure": "Change station departures"
+      },
+      "step": {
+        "user": {
+          "title": "Station departures",
+          "description": "The next passenger trains to leave the station. The sensor is shown by the departures card (departures-card).",
+          "data": {
+            "name": "Name",
+            "station": "Station",
+            "stops_at": "Stops at",
+            "departures": "Number of departures",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the sensor's name.",
+            "stops_at": "Only trains that stop at this station later, such as only those from Helsinki that go to Lappeenranta. Leave empty to include all.",
+            "departures": "How many of the next departures the sensor lists, 1–20."
+          }
+        },
+        "reconfigure": {
+          "title": "Station departures",
+          "description": "The next passenger trains to leave the station. The sensor is shown by the departures card (departures-card).",
+          "data": {
+            "name": "Name",
+            "station": "Station",
+            "stops_at": "Stops at",
+            "departures": "Number of departures",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the sensor's name.",
+            "stops_at": "Only trains that stop at this station later, such as only those from Helsinki that go to Lappeenranta. Leave empty to include all.",
+            "departures": "How many of the next departures the sensor lists, 1–20."
+          }
+        }
+      },
+      "error": {
+        "stops_at_same_station": "Choose a station other than the one the trains leave from."
+      },
+      "abort": {
+        "cannot_connect": "The station list couldn't be loaded from Digitraffic. Try again in a moment.",
+        "entry_not_loaded": "Digitraffic Live isn't running. Enable it, then add the feed.",
+        "reconfigure_successful": "Feed saved."
+      }
+    },
     "road_weather_station": {
       "entry_type": "Road weather station",
       "initiate_flow": {

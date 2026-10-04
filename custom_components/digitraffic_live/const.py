@@ -10,6 +10,9 @@ ATTRIBUTION: Final = "Fintraffic / digitraffic.fi, CC BY 4.0"
 # Version of the Map Feed format the sensors write (docs/map-feed-format.md in ha-map-card-plugin-map-feed).
 MAP_FEED_VERSION: Final = 1
 
+# Version of the departures format the station departure sensors write (docs/departures-format.md in departures-card).
+DEPARTURES_VERSION: Final = 1
+
 # Languages for the texts the integration writes into feeds. Each needs a texts/<code>.json file.
 LANGUAGES: Final = ["fi", "sv", "en"]
 
@@ -24,6 +27,8 @@ SUBENTRY_ROAD_MAINTENANCE: Final = "road_maintenance"
 SUBENTRY_ROAD_CONDITIONS: Final = "road_conditions"
 SUBENTRY_WEATHER_STATIONS: Final = "weather_stations"
 SUBENTRY_WEATHER_CAMERAS: Final = "weather_cameras"
+# The next departures from one railway station, as a departures sensor rather than a map feed
+SUBENTRY_STATION_DEPARTURES: Final = "station_departures"
 # A single road weather station or camera, which becomes a device with its own entities
 SUBENTRY_ROAD_WEATHER_STATION: Final = "road_weather_station"
 SUBENTRY_WEATHER_CAMERA: Final = "weather_camera"
@@ -49,6 +54,9 @@ CONF_MARKER_VALUE: Final = "marker_value"
 
 # Road weather station and camera settings (config subentry data)
 CONF_STATION: Final = "station"
+# Station departure settings; the station uses CONF_STATION
+CONF_STOPS_AT: Final = "stops_at"
+CONF_DEPARTURES: Final = "departures"
 CONF_CAMERA: Final = "camera"
 
 # Digitraffic caches most responses for about a minute, so polling faster only repeats the same data.
@@ -65,6 +73,9 @@ DEFAULT_TRAFFIC_MESSAGE_REFRESH_SECONDS: Final = 300
 DEFAULT_ROAD_CONDITION_REFRESH_SECONDS: Final = 600
 DEFAULT_WEATHER_STATION_REFRESH_SECONDS: Final = 300
 DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS: Final = 600
+
+DEFAULT_DEPARTURES: Final = 5
+MAX_DEPARTURES: Final = 20
 
 # Actions
 SERVICE_GET_TRAIN_COMPOSITION: Final = "get_train_composition"

@@ -1,4 +1,5 @@
-"""Digitraffic Live: live ships, trains and road traffic data from Fintraffic's Digitraffic, as map feeds.
+"""Digitraffic Live: live ships, trains and road traffic data from Fintraffic's Digitraffic, as map feeds, and the next
+departures from railway stations.
 
 Each feed is a config subentry with its own coordinator and sensor. The sensor
 writes the Map Feed format, which the map feed plugin for ha-map-card draws.
@@ -24,8 +25,9 @@ from .const import CONF_LANGUAGE, DOMAIN
 from .coordinator import COORDINATORS, DigitrafficConfigEntry, DigitrafficRuntimeData, PeriodicValue
 from .services import async_setup_services
 from .ships import VesselRegister, icebreaker_mmsis
+from .station_departures import station_name_index
 from .texts import async_load_texts
-from .trains import passenger_notice_index
+from .trains import PassengerNotices, passenger_notices
 
 PLATFORMS = [Platform.SENSOR, Platform.IMAGE]
 
@@ -53,15 +55,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
     async def fetch_icebreakers() -> set[int]:
         return icebreaker_mmsis(await client.winter_navigation_vessels())
 
-    async def fetch_notices() -> dict[str, list[str]]:
-        return passenger_notice_index(await client.passenger_information(), language)
+    async def fetch_notices() -> PassengerNotices:
+        return passenger_notices(await client.passenger_information(), language)
+
+    async def fetch_station_names() -> dict[str, str]:
+        return station_name_index(await client.stations())
 
     entry.runtime_data = DigitrafficRuntimeData(
         client=client,
         texts=await async_load_texts(hass, language),
         vessel_register=VesselRegister(),
         icebreakers=PeriodicValue("icebreakers", ICEBREAKER_REFRESH_SECONDS, fetch_icebreakers, set()),
-        notices=PeriodicValue("passenger notices", PASSENGER_NOTICES_REFRESH_SECONDS, fetch_notices, {}),
+        notices=PeriodicValue(
+            "passenger notices", PASSENGER_NOTICES_REFRESH_SECONDS, fetch_notices, PassengerNotices({}, [])
+        ),
         maintenance_tasks=PeriodicValue("maintenance tasks", DAILY_REFRESH_SECONDS, client.maintenance_tasks, []),
         forecast_sections=PeriodicValue("forecast sections", DAILY_REFRESH_SECONDS, client.forecast_sections, {}),
         weather_station_list=PeriodicValue(
@@ -70,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
         weather_station_details=DetailCache("weather station", client.weather_station),
         camera_list=PeriodicValue("weather cameras", STATION_LIST_REFRESH_SECONDS, client.weathercam_stations, {}),
         camera_details=DetailCache("weather camera", client.weathercam_station),
+        station_names=PeriodicValue("railway stations", DAILY_REFRESH_SECONDS, fetch_station_names, {}),
     )
 
     remove_stale_devices(hass, entry)

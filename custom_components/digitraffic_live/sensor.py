@@ -1,11 +1,15 @@
-"""Map feed sensors, one per feed, and the sensors of road weather stations.
+"""Map feed sensors, one per feed, station departure sensors, and the sensors of road weather stations.
 
 A feed sensor's state is the number of items; the items are in the `geojson`
 attribute, in the Map Feed format (docs/map-feed-format.md in ha-map-card-plugin-map-feed).
+A station departure sensor's state is the time of the next train that isn't cancelled;
+the departures are in the `departures` attribute, in the departures format
+(docs/departures-format.md in departures-card).
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -19,9 +23,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
+    DEPARTURES_VERSION,
     DOMAIN,
     MAP_FEED_VERSION,
     SUBENTRY_ROAD_CONDITIONS,
@@ -32,7 +38,12 @@ from .const import (
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
 )
-from .coordinator import DigitrafficConfigEntry, FeedCoordinator, WeatherStationCoordinator
+from .coordinator import (
+    DigitrafficConfigEntry,
+    FeedCoordinator,
+    StationDeparturesCoordinator,
+    WeatherStationCoordinator,
+)
 from .feed import feature_collection
 from .weather_stations import SURFACE_STATES, WARNING_STATES, station_readings
 
@@ -96,6 +107,8 @@ async def async_setup_entry(
     for subentry_id, coordinator in entry.runtime_data.coordinators.items():
         if isinstance(coordinator, FeedCoordinator):
             async_add_entities([MapFeedSensor(coordinator)], config_subentry_id=subentry_id)
+        elif isinstance(coordinator, StationDeparturesCoordinator):
+            async_add_entities([StationDeparturesSensor(coordinator)], config_subentry_id=subentry_id)
         elif isinstance(coordinator, WeatherStationCoordinator):
             async_add_entities(
                 [StationSensor(coordinator, description) for description in STATION_SENSORS],
@@ -139,6 +152,51 @@ class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
         if data := self.coordinator.data:
             attributes["updated"] = data.updated.isoformat(timespec="seconds")
             attributes["geojson"] = feature_collection(data.features)
+        return attributes
+
+
+class StationDeparturesSensor(CoordinatorEntity[StationDeparturesCoordinator], SensorEntity):
+    """The time of a station's next train that isn't cancelled, with the live estimate when there is one."""
+
+    # The departures change on every update; the next departure time is history enough.
+    _unrecorded_attributes = frozenset({"departures", "notices"})
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_icon = "mdi:train-variant"
+
+    def __init__(self, coordinator: StationDeparturesCoordinator) -> None:
+        super().__init__(coordinator)
+        subentry = coordinator.subentry
+        self._attr_unique_id = subentry.subentry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            manufacturer="Fintraffic",
+            model_id=coordinator.departures_config.station,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        data = self.coordinator.data
+        departure = data.next_departure if data else None
+        return dt_util.parse_datetime(departure["estimated"]) if departure else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.data
+        if data is None:
+            return {}
+        attributes: dict[str, Any] = {
+            "departures_version": DEPARTURES_VERSION,
+            "stop_id": data.station,
+            "stop_name": data.name,
+        }
+        if data.notices:
+            attributes["notices"] = data.notices
+        attributes["departures"] = data.departures
         return attributes
 
 

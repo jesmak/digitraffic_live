@@ -181,5 +181,20 @@
   "work_grass_cutting": "Slåtter",
   "work_maintenance": "Underhåll",
   "work_culvert_replacement": "Byte av trumma",
-  "work_other": "Annat arbete"
+  "work_other": "Annat arbete",
+  "cause_A": "Trafikering",
+  "cause_E": "Före tidtabellen",
+  "cause_H": "Personal",
+  "cause_I": "Annan orsak",
+  "cause_J": "Tågbildning",
+  "cause_K": "Fel på materielen",
+  "cause_L": "Trafikledning",
+  "cause_M": "Passagerarservice",
+  "cause_O": "Olycka",
+  "cause_P": "Fel i styrsystem",
+  "cause_R": "Banarbete",
+  "cause_S": "Kontaktledning",
+  "cause_T": "Banfel",
+  "cause_V": "Fel på dragfordon",
+  "cause_X": "Annan orsak"
 }

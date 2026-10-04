@@ -1,4 +1,6 @@
-"""Update coordinators: one per config subentry, which is a map feed, a road weather station or a camera.
+"""Update coordinators: one per config subentry.
+
+A subentry is a map feed, a railway station's departures, a road weather station or a road weather camera.
 
 Data that several feeds need (vessel register, icebreakers, passenger notices,
 road station lists and details) lives in DigitrafficRuntimeData and is shared.
@@ -34,6 +36,7 @@ from .const import (
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_ROAD_WEATHER_STATION,
     SUBENTRY_SHIPS,
+    SUBENTRY_STATION_DEPARTURES,
     SUBENTRY_TRAFFIC_MESSAGES,
     SUBENTRY_TRAINS,
     SUBENTRY_WEATHER_CAMERA,
@@ -44,9 +47,10 @@ from .geo import Area
 from .maintenance import MaintenanceFeedConfig, build_maintenance_features, fetch_maintenance, task_names
 from .road_conditions import RoadConditionFeedConfig, build_road_condition_features, count_poor, section_index
 from .ships import ShipFeedConfig, VesselRegister, build_ship_features, fetch_ship_positions
+from .station_departures import PASSENGER_CATEGORIES, StationDeparturesConfig, build_departures
 from .texts import Texts
 from .traffic_messages import TrafficMessageFeedConfig, build_traffic_message_features, fetch_traffic_messages
-from .trains import TrainFeedConfig, build_train_features, build_train_query
+from .trains import PassengerNotices, TrainFeedConfig, build_train_features, build_train_query
 from .weather_cameras import (
     WeatherCameraFeedConfig,
     build_weather_camera_features,
@@ -111,13 +115,15 @@ class DigitrafficRuntimeData:
     texts: Texts
     vessel_register: VesselRegister
     icebreakers: PeriodicValue[set[int]]
-    notices: PeriodicValue[dict[str, list[str]]]
+    notices: PeriodicValue[PassengerNotices]
     maintenance_tasks: PeriodicValue[list[dict[str, Any]]]
     forecast_sections: PeriodicValue[dict[str, Any]]
     weather_station_list: PeriodicValue[dict[str, Any]]
     weather_station_details: DetailCache[str]
     camera_list: PeriodicValue[dict[str, Any]]
     camera_details: DetailCache[str]
+    # Railway station names by short code, for where each departing train is heading.
+    station_names: PeriodicValue[dict[str, str]]
     coordinators: dict[str, SubentryCoordinator[Any]] = field(default_factory=dict)
 
 
@@ -221,7 +227,7 @@ class TrainFeedCoordinator(FeedCoordinator):
         runtime = self.runtime
         trains = await runtime.client.running_trains(self._query)
         notices = await runtime.notices.get()
-        return build_train_features(trains, notices, self.feed_config, runtime.texts, dt_util.utcnow())
+        return build_train_features(trains, notices.trains, self.feed_config, runtime.texts, dt_util.utcnow())
 
 
 class TrafficMessageFeedCoordinator(FeedCoordinator):
@@ -313,6 +319,56 @@ class WeatherCameraFeedCoordinator(FeedCoordinator):
         return build_weather_camera_features(cameras, runtime.camera_details, times, runtime.texts.language)
 
 
+@dataclass(frozen=True)
+class StationDepartures:
+    station: str
+    name: str
+    # Departures in the departures format, soonest first.
+    departures: list[dict[str, Any]]
+    # Station-wide passenger notices in force, such as track works.
+    notices: list[str]
+
+    @property
+    def next_departure(self) -> dict[str, Any] | None:
+        """The first departure that isn't cancelled."""
+        return next((departure for departure in self.departures if not departure.get("cancelled")), None)
+
+
+class StationDeparturesCoordinator(SubentryCoordinator[StationDepartures]):
+    """The next passenger trains to leave one railway station."""
+
+    def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
+        super().__init__(hass, entry, subentry)
+        self.departures_config = StationDeparturesConfig.from_data(subentry.data)
+
+    async def _async_update_data(self) -> StationDepartures:
+        runtime = self.runtime
+        config = self.departures_config
+        names = await runtime.station_names.get()
+        if not runtime.station_names.loaded:
+            raise UpdateFailed("Digitraffic's station list couldn't be loaded")
+        try:
+            # A station's own list is mostly commuter trains at a big one: Helsinki's next twenty leave within a quarter
+            # of an hour, and a train to the "stops at" station wouldn't be among them.
+            if config.stops_at:
+                trains = await runtime.client.trains_between(config.station, config.stops_at, config.fetch_count)
+            else:
+                trains = await runtime.client.station_departures(
+                    config.station, config.fetch_count, PASSENGER_CATEGORIES
+                )
+        except DigitrafficError as err:
+            raise UpdateFailed(str(err)) from err
+        # Notices only add to the departures: without them, the departures are shown all the same.
+        notices = await runtime.notices.get()
+        departures = build_departures(trains, config, names, notices.trains, runtime.texts)
+        return StationDepartures(
+            config.station,
+            names.get(config.station, config.station),
+            departures,
+            notices.for_station(config.station, dt_util.utcnow()),
+        )
+
+
 class WeatherStationCoordinator(SubentryCoordinator[dict[str, Mapping[str, Any]]]):
     """The latest sensor values of one road weather station, by sensor name."""
 
@@ -369,6 +425,7 @@ COORDINATORS: dict[str, type[SubentryCoordinator[Any]]] = {
     SUBENTRY_ROAD_CONDITIONS: RoadConditionFeedCoordinator,
     SUBENTRY_WEATHER_STATIONS: WeatherStationFeedCoordinator,
     SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedCoordinator,
+    SUBENTRY_STATION_DEPARTURES: StationDeparturesCoordinator,
     SUBENTRY_ROAD_WEATHER_STATION: WeatherStationCoordinator,
     SUBENTRY_WEATHER_CAMERA: WeatherCameraCoordinator,
 }

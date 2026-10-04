@@ -181,5 +181,20 @@
   "work_grass_cutting": "Niitto",
   "work_maintenance": "Kunnossapito",
   "work_culvert_replacement": "Rummun uusiminen",
-  "work_other": "Muu työ"
+  "work_other": "Muu työ",
+  "cause_A": "Liikennöinti",
+  "cause_E": "Etuajassa",
+  "cause_H": "Henkilökunta",
+  "cause_I": "Muu syy",
+  "cause_J": "Junan kokoaminen",
+  "cause_K": "Kalustovika",
+  "cause_L": "Liikenteenohjaus",
+  "cause_M": "Matkustajapalvelu",
+  "cause_O": "Onnettomuus",
+  "cause_P": "Ohjausjärjestelmät",
+  "cause_R": "Ratatyö",
+  "cause_S": "Sähkörata",
+  "cause_T": "Ratavika",
+  "cause_V": "Veturivika",
+  "cause_X": "Muu syy"
 }

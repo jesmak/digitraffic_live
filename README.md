@@ -40,6 +40,9 @@ so other integrations and template entities can produce feeds for the same card.
 - **Weather camera feeds:** the latest picture from each view of Fintraffic's road cameras.
 - **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
   surface, grip and road weather warnings, and an image entity for each camera view.
+- **Station departures:** the next passenger trains to leave a railway station, optionally only those that stop at
+  another station later, with live estimates, delays, tracks, cancellations and their reasons. Shown by
+  [departures-card](https://github.com/jesmak/departures-card).
 
 ## Installation
 
@@ -165,6 +168,19 @@ an image entity for each of its views, named after the direction it looks, such 
 picture about every ten minutes, and the image entity updates when they do. New pictures are checked for every 600
 seconds; change the interval with **Change weather camera**.
 
+### Station departures
+
+Add with **Add station departures** to get a sensor with the next passenger trains to leave one station. Cargo and
+work trains are left out.
+
+| Name            | Type    | Description                                                                                   | Default |
+| --------------- | ------- | --------------------------------------------------------------------------------------------- | ------- |
+| Name            | string  | Name of the sensor                                                                            |         |
+| Station         | station | The station the trains leave from                                                             |         |
+| Stops at        | station | Only trains that stop at this station later, such as only those from Helsinki to Lappeenranta | none    |
+| Departures      | number  | How many of the next departures the sensor lists, 1–20                                        | 5       |
+| Update interval | seconds | How often the departures are fetched, at least 30                                             | 60      |
+
 ## Sensors
 
 Every feed has one sensor, whose state is the number of items in the feed: ships, trains, traffic messages,
@@ -182,6 +198,32 @@ poor or extremely poor conditions, which is handy in automations. The attributes
 
 None of the attributes are stored in the recorder, only the count. A feed that can't be fetched becomes
 unavailable until the next successful update.
+
+### Station departures
+
+A station departures sensor's state is the time of the next train that isn't cancelled: its live estimate when there
+is one, otherwise the timetable time. The attributes follow the
+[departures format](https://github.com/jesmak/departures-card/blob/main/docs/departures-format.md), which
+[departures-card](https://github.com/jesmak/departures-card) shows:
+
+| Name                 | Description                          |
+| -------------------- | ------------------------------------ |
+| `departures_version` | Always `1`                           |
+| `stop_id`            | The station's short code, e.g. `HKI` |
+| `stop_name`          | The station's name                   |
+| `notices`            | Station-wide notices in force now    |
+| `departures`         | The next departures, soonest first   |
+| `attribution`        | Data credit                          |
+
+Each departure has its train (`IC 45`, or the line letter of a commuter train), where it is heading, the timetable
+time and the live estimate, the delay in seconds, the track, and whether it is cancelled. A train's own passenger
+notice, such as "Passengers are directed to train S 106", is in `notice`. Without one, a cancelled or late train has
+the reason there instead, in the integration's language: rolling stock, track work, traffic control and so on.
+Digitraffic gives the reasons as category codes; their texts are the integration's own.
+
+`notices` holds Digitraffic's passenger notices for the whole station while they are in force, such as track works
+with buses replacing trains, in the integration's language when Digitraffic has it, otherwise in Finnish. Only the
+next departure time is stored in the recorder.
 
 ## Dashboard cards
 

@@ -2,7 +2,8 @@
 
 The config entry holds only the language. Each feed is a config subentry
 (ships, trains, traffic messages, road maintenance, road conditions, weather
-stations or weather cameras), added and changed from the integration page.
+stations or weather cameras), added and changed from the integration page, and so
+is each railway station's departures.
 """
 
 from __future__ import annotations
@@ -42,6 +43,7 @@ from .const import (
     CONF_AREA,
     CONF_CAMERA,
     CONF_CATEGORIES,
+    CONF_DEPARTURES,
     CONF_FORECAST,
     CONF_ICEBREAKERS,
     CONF_INCLUDE_MOORED,
@@ -56,9 +58,11 @@ from .const import (
     CONF_SHIP_TYPES,
     CONF_SHOW_ROUTES,
     CONF_STATION,
+    CONF_STOPS_AT,
     CONF_TASKS,
     CONF_UPCOMING_DAYS,
     CONF_USE_AREA,
+    DEFAULT_DEPARTURES,
     DEFAULT_MAINTENANCE_MAX_AGE_MINUTES,
     DEFAULT_REFRESH_SECONDS,
     DEFAULT_ROAD_CONDITION_REFRESH_SECONDS,
@@ -71,11 +75,13 @@ from .const import (
     DEFAULT_WEATHER_STATION_REFRESH_SECONDS,
     DOMAIN,
     LANGUAGES,
+    MAX_DEPARTURES,
     MIN_REFRESH_SECONDS,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_ROAD_WEATHER_STATION,
     SUBENTRY_SHIPS,
+    SUBENTRY_STATION_DEPARTURES,
     SUBENTRY_TRAFFIC_MESSAGES,
     SUBENTRY_TRAINS,
     SUBENTRY_WEATHER_CAMERA,
@@ -144,6 +150,7 @@ class DigitrafficLiveConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_ROAD_CONDITIONS: RoadConditionFeedFlow,
             SUBENTRY_WEATHER_STATIONS: WeatherStationFeedFlow,
             SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedFlow,
+            SUBENTRY_STATION_DEPARTURES: StationDeparturesFlow,
             SUBENTRY_ROAD_WEATHER_STATION: RoadWeatherStationFlow,
             SUBENTRY_WEATHER_CAMERA: WeatherCameraFlow,
         }
@@ -244,25 +251,11 @@ class TrainFeedFlow(FeedFlow):
     _stations: list[SelectOptionDict] | None = None
 
     async def async_schema(self) -> vol.Schema | SubentryFlowResult:
-        entry = self._get_entry()
-        if entry.state is not ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
         if self._stations is None:
-            try:
-                stations = await entry.runtime_data.client.stations()
-            except DigitrafficError:
-                return self.async_abort(reason="cannot_connect")
-            self._stations = sorted(
-                (
-                    SelectOptionDict(
-                        value=station["stationShortCode"],
-                        label=f"{station_name(station['stationName'])} ({station['stationShortCode']})",
-                    )
-                    for station in stations
-                    if station.get("passengerTraffic")
-                ),
-                key=lambda option: option["label"],
-            )
+            stations = await passenger_stations(self)
+            if isinstance(stations, dict):  # an abort result
+                return stations
+            self._stations = stations
 
         return vol.Schema(
             {
@@ -306,6 +299,72 @@ class TrainFeedFlow(FeedFlow):
             # Without the area enabled the feed covers all of Finland; don't keep a stale circle around.
             data.pop(CONF_AREA, None)
         return data
+
+
+class StationDeparturesFlow(FeedFlow):
+    """The next departures from one station, optionally only trains that stop at another station later."""
+
+    _stations: list[SelectOptionDict] | None = None
+
+    async def async_schema(self) -> vol.Schema | SubentryFlowResult:
+        if self._stations is None:
+            stations = await passenger_stations(self)
+            if isinstance(stations, dict):  # an abort result
+                return stations
+            self._stations = stations
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_NAME): TextSelector(),
+                vol.Required(CONF_STATION): SelectSelector(
+                    SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)
+                ),
+                vol.Optional(CONF_STOPS_AT): SelectSelector(
+                    SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)
+                ),
+                vol.Required(CONF_DEPARTURES): NumberSelector(
+                    NumberSelectorConfig(min=1, max=MAX_DEPARTURES, step=1, mode=NumberSelectorMode.BOX)
+                ),
+                vol.Required(CONF_REFRESH_SECONDS): REFRESH_SELECTOR,
+            }
+        )
+
+    def defaults(self) -> dict[str, Any]:
+        return {CONF_DEPARTURES: DEFAULT_DEPARTURES, CONF_REFRESH_SECONDS: DEFAULT_REFRESH_SECONDS}
+
+    def validate(self, data: dict[str, Any]) -> dict[str, str]:
+        if data.get(CONF_STOPS_AT) and data[CONF_STOPS_AT] == data[CONF_STATION]:
+            return {CONF_STOPS_AT: "stops_at_same_station"}
+        return {}
+
+    def clean(self, data: dict[str, Any]) -> dict[str, Any]:
+        data = super().clean(data)
+        data[CONF_DEPARTURES] = int(data[CONF_DEPARTURES])
+        if not data.get(CONF_STOPS_AT):
+            data.pop(CONF_STOPS_AT, None)
+        return data
+
+
+async def passenger_stations(flow: ConfigSubentryFlow) -> list[SelectOptionDict] | SubentryFlowResult:
+    """Every station passenger trains stop at, as options sorted by name; an abort when the list can't be had."""
+    entry = flow._get_entry()
+    if entry.state is not ConfigEntryState.LOADED:
+        return flow.async_abort(reason="entry_not_loaded")
+    try:
+        stations = await entry.runtime_data.client.stations()
+    except DigitrafficError:
+        return flow.async_abort(reason="cannot_connect")
+    return sorted(
+        (
+            SelectOptionDict(
+                value=station["stationShortCode"],
+                label=f"{station_name(station['stationName'])} ({station['stationShortCode']})",
+            )
+            for station in stations
+            if station.get("passengerTraffic")
+        ),
+        key=lambda option: option["label"],
+    )
 
 
 class AreaFeedFlow(FeedFlow):

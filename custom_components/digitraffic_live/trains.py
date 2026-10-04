@@ -155,24 +155,71 @@ def notice_key(train_number: Any, departure_date: Any) -> str:
     return f"{train_number}|{departure_date}"
 
 
-def passenger_notice_index(messages: Any, language: str) -> dict[str, list[str]]:
-    """Train-specific passenger notices by notice_key().
+def notice_text(message: Mapping[str, Any], language: str) -> str | None:
+    """A notice's text in the chosen language when available, otherwise Finnish, English or Swedish."""
+    texts = (message.get("video") or {}).get("text") or (message.get("audio") or {}).get("text") or {}
+    return texts.get(language) or texts.get("fi") or texts.get("en") or texts.get("sv")
 
-    Station-wide notices (without a train number) are left out. Texts are in the
-    chosen language when available, otherwise Finnish, English or Swedish.
-    """
+
+def passenger_notice_index(messages: Any, language: str) -> dict[str, list[str]]:
+    """Train-specific passenger notices by notice_key(). Station-wide notices (without a train number) are left out."""
     index: dict[str, list[str]] = {}
     for message in messages if isinstance(messages, list) else []:
         if not message.get("trainNumber") or not message.get("trainDepartureDate"):
             continue
-        texts = (message.get("video") or {}).get("text") or (message.get("audio") or {}).get("text") or {}
-        text = texts.get(language) or texts.get("fi") or texts.get("en") or texts.get("sv")
+        text = notice_text(message, language)
         if not text:
             continue
         notices = index.setdefault(notice_key(message["trainNumber"], message["trainDepartureDate"]), [])
         if text not in notices:
             notices.append(text)
     return index
+
+
+@dataclass(frozen=True)
+class StationNotice:
+    """A notice for stations rather than one train, such as track works with buses replacing trains."""
+
+    stations: frozenset[str]
+    start: datetime | None
+    end: datetime | None
+    text: str
+
+
+@dataclass(frozen=True)
+class PassengerNotices:
+    trains: dict[str, list[str]]
+    stations: list[StationNotice]
+
+    def for_station(self, station: str, now: datetime) -> list[str]:
+        """The station-wide notices in force at a station.
+
+        Only the validity period counts. The notices also say when station screens show them (9.55–18.20, say), but the
+        track works go on when the screen goes quiet.
+        """
+        texts: list[str] = []
+        for notice in self.stations:
+            in_force = (notice.start is None or notice.start <= now) and (notice.end is None or now <= notice.end)
+            if station in notice.stations and in_force and notice.text not in texts:
+                texts.append(notice.text)
+        return texts
+
+
+def passenger_notices(messages: Any, language: str) -> PassengerNotices:
+    """Active passenger notices, per train and per station."""
+    stations = []
+    for message in messages if isinstance(messages, list) else []:
+        if message.get("trainNumber") or not (text := notice_text(message, language)):
+            continue
+        stations.append(
+            StationNotice(
+                stations=frozenset(str(code) for code in message.get("stations") or ()),
+                start=dt_util.parse_datetime(message.get("startValidity") or ""),
+                end=dt_util.parse_datetime(message.get("endValidity") or ""),
+                text=text,
+            )
+        )
+    return PassengerNotices(passenger_notice_index(messages, language), stations)
 
 
 def composition_details(data: Mapping[str, Any] | None, texts: Texts) -> list[dict[str, Any]]:

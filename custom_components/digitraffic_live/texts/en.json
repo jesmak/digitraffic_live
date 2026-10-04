@@ -181,5 +181,20 @@
   "work_grass_cutting": "Grass cutting",
   "work_maintenance": "Maintenance",
   "work_culvert_replacement": "Culvert replacement",
-  "work_other": "Other work"
+  "work_other": "Other work",
+  "cause_A": "Traffic operations",
+  "cause_E": "Running early",
+  "cause_H": "Staff",
+  "cause_I": "Other cause",
+  "cause_J": "Train formation",
+  "cause_K": "Rolling stock",
+  "cause_L": "Traffic control",
+  "cause_M": "Passenger service",
+  "cause_O": "Accident",
+  "cause_P": "Signalling systems",
+  "cause_R": "Track work",
+  "cause_S": "Overhead line",
+  "cause_T": "Track fault",
+  "cause_V": "Locomotive fault",
+  "cause_X": "Other cause"
 }

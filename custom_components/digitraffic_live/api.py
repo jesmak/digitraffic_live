@@ -98,6 +98,23 @@ class DigitrafficClient:
         """Cars and services of one train run. Raises DigitrafficNotFound for trains without one."""
         return await self._request("GET", f"{RAILWAY_API}/v1/compositions/{departure_date}/{train_number}")
 
+    async def station_departures(self, station: str, count: int, categories: Sequence[str]) -> list[dict[str, Any]]:
+        """The next `count` trains to leave a station, with their whole timetables; ones already gone are left out."""
+        params = {
+            "departing_trains": str(count),
+            "arriving_trains": "0",
+            "departed_trains": "0",
+            "arrived_trains": "0",
+            "include_nonstopping": "false",
+            "train_categories": ",".join(categories),
+        }
+        return await self._request("GET", f"{RAILWAY_API}/v1/live-trains/station/{station}", params=params)
+
+    async def trains_between(self, station: str, stops_at: str, count: int) -> list[dict[str, Any]]:
+        """The next `count` trains to leave `station` that stop at `stops_at` later, of any category."""
+        params = {"limit": str(count), "include_nonstopping": "false"}
+        return await self._request("GET", f"{RAILWAY_API}/v1/live-trains/station/{station}/{stops_at}", params=params)
+
     async def stations(self) -> list[dict[str, Any]]:
         """Every station and stop, with names and short codes."""
         return await self._request("GET", f"{RAILWAY_API}/v1/metadata/stations")

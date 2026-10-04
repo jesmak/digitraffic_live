@@ -366,6 +366,55 @@
         "reconfigure_successful": "Flödet har sparats."
       }
     },
+    "station_departures": {
+      "entry_type": "Stationens avgångar",
+      "initiate_flow": {
+        "user": "Lägg till stationens avgångar",
+        "reconfigure": "Ändra stationens avgångar"
+      },
+      "step": {
+        "user": {
+          "title": "Stationens avgångar",
+          "description": "De närmaste persontågen som avgår från stationen. Sensorn visas i avgångskortet (departures-card).",
+          "data": {
+            "name": "Namn",
+            "station": "Station",
+            "stops_at": "Stannar vid station",
+            "departures": "Antal avgångar",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Också sensorns namn.",
+            "stops_at": "Bara tåg som senare stannar vid denna station, t.ex. från Helsingfors bara de som går till Villmanstrand. Lämna tomt för att ta med alla.",
+            "departures": "Hur många av de närmaste avgångarna sensorn listar, 1–20."
+          }
+        },
+        "reconfigure": {
+          "title": "Stationens avgångar",
+          "description": "De närmaste persontågen som avgår från stationen. Sensorn visas i avgångskortet (departures-card).",
+          "data": {
+            "name": "Namn",
+            "station": "Station",
+            "stops_at": "Stannar vid station",
+            "departures": "Antal avgångar",
+            "refresh_seconds": "Uppdateringsintervall"
+          },
+          "data_description": {
+            "name": "Också sensorns namn.",
+            "stops_at": "Bara tåg som senare stannar vid denna station, t.ex. från Helsingfors bara de som går till Villmanstrand. Lämna tomt för att ta med alla.",
+            "departures": "Hur många av de närmaste avgångarna sensorn listar, 1–20."
+          }
+        }
+      },
+      "error": {
+        "stops_at_same_station": "Välj en annan station än den tågen avgår från."
+      },
+      "abort": {
+        "cannot_connect": "Stationslistan kunde inte hämtas från Digitraffic. Försök igen om en stund.",
+        "entry_not_loaded": "Digitraffic Live körs inte. Aktivera det och lägg sedan till flödet.",
+        "reconfigure_successful": "Flödet har sparats."
+      }
+    },
     "road_weather_station": {
       "entry_type": "Vägväderstation",
       "initiate_flow": {

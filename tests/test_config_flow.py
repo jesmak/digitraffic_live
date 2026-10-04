@@ -112,6 +112,30 @@ async def test_train_feed_validation_and_creation(hass: HomeAssistant, digitraff
     assert hass.states.get("sensor.trains_hki_lr").state == "1"
 
 
+async def test_adding_station_departures(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
+    entry = await setup_entry(hass)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station_departures"), context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    departures = {"name": "Lappeenranta → Helsinki", "station": "LR", "departures": 5, "refresh_seconds": 60}
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], departures | {"stops_at": "LR"})
+    assert result["errors"] == {"stops_at": "stops_at_same_station"}
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], departures | {"stops_at": "HKI"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.lappeenranta_helsinki")
+    assert state.state == "2026-10-04T14:48:00+00:00", "the first train that isn't cancelled"
+    assert state.attributes["departures_version"] == 1
+    assert (state.attributes["stop_id"], state.attributes["stop_name"]) == ("LR", "Lappeenranta")
+    assert state.attributes["notices"] == ["Track work: buses replace trains between Lappeenranta and Imatra."]
+    assert [departure["line"] for departure in state.attributes["departures"]] == ["IC 101", "S 103", "IC 105"]
+    assert state.attributes["device_class"] == "timestamp"
+
+
 async def test_reconfiguring_a_feed(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "ships"), context={"source": SOURCE_USER})

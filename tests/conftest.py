@@ -121,7 +121,13 @@ def running_trains() -> dict[str, Any]:
 
 
 PASSENGER_INFORMATION = [
-    {"trainNumber": 8, "trainDepartureDate": "2026-09-14", "video": {"text": {"en": "Delayed by track works."}}}
+    {"trainNumber": 8, "trainDepartureDate": "2026-09-14", "video": {"text": {"en": "Delayed by track works."}}},
+    {
+        "stations": ["LR", "IMR"],
+        "startValidity": "2026-01-01T00:00:00Z",
+        "endValidity": "2099-01-01T00:00:00Z",
+        "video": {"text": {"en": "Track work: buses replace trains between Lappeenranta and Imatra."}},
+    },
 ]
 
 COMPOSITION = {
@@ -134,6 +140,86 @@ STATIONS = [
     {"stationName": "Helsinki asema", "stationShortCode": "HKI", "passengerTraffic": True},
     {"stationName": "Lappeenranta", "stationShortCode": "LR", "passengerTraffic": True},
     {"stationName": "Ahonpää", "stationShortCode": "AHO", "passengerTraffic": False},
+]
+
+
+def timetable_row(station: str, kind: str, scheduled: str, **extra: Any) -> dict[str, Any]:
+    return {
+        "stationShortCode": station,
+        "type": kind,
+        "scheduledTime": scheduled,
+        "commercialStop": True,
+        "cancelled": False,
+    } | extra
+
+
+# Made-up trains leaving Lappeenranta, shaped like the railway API's live-trains/station answer.
+STATION_TRAINS = [
+    {
+        "trainNumber": 101,
+        "departureDate": "2026-10-04",
+        "trainType": "IC",
+        "trainCategory": "Long-distance",
+        "commuterLineID": "",
+        "cancelled": False,
+        "timeTableRows": [
+            timetable_row(
+                "LR",
+                "DEPARTURE",
+                "2026-10-04T14:41:00.000Z",
+                liveEstimateTime="2026-10-04T14:48:00.000Z",
+                differenceInMinutes=7,
+                commercialTrack="001",
+                causes=[{"categoryCode": "K", "detailedCategoryCode": "K2"}],
+            ),
+            timetable_row("HKI", "ARRIVAL", "2026-10-04T16:45:00.000Z"),
+        ],
+    },
+    {
+        "trainNumber": 103,
+        "departureDate": "2026-10-04",
+        "trainType": "S",
+        "trainCategory": "Long-distance",
+        "cancelled": True,
+        "timeTableRows": [
+            timetable_row("LR", "DEPARTURE", "2026-10-04T15:43:00.000Z", commercialTrack="2", cancelled=True),
+            timetable_row("HKI", "ARRIVAL", "2026-10-04T17:45:00.000Z", cancelled=True, causes=[{"categoryCode": "R"}]),
+        ],
+    },
+    {
+        "trainNumber": 9001,
+        "departureDate": "2026-10-04",
+        "trainType": "HL",
+        "trainCategory": "Commuter",
+        "commuterLineID": "R",
+        "cancelled": False,
+        "timeTableRows": [
+            timetable_row("LR", "DEPARTURE", "2026-10-04T15:10:00.000Z", liveEstimateTime="2026-10-04T15:10:00.000Z"),
+            timetable_row("KV", "ARRIVAL", "2026-10-04T16:00:00.000Z"),
+        ],
+    },
+    {
+        "trainNumber": 99,
+        "departureDate": "2026-10-04",
+        "trainType": "IC",
+        "trainCategory": "Long-distance",
+        "cancelled": False,
+        "timeTableRows": [
+            timetable_row("LR", "DEPARTURE", "2026-10-04T14:01:00.000Z", actualTime="2026-10-04T14:02:00.000Z"),
+            timetable_row("HKI", "ARRIVAL", "2026-10-04T16:05:00.000Z"),
+        ],
+    },
+    {
+        "trainNumber": 105,
+        "departureDate": "2026-10-04",
+        "trainType": "IC",
+        "trainCategory": "Long-distance",
+        "cancelled": False,
+        "timeTableRows": [
+            timetable_row("LR", "DEPARTURE", "2026-10-04T17:41:00.000Z", commercialTrack="002"),
+            timetable_row("HKI", "ARRIVAL", "2026-10-04T19:45:00.000Z"),
+        ],
+    },
 ]
 
 
@@ -150,6 +236,8 @@ def digitraffic_api(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     aioclient_mock.get(f"{RAILWAY_API}/v1/compositions/2026-09-14/8", json=COMPOSITION)
     aioclient_mock.get(f"{RAILWAY_API}/v1/compositions/2026-09-14/9", status=404)
     aioclient_mock.get(f"{RAILWAY_API}/v1/metadata/stations", json=STATIONS)
+    aioclient_mock.get(f"{RAILWAY_API}/v1/live-trains/station/LR/HKI", json=STATION_TRAINS)
+    aioclient_mock.get(f"{RAILWAY_API}/v1/live-trains/station/LR", json=STATION_TRAINS)
     return aioclient_mock
 
 
