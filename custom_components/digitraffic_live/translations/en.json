@@ -293,7 +293,7 @@
       "step": {
         "user": {
           "title": "Road weather station feed",
-          "description": "Road weather stations in the area: road and air temperature, road surface, grip, wind and precipitation.",
+          "description": "Road weather stations in the area with their road and air temperature, road surface, grip, wind and precipitation.",
           "data": {
             "name": "Name",
             "area": "Area",
@@ -307,7 +307,7 @@
         },
         "reconfigure": {
           "title": "Road weather station feed",
-          "description": "Road weather stations in the area: road and air temperature, road surface, grip, wind and precipitation.",
+          "description": "Road weather stations in the area with their road and air temperature, road surface, grip, wind and precipitation.",
           "data": {
             "name": "Name",
             "area": "Area",
@@ -424,7 +424,7 @@
       "step": {
         "user": {
           "title": "Road weather station",
-          "description": "Sensors for one of Fintraffic's road weather stations: road and air temperature, road surface, grip and road weather warning.",
+          "description": "Sensors for one of Fintraffic's road weather stations, such as road and air temperature, road surface, grip, wind, precipitation and visibility.",
           "data": {
             "station": "Station",
             "refresh_seconds": "Update interval"
@@ -636,6 +636,17 @@
       "grip": {
         "name": "Grip"
       },
+      "grip_condition": {
+        "name": "Grip condition",
+        "state": {
+          "good": "Good grip",
+          "fair": "Fair grip",
+          "good_winter": "Good winter conditions",
+          "fair_winter": "Fair winter conditions",
+          "slippery": "Slippery",
+          "very_slippery": "Very slippery"
+        }
+      },
       "road_warning": {
         "name": "Road weather warning",
         "state": {
@@ -645,6 +656,48 @@
           "frost": "Frost",
           "rain": "Rain"
         }
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      },
+      "wind_gusts": {
+        "name": "Wind gusts"
+      },
+      "precipitation": {
+        "name": "Precipitation",
+        "state": {
+          "none": "None",
+          "light": "Light rain",
+          "moderate": "Moderate rain",
+          "heavy": "Heavy rain",
+          "light_snow": "Light snow or sleet",
+          "moderate_snow": "Moderate snow or sleet",
+          "heavy_snow": "Heavy snow or sleet"
+        }
+      },
+      "precipitation_type": {
+        "name": "Precipitation type",
+        "state": {
+          "none": "None",
+          "very_light": "Very light precipitation",
+          "drizzle": "Drizzle",
+          "rain": "Rain",
+          "snow": "Snow",
+          "wet_sleet": "Wet sleet",
+          "sleet": "Sleet",
+          "hail": "Hail",
+          "ice_crystals": "Ice crystals",
+          "snow_grains": "Snow grains",
+          "graupel": "Graupel",
+          "freezing_drizzle": "Freezing drizzle",
+          "freezing_rain": "Freezing rain"
+        }
+      },
+      "rain_intensity": {
+        "name": "Rain intensity"
+      },
+      "visibility": {
+        "name": "Visibility"
       }
     }
   }

@@ -32,6 +32,29 @@ WARNING = (
     "OPTISEN_ANTURIN_VAROITUS2",
 )
 GRIP = ("KITKA1", "KITKA2")
+WIND_SPEED = ("KESKITUULI",)
+WIND_GUSTS = ("MAKSIMITUULI",)
+PRECIPITATION = "SADE"
+PRECIPITATION_TYPE = "SATEEN_OLOMUOTO_PWDXX"
+RAIN_INTENSITY = ("SADE_INTENSITEETTI",)
+VISIBILITY = "NÄKYVYYS_KM"
+# A few stations give visibility only in metres.
+VISIBILITY_METRES = "NÄKYVYYS_M"
+
+# Finnra's slipperiness classes by friction, each with its lower limit, from the most grip down. Source: Nurmi, Hippi
+# and Juga, "Evaluation of FMI's new forecast model of road surface friction", SIRWEC 2010, figure 1. The top two
+# share "good road condition" there and are kept apart here. They are named for grip alone: the figure calls them
+# clear and wet and clear and dry, but today's stations report 0.75-0.82 on a wet road.
+GRIP_CONDITIONS = (
+    (0.45, "good"),
+    (0.30, "fair"),
+    (0.25, "good_winter"),
+    (0.20, "fair_winter"),
+    (0.15, "slippery"),
+    (0.0, "very_slippery"),
+)
+GRIP_CAUTION = frozenset({"slippery", "fair_winter", "good_winter"})
+GRIP_ALARM = "very_slippery"
 
 # The value shown on a station's marker, and the sensors it comes from. Both are in the popup.
 MARKER_VALUES = {"air_temperature": AIR_TEMPERATURE, "road_temperature": ROAD_TEMPERATURE}
@@ -40,7 +63,8 @@ DEFAULT_MARKER_VALUE = "air_temperature"
 # Above this many stations in an area, one request for all of Finland is cheaper than one per station.
 BULK_THRESHOLD = 25
 
-# Colours for stations that warn about the road: amber for caution, red for ice or an alarm.
+# Colours for stations that warn about the road: amber for caution or winter grip, red for ice, an alarm or very
+# slippery grip.
 CAUTION_COLOR = "#f9a825"
 ALARM_COLOR = "#c62828"
 
@@ -65,6 +89,33 @@ SURFACE_STATES = {
     9: "slushy",
 }
 WARNING_STATES = {0: "ok", 1: "beware", 2: "alarm", 3: "frost", 4: "rain"}
+# Precipitation codes (SADE): 0 none, 1-3 light to heavy rain, 4-6 light to heavy snow or sleet.
+PRECIPITATION_STATES = {
+    0: "none",
+    1: "light",
+    2: "moderate",
+    3: "heavy",
+    4: "light_snow",
+    5: "moderate_snow",
+    6: "heavy_snow",
+}
+# Precipitation type codes (SATEEN_OLOMUOTO_PWDXX), measured by the present weather sensor. They run on from SADE's.
+PRECIPITATION_TYPES = {
+    7: "none",
+    8: "very_light",
+    9: "drizzle",
+    10: "rain",
+    11: "snow",
+    12: "wet_sleet",
+    13: "sleet",
+    14: "hail",
+    15: "ice_crystals",
+    16: "snow_grains",
+    17: "graupel",
+    18: "freezing_drizzle",
+    19: "freezing_rain",
+}
+PRECIPITATION_TYPE_NONE = 7
 
 
 @dataclass(frozen=True)
@@ -174,6 +225,13 @@ def first_numeric(values: Mapping[str, Mapping[str, Any]], names: Sequence[str])
     return None
 
 
+def visibility_km(values: Mapping[str, Mapping[str, Any]]) -> float | None:
+    if (km := numeric(values, VISIBILITY)) is not None:
+        return km
+    metres = numeric(values, VISIBILITY_METRES)
+    return metres / 1000 if metres is not None else None
+
+
 def surface_code(values: Mapping[str, Mapping[str, Any]]) -> int | None:
     """The road surface from the first surface sensor that isn't reporting a fault."""
     for name in SURFACE:
@@ -188,12 +246,19 @@ def warning_code(values: Mapping[str, Mapping[str, Any]]) -> int | None:
     return int(warning) if warning is not None else None
 
 
+def grip_condition(grip: float | None) -> str | None:
+    if grip is None:
+        return None
+    return next((condition for limit, condition in GRIP_CONDITIONS if grip >= limit), GRIP_ALARM)
+
+
 def station_color(values: Mapping[str, Mapping[str, Any]]) -> str | None:
     surface = surface_code(values)
     warning = warning_code(values)
-    if surface == SURFACE_ICE or warning == WARNING_ALARM:
+    grip = grip_condition(first_numeric(values, GRIP))
+    if surface == SURFACE_ICE or warning == WARNING_ALARM or grip == GRIP_ALARM:
         return ALARM_COLOR
-    if surface in SURFACE_CAUTION or (warning is not None and warning > 0):
+    if surface in SURFACE_CAUTION or (warning is not None and warning > 0) or grip in GRIP_CAUTION:
         return CAUTION_COLOR
     return None
 
@@ -202,12 +267,22 @@ def station_readings(values: Mapping[str, Mapping[str, Any]]) -> dict[str, float
     """The values of a station's sensors, by sensor key. Values the station doesn't measure are None."""
     surface = surface_code(values)
     warning = warning_code(values)
+    grip = first_numeric(values, GRIP)
+    precipitation = numeric(values, PRECIPITATION)
+    kind = numeric(values, PRECIPITATION_TYPE)
     return {
         "road_temperature": first_numeric(values, ROAD_TEMPERATURE),
         "air_temperature": first_numeric(values, AIR_TEMPERATURE),
         "road_surface": SURFACE_STATES.get(surface) if surface is not None else None,
-        "grip": first_numeric(values, GRIP),
+        "grip": grip,
+        "grip_condition": grip_condition(grip),
         "road_warning": WARNING_STATES.get(warning) if warning is not None else None,
+        "wind_speed": first_numeric(values, WIND_SPEED),
+        "wind_gusts": first_numeric(values, WIND_GUSTS),
+        "precipitation": PRECIPITATION_STATES.get(int(precipitation)) if precipitation is not None else None,
+        "precipitation_type": PRECIPITATION_TYPES.get(int(kind)) if kind is not None else None,
+        "rain_intensity": first_numeric(values, RAIN_INTENSITY),
+        "visibility": visibility_km(values),
     }
 
 
@@ -231,13 +306,17 @@ def station_details(values: Mapping[str, Mapping[str, Any]], texts: Texts) -> li
     measurement(AIR_TEMPERATURE, "air_temperature", "°C")
     coded(surface_code(values), "road_surface", "surface_code")
     coded(warning_code(values), "warning", "warning_code", skip=0)
+    if condition := grip_condition(first_numeric(values, GRIP)):
+        rows.append(row(texts("grip_condition"), texts(f"friction_{condition}")))
     measurement(GRIP, "friction", "µ", decimals=2)
     measurement(("LUMEN_MÄÄRÄ1",), "snow_on_road", "mm", skip_zero=True)
     measurement(("JÄÄN_MÄÄRÄ1",), "ice_on_road", "mm", skip_zero=True)
-    measurement(("KESKITUULI",), "wind_speed", "m/s")
-    measurement(("MAKSIMITUULI",), "gusts", "m/s")
-    coded(sensor_code("SADE"), "precipitation", "rain_code")
-    measurement(("SADE_INTENSITEETTI",), "rain_intensity", "mm/h", skip_zero=True)
-    measurement(("NÄKYVYYS_KM",), "visibility", "km")
+    measurement(WIND_SPEED, "wind_speed", "m/s")
+    measurement(WIND_GUSTS, "gusts", "m/s")
+    coded(sensor_code(PRECIPITATION), "precipitation", "rain_code")
+    coded(sensor_code(PRECIPITATION_TYPE), "precipitation_type", "rain_type", skip=PRECIPITATION_TYPE_NONE)
+    measurement(RAIN_INTENSITY, "rain_intensity", "mm/h", skip_zero=True)
+    if (visibility := visibility_km(values)) is not None:
+        rows.append(row(texts("visibility"), number_text(visibility), "km"))
     measurement(("ILMAN_KOSTEUS",), "humidity", "%", decimals=0)
     return rows

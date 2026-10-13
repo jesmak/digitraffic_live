@@ -42,7 +42,9 @@ from custom_components.digitraffic_live.weather_cameras import (
 from custom_components.digitraffic_live.weather_stations import (
     build_weather_station_features,
     fetch_sensor_values,
+    grip_condition,
     station_color,
+    station_details,
     station_options,
     station_readings,
     stations_in_area,
@@ -314,7 +316,14 @@ def test_station_readings() -> None:
         "air_temperature": 14.6,
         "road_surface": "dry",
         "grip": 0.82,
+        "grip_condition": "good",
         "road_warning": "ok",
+        "wind_speed": 1.5,
+        "wind_gusts": 3.2,
+        "precipitation": "none",
+        "precipitation_type": "none",
+        "rain_intensity": 0.0,
+        "visibility": 20.0,
     }
 
 
@@ -329,13 +338,25 @@ def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
         "air_temperature": None,
         "road_surface": "ice",
         "grip": 0.31,
+        "grip_condition": "fair",
         "road_warning": "alarm",
+        "wind_speed": None,
+        "wind_gusts": None,
+        "precipitation": None,
+        "precipitation_type": None,
+        "rain_intensity": None,
+        "visibility": None,
     }
     optical = station_readings(values(TIEN_LÄMPÖTILA_DST_ANT=-1.4, ILMA=2.0, OPTISEN_ANTURIN_KELI1=5, OPTISEN_ANTURIN_VAROITUS1=3))
     assert optical["road_temperature"] == -1.4
     assert optical["road_surface"] == "frost"
     assert optical["road_warning"] == "frost"
     assert optical["grip"] is None
+    assert optical["grip_condition"] is None
+    assert station_readings(values(SADE=5))["precipitation"] == "moderate_snow"
+    assert station_readings(values(SATEEN_OLOMUOTO_PWDXX=19))["precipitation_type"] == "freezing_rain"
+    assert station_readings(values(NÄKYVYYS_M=850))["visibility"] == 0.85
+    assert station_readings(values(NÄKYVYYS_KM=12.0, NÄKYVYYS_M=850))["visibility"] == 12.0
     assert station_color(values(TIE_2=-0.6, KELI_2=7)) == "#c62828"
 
     [feature] = build_weather_station_features(
@@ -347,6 +368,48 @@ def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
     )
     assert feature["properties"]["badge"] == "-1°"
     assert feature["properties"]["details"][0]["value"] == "-1.4"
+
+
+def test_grip_condition_limits() -> None:
+    # Each limit belongs to the class above it.
+    expected = {
+        0.82: "good",
+        0.45: "good",
+        0.44: "fair",
+        0.30: "fair",
+        0.29: "good_winter",
+        0.25: "good_winter",
+        0.24: "fair_winter",
+        0.20: "fair_winter",
+        0.19: "slippery",
+        0.15: "slippery",
+        0.14: "very_slippery",
+        0.0: "very_slippery",
+    }
+    assert {grip: grip_condition(grip) for grip in expected} == expected
+    assert grip_condition(None) is None
+
+
+def test_grip_colours_the_station_and_shows_in_the_popup() -> None:
+    def values(**sensors: float) -> dict[str, dict[str, float]]:
+        return {name: {"value": value} for name, value in sensors.items()}
+
+    assert station_color(values(KELI_1=1, KITKA1=0.82)) is None
+    assert station_color(values(KELI_1=3, KITKA1=0.35)) is None
+    assert station_color(values(KELI_1=1, KITKA1=0.27)) == "#f9a825"
+    assert station_color(values(KELI_1=1, KITKA1=0.12)) == "#c62828"
+
+    rows = station_details(values(KITKA1=0.22), TEXTS)
+    assert rows[0] == {"label": "Grip condition", "value": "Fair winter conditions"}
+    assert rows[1] == {"label": "Grip", "value": "0.22", "unit": "µ"}
+
+
+def test_precipitation_type_shows_in_the_popup_unless_it_is_dry() -> None:
+    def values(**sensors: float) -> dict[str, dict[str, float]]:
+        return {name: {"value": value} for name, value in sensors.items()}
+
+    assert station_details(values(SATEEN_OLOMUOTO_PWDXX=18), TEXTS) == [{"label": "Precipitation type", "value": "Freezing drizzle"}]
+    assert station_details(values(SATEEN_OLOMUOTO_PWDXX=7), TEXTS) == []
 
 
 def test_station_and_camera_choices() -> None:

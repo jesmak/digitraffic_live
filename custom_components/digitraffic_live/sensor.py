@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import MATCH_ALL, UnitOfTemperature
+from homeassistant.const import MATCH_ALL, UnitOfLength, UnitOfSpeed, UnitOfTemperature, UnitOfVolumetricFlux
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,7 +45,14 @@ from .coordinator import (
     WeatherStationCoordinator,
 )
 from .feed import feature_collection
-from .weather_stations import SURFACE_STATES, WARNING_STATES, station_readings
+from .weather_stations import (
+    GRIP_CONDITIONS,
+    PRECIPITATION_STATES,
+    PRECIPITATION_TYPES,
+    SURFACE_STATES,
+    WARNING_STATES,
+    station_readings,
+)
 
 ICONS = {
     SUBENTRY_SHIPS: "mdi:ferry",
@@ -90,11 +97,64 @@ STATION_SENSORS = (
         icon="mdi:car-traction-control",
     ),
     SensorEntityDescription(
+        key="grip_condition",
+        translation_key="grip_condition",
+        device_class=SensorDeviceClass.ENUM,
+        options=[condition for _, condition in GRIP_CONDITIONS],
+        icon="mdi:car-traction-control",
+    ),
+    SensorEntityDescription(
         key="road_warning",
         translation_key="road_warning",
         device_class=SensorDeviceClass.ENUM,
         options=list(WARNING_STATES.values()),
         icon="mdi:alert",
+    ),
+    SensorEntityDescription(
+        key="wind_speed",
+        translation_key="wind_speed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        # Home Assistant would convert to km/h; Finnish weather services give wind in m/s.
+        suggested_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="wind_gusts",
+        translation_key="wind_gusts",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="precipitation",
+        translation_key="precipitation",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PRECIPITATION_STATES.values()),
+        icon="mdi:weather-pouring",
+    ),
+    SensorEntityDescription(
+        key="precipitation_type",
+        translation_key="precipitation_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PRECIPITATION_TYPES.values()),
+        icon="mdi:weather-snowy-rainy",
+    ),
+    SensorEntityDescription(
+        key="rain_intensity",
+        translation_key="rain_intensity",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="visibility",
+        translation_key="visibility",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        icon="mdi:eye",
     ),
 )
 

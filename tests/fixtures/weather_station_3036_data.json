@@ -77,6 +77,17 @@
    "value": 0.0
   },
   {
+   "id": 25,
+   "stationId": 3036,
+   "name": "SATEEN_OLOMUOTO_PWDXX",
+   "shortName": "S-Olom",
+   "measuredTime": "2026-09-15T11:48:20Z",
+   "sensorValueDescriptionEn": "Dry weather",
+   "sensorValueDescriptionFi": "Pouta",
+   "unit": "///",
+   "value": 7.0
+  },
+  {
    "id": 26,
    "stationId": 3036,
    "name": "NÄKYVYYS_KM",

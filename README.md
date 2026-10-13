@@ -142,7 +142,7 @@ Add with **Add road condition feed**. Road sections are drawn as lines coloured 
 Add with **Add road weather station feed** or **Add weather camera feed**. Both have a name, an area (home, 30 km
 by default) and an update interval (300 and 600 seconds). Station markers show the air temperature, or the road
 temperature if you choose so with **Value on the map**; the popup has both. Markers turn amber or red when the station
-warns about frost, snow or ice.
+warns about frost, snow or ice, or when its grip is that of a winter road or worse (see [Grip condition](#grip-condition)).
 
 ### Road weather station
 
@@ -155,11 +155,38 @@ dashboard. The station becomes a device named after it, with these sensors:
 | Air temperature      | °C                                                                                   |
 | Road surface         | Dry, moist, wet, wet and salty, frost, snow, ice, probably moist and salty or slushy |
 | Grip                 | Friction coefficient µ, 0–1                                                          |
+| Grip condition       | Good or fair grip, good or fair winter conditions, slippery or very slippery         |
 | Road weather warning | OK, beware, alarm, frost or rain                                                     |
+| Wind speed           | m/s                                                                                  |
+| Wind gusts           | m/s                                                                                  |
+| Precipitation        | None, or light, moderate or heavy rain, snow or sleet                                |
+| Precipitation type   | None, drizzle, rain, snow, sleet, hail, freezing drizzle, freezing rain and others   |
+| Rain intensity       | mm/h                                                                                 |
+| Visibility           | km                                                                                   |
 
 Stations have up to four road sensors and two optical sensors, and many lack the first of them. Each value comes from
 the first sensor that has one, road sensors before optical ones. A value that the station doesn't measure at all stays
-unknown. Values are fetched every 300 seconds; change the interval with **Change road weather station**.
+unknown. Values are fetched every 300 seconds, and **Change road weather station** changes the interval. Wind is in
+m/s, as Finnish weather services give it. If you prefer km/h, change the unit in the entity's settings.
+
+#### Grip condition
+
+The grip condition follows the slipperiness classification of the Finnish Road Administration, as published by the
+Finnish Meteorological Institute (Nurmi, Hippi and Juga, *Evaluation of FMI's new forecast model of road surface
+friction*, SIRWEC 2010). The classification puts the two highest classes together as a good road condition. Here
+they are kept apart as good and fair grip.
+
+| Grip µ      | Condition              | Typical surface         | On the map |
+| ----------- | ---------------------- | ----------------------- | ---------- |
+| 0.45 and up | Good grip              | Clear                   |            |
+| 0.30–0.44   | Fair grip              | Clear                   |            |
+| 0.25–0.29   | Good winter conditions | Rough ice, packed snow  | Amber      |
+| 0.20–0.24   | Fair winter conditions | Packed snow             | Amber      |
+| 0.15–0.19   | Slippery               | Icy                     | Amber      |
+| below 0.15  | Very slippery          | Wet ice                 | Red        |
+
+A value on a limit belongs to the class above it. The condition comes from the grip alone. The road surface sensor
+tells whether the road is dry or wet, and a wet road often still has good grip.
 
 ### Weather camera
 
@@ -244,6 +271,8 @@ entities:
     name: Tienpinta
   - entity: sensor.tie_6_luumaki_kirkko_tienpinta
     name: Keli
+  - entity: sensor.tie_6_luumaki_kirkko_keli
+    name: Pito
   - entity: sensor.tie_6_luumaki_kirkko_pito
     name: Kitka
   - entity: sensor.tie_6_luumaki_kirkko_tiesaavaroitus

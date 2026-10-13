@@ -293,7 +293,7 @@
       "step": {
         "user": {
           "title": "Tiesääasemasyöte",
-          "description": "Alueen tiesääasemat: tien ja ilman lämpötila, tienpinta, pito, tuuli ja sade.",
+          "description": "Alueen tiesääasemat ja niiden tien ja ilman lämpötila, tienpinta, pito, tuuli ja sade.",
           "data": {
             "name": "Nimi",
             "area": "Alue",
@@ -307,7 +307,7 @@
         },
         "reconfigure": {
           "title": "Tiesääasemasyöte",
-          "description": "Alueen tiesääasemat: tien ja ilman lämpötila, tienpinta, pito, tuuli ja sade.",
+          "description": "Alueen tiesääasemat ja niiden tien ja ilman lämpötila, tienpinta, pito, tuuli ja sade.",
           "data": {
             "name": "Nimi",
             "area": "Alue",
@@ -424,7 +424,7 @@
       "step": {
         "user": {
           "title": "Tiesääasema",
-          "description": "Anturit yhdelle Fintrafficin tiesääasemalle: tien ja ilman lämpötila, tienpinta, pito ja tiesäävaroitus.",
+          "description": "Anturit yhdelle Fintrafficin tiesääasemalle, kuten tien ja ilman lämpötila, tienpinta, pito, tuuli, sade ja näkyvyys.",
           "data": {
             "station": "Asema",
             "refresh_seconds": "Päivitysväli"
@@ -636,6 +636,17 @@
       "grip": {
         "name": "Pito"
       },
+      "grip_condition": {
+        "name": "Ajokeli",
+        "state": {
+          "good": "Hyvä pito",
+          "fair": "Tyydyttävä pito",
+          "good_winter": "Hyvä talvikeli",
+          "fair_winter": "Kohtalainen talvikeli",
+          "slippery": "Liukas",
+          "very_slippery": "Erittäin liukas"
+        }
+      },
       "road_warning": {
         "name": "Tiesäävaroitus",
         "state": {
@@ -645,6 +656,48 @@
           "frost": "Kuura",
           "rain": "Sade"
         }
+      },
+      "wind_speed": {
+        "name": "Tuulen nopeus"
+      },
+      "wind_gusts": {
+        "name": "Puuskat"
+      },
+      "precipitation": {
+        "name": "Sade",
+        "state": {
+          "none": "Poutaa",
+          "light": "Heikkoa vesisadetta",
+          "moderate": "Kohtalaista vesisadetta",
+          "heavy": "Runsasta vesisadetta",
+          "light_snow": "Heikkoa lumi- tai räntäsadetta",
+          "moderate_snow": "Kohtalaista lumi- tai räntäsadetta",
+          "heavy_snow": "Runsasta lumi- tai räntäsadetta"
+        }
+      },
+      "precipitation_type": {
+        "name": "Sateen olomuoto",
+        "state": {
+          "none": "Poutaa",
+          "very_light": "Hyvin heikkoa sadetta",
+          "drizzle": "Tihkua",
+          "rain": "Vesisadetta",
+          "snow": "Lumisadetta",
+          "wet_sleet": "Märkää räntää",
+          "sleet": "Räntää",
+          "hail": "Rakeita",
+          "ice_crystals": "Jääkiteitä",
+          "snow_grains": "Lumijyväsiä",
+          "graupel": "Lumirakeita",
+          "freezing_drizzle": "Jäätävää tihkua",
+          "freezing_rain": "Jäätävää sadetta"
+        }
+      },
+      "rain_intensity": {
+        "name": "Sateen voimakkuus"
+      },
+      "visibility": {
+        "name": "Näkyvyys"
       }
     }
   }

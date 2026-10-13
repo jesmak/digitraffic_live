@@ -213,6 +213,11 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
     assert hass.states.get("sensor.road_6_lappeenranta_karki_air_temperature").state == "14.6"
     assert hass.states.get("sensor.road_6_lappeenranta_karki_road_surface").state == "dry"
     assert hass.states.get("sensor.road_6_lappeenranta_karki_grip").state == "0.82"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_grip_condition").state == "good"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_wind_speed").state == "1.5"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_precipitation").state == "none"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_precipitation_type").state == "none"
+    assert hass.states.get("sensor.road_6_lappeenranta_karki_visibility").state == "20.0"
     assert hass.states.get("sensor.road_6_lappeenranta_karki_road_weather_warning").state == "ok"
 
     # Each view of a weather camera is an image entity; its state is when the picture was taken.
