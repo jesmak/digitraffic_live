@@ -400,6 +400,9 @@ Hey dude! Help me out for a couple of :beers: or a :coffee:!
 
 MIT, see [LICENSE](LICENSE).
 
-[releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases]
-
-[![HACS][hacs-shield]][hacs] [![Home Assistant][license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
+[release-date-shield]: https://img.shields.io/github/release-date/jesmak/digitraffic_live?style=for-the-badge
+[releases]: https://github.com/jesmak/digitraffic_live/releases
+[hacs-shield]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
+[hacs]: https://hacs.xyz/docs/faq/custom_repositories/
+[license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge
