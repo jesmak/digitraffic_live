@@ -1,18 +1,20 @@
 # Digitraffic Live for Home Assistant
 
-Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds.
+Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds, road
+weather station sensors and railway station departures.
 
-[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases]
+[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
 
-[![HACS][hacs-shield]][hacs] [![Home Assistant][home-assistant-shield]][home-assistant] [![License][license-shield]](LICENSE)
-
-![Project Maintenance][maintenance-shield] [![GitHub Activity][commits-shield]][commits] [![Open bugs][bugs-shield]][bugs] [![Open enhancements][enhancements-shield]][enhancements]
-
-## Support
-
-Hey dude! Help me out for a couple of :beers: or a :coffee:!
-
-[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/jesmak)
+<p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/road-weather-station-dark.png">
+  <img src="docs/images/road-weather-station-light.png" width="400" alt="A road weather station's sensors on road-conditions-card, in good winter conditions with snow on the road, wind with gusts, snowfall and a road weather warning">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/station-departures-dark.png">
+  <img src="docs/images/station-departures-light.png" width="400" alt="A station departures sensor on departures-card, a railway station with a track works notice, the next train large with its delay and track, and a cancelled train among the ones after it">
+</picture>
+</p>
 
 ## What is it?
 
@@ -39,7 +41,8 @@ so other integrations and template entities can produce feeds for the same card.
 - **Road weather station feeds:** road and air temperature, road surface, grip, wind and precipitation.
 - **Weather camera feeds:** the latest picture from each view of Fintraffic's road cameras.
 - **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
-  surface, grip and road weather warnings, and an image entity for each camera view.
+  surface, grip and its grade, road weather warnings, wind, precipitation and visibility, and an image entity for
+  each camera view. Shown by [road-conditions-card](https://github.com/jesmak/road-conditions-card).
 - **Station departures:** the next passenger trains to leave a railway station, optionally only those that stop at
   another station later, with live estimates, delays, tracks, cancellations and their reasons. Shown by
   [departures-card](https://github.com/jesmak/departures-card).
@@ -112,7 +115,7 @@ the feed's area are included.
 
 ### Road maintenance feed
 
-Add with **Add road maintenance feed**. Covers state roads maintained under Fintraffic's contracts; most city
+Add with **Add road maintenance feed**. Covers state roads maintained under Fintraffic's contracts. Most city
 streets are not included.
 
 | Name                            | Type    | Description                                                        | Default     |
@@ -141,8 +144,9 @@ Add with **Add road condition feed**. Road sections are drawn as lines coloured 
 
 Add with **Add road weather station feed** or **Add weather camera feed**. Both have a name, an area (home, 30 km
 by default) and an update interval (300 and 600 seconds). Station markers show the air temperature, or the road
-temperature if you choose so with **Value on the map**; the popup has both. Markers turn amber or red when the station
-warns about frost, snow or ice, or when its grip is that of a winter road or worse (see [Grip condition](#grip-condition)).
+temperature if you choose so with **Value on the map**. The popup has both. Markers turn amber or red when the
+station warns about frost, snow or ice, or when its grip is that of a winter road or worse (see
+[Grip condition](#grip-condition)).
 
 ### Road weather station
 
@@ -193,7 +197,7 @@ tells whether the road is dry or wet, and a wet road often still has good grip.
 Add with **Add weather camera** to get the pictures of one camera anywhere in Finland. The camera becomes a device with
 an image entity for each of its views, named after the direction it looks, such as *Imatralle*. Cameras take a new
 picture about every ten minutes, and the image entity updates when they do. New pictures are checked for every 600
-seconds; change the interval with **Change weather camera**.
+seconds, and **Change weather camera** changes the interval.
 
 ### Station departures
 
@@ -252,62 +256,6 @@ Digitraffic gives the reasons as category codes; their texts are the integration
 with buses replacing trains, in the integration's language when Digitraffic has it, otherwise in Finnish. Only the
 next departure time is stored in the recorder.
 
-## Dashboard cards
-
-Maps are drawn by the [map feed plugin](https://github.com/jesmak/ha-map-card-plugin-map-feed), whose README has
-examples for every feed type. Station sensors and camera images work with Home Assistant's own cards. The examples
-below come from a dashboard in Finnish. Entity IDs are made from the station or camera name and Home Assistant's
-language, so check yours on the device's page.
-
-### A road weather station
-
-<img src="docs/images/road-weather-station-card.png" alt="An entities card with road temperature, road surface, grip and warning" width="400">
-
-```yaml
-type: entities
-title: VT6 Luumäki
-entities:
-  - entity: sensor.tie_6_luumaki_kirkko_tien_lampotila
-    name: Tienpinta
-  - entity: sensor.tie_6_luumaki_kirkko_tienpinta
-    name: Keli
-  - entity: sensor.tie_6_luumaki_kirkko_keli
-    name: Pito
-  - entity: sensor.tie_6_luumaki_kirkko_pito
-    name: Kitka
-  - entity: sensor.tie_6_luumaki_kirkko_tiesaavaroitus
-    name: Varoitus
-```
-
-### Weather cameras
-
-<img src="docs/images/weather-camera-cards.png" alt="Six road camera pictures in two columns" width="400">
-
-Each picture is a `picture-entity` card. This is the YAML of a section in a sections view, where `columns: 6` puts
-two cards side by side:
-
-```yaml
-type: grid
-cards:
-  - type: picture-entity
-    entity: image.tie_6_lappeenranta_viipurintie_imatralle
-    name: VT6 Viipurintie I
-    show_state: false
-    fit_mode: cover
-    grid_options:
-      columns: 6
-  - type: picture-entity
-    entity: image.tie_6_lappeenranta_viipurintie_kouvolaan
-    name: VT6 Viipurintie L
-    show_state: false
-    fit_mode: cover
-    grid_options:
-      columns: 6
-  # ...and the same for image.tie_6_lappeenranta_saimaan_kanava_imatralle,
-  # image.tie_6_lappeenranta_saimaan_kanava_lappeenrantaan,
-  # image.tie_13_savitaipale_lappeenrantaan and image.tie_13_savitaipale_mikkeliin
-```
-
 ## Actions
 
 ### `digitraffic_live.get_train_composition`
@@ -318,6 +266,76 @@ Returns a train's cars and services as popup rows. The map feed plugin calls it 
 | ---------------- | ----------------------------------------- |
 | `departure_date` | The date the train left its first station |
 | `train_number`   | For example `8` for IC 8                  |
+
+## Examples
+
+Maps are drawn by the [map feed plugin](https://github.com/jesmak/ha-map-card-plugin-map-feed), whose README has
+examples for every feed type. Entity IDs are made from the station or camera name and Home Assistant's language, so
+check yours on the device's page.
+
+### A road weather station
+
+[road-conditions-card](https://github.com/jesmak/road-conditions-card) finds a station's sensors by itself, so it
+needs only the station's device. Pick it in the card's visual editor:
+
+```yaml
+type: custom:road-conditions-card
+stations:
+  - device: 0123456789abcdef0123456789abcdef
+    name: Road 9 Hillside
+```
+
+Home Assistant's own cards work too:
+
+```yaml
+type: entities
+title: Road 9 Hillside
+entities:
+  - sensor.road_9_example_hillside_grip_condition
+  - sensor.road_9_example_hillside_road_temperature
+  - sensor.road_9_example_hillside_road_surface
+  - sensor.road_9_example_hillside_precipitation_type
+  - sensor.road_9_example_hillside_road_weather_warning
+```
+
+### Station departures
+
+```yaml
+type: custom:departures-card
+entities:
+  - entity: sensor.trains_tampere_helsinki
+    subtitle: to Helsinki
+```
+
+### Weather cameras
+
+Each picture is a `picture-entity` card. In a sections view, `columns: 6` puts two cards side by side:
+
+```yaml
+type: grid
+cards:
+  - type: picture-entity
+    entity: image.road_9_example_hillside_towards_example
+    name: Road 9 Hillside
+    show_state: false
+    fit_mode: cover
+    grid_options:
+      columns: 6
+  - type: picture-entity
+    entity: image.road_9_example_hillside_towards_sample
+    name: Road 9 Hillside
+    show_state: false
+    fit_mode: cover
+    grid_options:
+      columns: 6
+```
+
+## Upgrading from 1.0
+
+Nothing is required. Road weather stations get their new sensors (grip condition, wind, precipitation and
+visibility) on the next restart, and entity IDs and attributes carry over. Swedish is no longer one of the
+integration's languages. An integration set to Swedish writes its feed texts in English, and choosing Finnish or
+English in its settings makes that explicit.
 
 ## Data
 
@@ -334,6 +352,14 @@ and camera feeds look up each station's details once a day, one request per stat
 
 Traffic messages are published in Finnish only. Their labels and the restriction and work types are written in the
 integration's language. Road geometries are simplified to keep the feeds small.
+
+## Translating
+
+The integration's own texts are in two places. `translations/<language>.json` has Home Assistant's UI, and
+`texts/<language>.json` the texts written into feeds. To add a language, copy both `en.json` files to the new
+language's code, translate the values, and add the code to `LANGUAGES` in `const.py`. The tests check that every
+language has the same keys and placeholders as English. Names of stations, places and traffic messages come from
+Digitraffic as they are.
 
 ## Development
 
@@ -362,23 +388,18 @@ python3.14 -m venv .venv
 | `services.py`                       | The composition action                                |
 | `texts.py`, `texts/<language>.json` | Texts written into feeds                              |
 | `translations/<language>.json`      | Home Assistant UI texts                               |
+| `docs/screenshots.json`             | The made-up data the README's screenshots are taken from |
 
-To add a language, copy `texts/en.json` and `translations/en.json` to `<code>.json`, translate the values, and
-add the code to `LANGUAGES` in `const.py`. The tests check that every language has the same keys and
-placeholders as English.
+## Support
 
-[releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
-[release-date-shield]: https://img.shields.io/github/release-date/jesmak/digitraffic_live?style=for-the-badge
-[releases]: https://github.com/jesmak/digitraffic_live/releases
-[hacs-shield]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[hacs]: https://hacs.xyz/docs/faq/custom_repositories/
-[home-assistant-shield]: https://img.shields.io/badge/Home%20Assistant-UI%20setup-green.svg?style=for-the-badge
-[home-assistant]: https://www.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/jesmak/digitraffic_live.svg?style=for-the-badge
-[commits]: https://github.com/jesmak/digitraffic_live/commits/main
-[bugs-shield]: https://img.shields.io/github/issues/jesmak/digitraffic_live/bug?style=for-the-badge&label=bugs&color=red
-[bugs]: https://github.com/jesmak/digitraffic_live/labels/bug
-[enhancements-shield]: https://img.shields.io/github/issues/jesmak/digitraffic_live/enhancement?style=for-the-badge&label=enhancements&color=blue
-[enhancements]: https://github.com/jesmak/digitraffic_live/labels/enhancement
+Hey dude! Help me out for a couple of :beers: or a :coffee:!
+
+[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/jesmak)
+
+## License
+
+MIT, see [LICENSE](LICENSE).
+
+[releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases]
+
+[![HACS][hacs-shield]][hacs] [![Home Assistant][license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge

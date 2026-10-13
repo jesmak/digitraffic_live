@@ -1,0 +1,269 @@
+{
+    "resources": [
+        "../../hass-kortit/road-conditions-card/dist/road-conditions-card.js",
+        "../../hass-kortit/departures-card/dist/departures-card.js"
+    ],
+    "clock": "2026-10-14T07:40:00+03:00",
+    "translations": {
+        "digitraffic_live": "custom_components/digitraffic_live/translations"
+    },
+    "states": {
+        "sensor.hillside_road_temperature": {
+            "state": "-3.4",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside road temperature",
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.hillside_air_temperature": {
+            "state": "-6.1",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside air temperature",
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.hillside_road_surface": {
+            "state": "snow",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside road surface",
+                "device_class": "enum"
+            }
+        },
+        "sensor.hillside_grip": {
+            "state": "0.27",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside grip",
+                "unit_of_measurement": "µ",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.hillside_grip_condition": {
+            "state": "good_winter",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside grip condition",
+                "device_class": "enum"
+            }
+        },
+        "sensor.hillside_road_warning": {
+            "state": "beware",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside road warning",
+                "device_class": "enum"
+            }
+        },
+        "sensor.hillside_wind_speed": {
+            "state": "4.2",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside wind speed",
+                "unit_of_measurement": "m/s",
+                "device_class": "wind_speed",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.hillside_wind_gusts": {
+            "state": "9.1",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside wind gusts",
+                "unit_of_measurement": "m/s",
+                "device_class": "wind_speed",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.hillside_precipitation": {
+            "state": "light_snow",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside precipitation",
+                "device_class": "enum"
+            }
+        },
+        "sensor.hillside_precipitation_type": {
+            "state": "snow",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside precipitation type",
+                "device_class": "enum"
+            }
+        },
+        "sensor.hillside_rain_intensity": {
+            "state": "0.6",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside rain intensity",
+                "unit_of_measurement": "mm/h",
+                "device_class": "precipitation_intensity",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.hillside_visibility": {
+            "state": "3.2",
+            "attributes": {
+                "friendly_name": "Road 9 Example, Hillside visibility",
+                "unit_of_measurement": "km",
+                "device_class": "distance",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.tampere_station": {
+            "state": "2026-10-14T07:47:00+03:00",
+            "attributes": {
+                "friendly_name": "Tampere",
+                "device_class": "timestamp",
+                "departures_version": 1,
+                "stop_name": "Tampere",
+                "stop_id": "TPE",
+                "attribution": "Fintraffic / digitraffic.fi, CC BY 4.0",
+                "notices": [
+                    "Track works between Tampere and Lempäälä. Some trains leave from track 1."
+                ],
+                "departures": [
+                    {
+                        "id": "train:2026-10-14/45",
+                        "line": "IC 45",
+                        "mode": "train",
+                        "headsign": "Oulu",
+                        "scheduled": "2026-10-14T07:43:00+03:00",
+                        "estimated": "2026-10-14T07:47:00+03:00",
+                        "realtime": true,
+                        "delay": 240,
+                        "platform": "3"
+                    },
+                    {
+                        "id": "train:2026-10-14/172",
+                        "line": "S 172",
+                        "mode": "train",
+                        "headsign": "Helsinki",
+                        "scheduled": "2026-10-14T07:55:00+03:00",
+                        "estimated": "2026-10-14T07:55:00+03:00",
+                        "realtime": true,
+                        "platform": "1"
+                    },
+                    {
+                        "id": "train:2026-10-14/R12",
+                        "line": "R",
+                        "mode": "train",
+                        "headsign": "Riihimäki",
+                        "scheduled": "2026-10-14T08:04:00+03:00",
+                        "estimated": "2026-10-14T08:04:00+03:00",
+                        "platform": "2",
+                        "cancelled": true,
+                        "notice": "Rolling stock"
+                    },
+                    {
+                        "id": "train:2026-10-14/266",
+                        "line": "IC 266",
+                        "mode": "train",
+                        "headsign": "Turku",
+                        "scheduled": "2026-10-14T08:20:00+03:00",
+                        "estimated": "2026-10-14T08:20:00+03:00",
+                        "platform": "4"
+                    }
+                ]
+            }
+        }
+    },
+    "entities": {
+        "sensor.hillside_road_temperature": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "road_temperature",
+            "display_precision": 1
+        },
+        "sensor.hillside_air_temperature": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "air_temperature",
+            "display_precision": 1
+        },
+        "sensor.hillside_road_surface": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "road_surface"
+        },
+        "sensor.hillside_grip": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "grip",
+            "display_precision": 2
+        },
+        "sensor.hillside_grip_condition": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "grip_condition"
+        },
+        "sensor.hillside_road_warning": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "road_warning"
+        },
+        "sensor.hillside_wind_speed": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "wind_speed",
+            "display_precision": 1
+        },
+        "sensor.hillside_wind_gusts": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "wind_gusts",
+            "display_precision": 1
+        },
+        "sensor.hillside_precipitation": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "precipitation"
+        },
+        "sensor.hillside_precipitation_type": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "precipitation_type"
+        },
+        "sensor.hillside_rain_intensity": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "rain_intensity",
+            "display_precision": 1
+        },
+        "sensor.hillside_visibility": {
+            "device_id": "hillside",
+            "platform": "digitraffic_live",
+            "translation_key": "visibility",
+            "display_precision": 1
+        },
+        "sensor.tampere_station": {
+            "platform": "digitraffic_live"
+        }
+    },
+    "devices": {
+        "hillside": {
+            "name": "Road 9 Example, Hillside",
+            "name_by_user": null
+        }
+    },
+    "shots": [
+        {
+            "name": "road-weather-station",
+            "width": 500,
+            "card": {
+                "type": "custom:road-conditions-card",
+                "stations": [
+                    {
+                        "device": "hillside",
+                        "name": "Road 9 Hillside"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "station-departures",
+            "width": 500,
+            "card": {
+                "type": "custom:departures-card",
+                "entities": [
+                    "sensor.tampere_station"
+                ]
+            }
+        }
+    ]
+}
