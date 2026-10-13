@@ -5,16 +5,10 @@ weather station sensors and railway station departures.
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
 
-<p>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/road-weather-station-dark.png">
-  <img src="docs/images/road-weather-station-light.png" width="400" alt="A road weather station's sensors on road-conditions-card, in good winter conditions with snow on the road, wind with gusts, snowfall and a road weather warning">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img src="docs/images/dashboard-light.png" width="1280" alt="A dashboard around Tampere, with a map of trains, road weather stations with their temperatures and a road works site, the departures from Tampere station, and the road conditions at three road weather stations">
 </picture>
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/station-departures-dark.png">
-  <img src="docs/images/station-departures-light.png" width="400" alt="A station departures sensor on departures-card, a railway station with a track works notice, the next train large with its delay and track, and a cancelled train among the ones after it">
-</picture>
-</p>
 
 ## What is it?
 
@@ -151,7 +145,14 @@ station warns about frost, snow or ice, or when its grip is that of a winter roa
 ### Road weather station
 
 Add with **Add road weather station** to get sensors for one station anywhere in Finland, for example to show on a
-dashboard. The station becomes a device named after it, with these sensors:
+dashboard. The station becomes a device named after it, with these sensors, which
+[road-conditions-card](https://github.com/jesmak/road-conditions-card) shows:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/road-weather-station-dark.png">
+  <img src="docs/images/road-weather-station-light.png" width="510" alt="A road weather station on road-conditions-card, in good winter conditions with snow on the road, wind with gusts, snowfall and a road weather warning">
+</picture>
+
 
 | Sensor               | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
@@ -203,6 +204,11 @@ seconds, and **Change weather camera** changes the interval.
 
 Add with **Add station departures** to get a sensor with the next passenger trains to leave one station. Cargo and
 work trains are left out.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/station-departures-dark.png">
+  <img src="docs/images/station-departures-light.png" width="510" alt="A station departures sensor on departures-card, with a track works notice, the next train large with its delay and track, and a cancelled train among the ones after it">
+</picture>
 
 | Name            | Type    | Description                                                                                   | Default |
 | --------------- | ------- | --------------------------------------------------------------------------------------------- | ------- |

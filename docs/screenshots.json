@@ -1,7 +1,8 @@
 {
     "resources": [
         "../../hass-kortit/road-conditions-card/dist/road-conditions-card.js",
-        "../../hass-kortit/departures-card/dist/departures-card.js"
+        "../../hass-kortit/departures-card/dist/departures-card.js",
+        "https://github.com/nathan-gs/ha-map-card/releases/download/v1.16.0/map-card.js"
     ],
     "clock": "2026-10-14T07:40:00+03:00",
     "translations": {
@@ -105,6 +106,191 @@
                 "state_class": "measurement"
             }
         },
+        "sensor.lakeview_road_temperature": {
+            "state": "1.8",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview road temperature",
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.lakeview_air_temperature": {
+            "state": "0.9",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview air temperature",
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.lakeview_road_surface": {
+            "state": "dry",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview road surface",
+                "device_class": "enum"
+            }
+        },
+        "sensor.lakeview_grip": {
+            "state": "0.81",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview grip",
+                "unit_of_measurement": "µ",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.lakeview_grip_condition": {
+            "state": "good",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview grip condition",
+                "device_class": "enum"
+            }
+        },
+        "sensor.lakeview_road_warning": {
+            "state": "ok",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview road warning",
+                "device_class": "enum"
+            }
+        },
+        "sensor.lakeview_wind_speed": {
+            "state": "2.6",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview wind speed",
+                "unit_of_measurement": "m/s",
+                "device_class": "wind_speed",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.lakeview_wind_gusts": {
+            "state": "4.0",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview wind gusts",
+                "unit_of_measurement": "m/s",
+                "device_class": "wind_speed",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.lakeview_precipitation": {
+            "state": "none",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview precipitation",
+                "device_class": "enum"
+            }
+        },
+        "sensor.lakeview_precipitation_type": {
+            "state": "none",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview precipitation type",
+                "device_class": "enum"
+            }
+        },
+        "sensor.lakeview_rain_intensity": {
+            "state": "0.0",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview rain intensity",
+                "unit_of_measurement": "mm/h",
+                "device_class": "precipitation_intensity",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.lakeview_visibility": {
+            "state": "20.0",
+            "attributes": {
+                "friendly_name": "Road 12 Example, Lakeview visibility",
+                "unit_of_measurement": "km",
+                "device_class": "distance",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.riverbend_road_temperature": {
+            "state": "-0.4",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend road temperature",
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.riverbend_air_temperature": {
+            "state": "0.3",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend air temperature",
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.riverbend_road_surface": {
+            "state": "ice",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend road surface",
+                "device_class": "enum"
+            }
+        },
+        "sensor.riverbend_grip": {
+            "state": "0.13",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend grip",
+                "unit_of_measurement": "µ",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.riverbend_grip_condition": {
+            "state": "very_slippery",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend grip condition",
+                "device_class": "enum"
+            }
+        },
+        "sensor.riverbend_road_warning": {
+            "state": "alarm",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend road warning",
+                "device_class": "enum"
+            }
+        },
+        "sensor.riverbend_wind_speed": {
+            "state": "3.4",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend wind speed",
+                "unit_of_measurement": "m/s",
+                "device_class": "wind_speed",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.riverbend_precipitation": {
+            "state": "moderate",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend precipitation",
+                "device_class": "enum"
+            }
+        },
+        "sensor.riverbend_precipitation_type": {
+            "state": "freezing_rain",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend precipitation type",
+                "device_class": "enum"
+            }
+        },
+        "sensor.riverbend_rain_intensity": {
+            "state": "1.2",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend rain intensity",
+                "unit_of_measurement": "mm/h",
+                "device_class": "precipitation_intensity",
+                "state_class": "measurement"
+            }
+        },
+        "sensor.riverbend_visibility": {
+            "state": "6.5",
+            "attributes": {
+                "friendly_name": "Road 3 Example, Riverbend visibility",
+                "unit_of_measurement": "km",
+                "device_class": "distance",
+                "state_class": "measurement"
+            }
+        },
         "sensor.tampere_station": {
             "state": "2026-10-14T07:47:00+03:00",
             "attributes": {
@@ -160,6 +346,280 @@
                         "platform": "4"
                     }
                 ]
+            }
+        },
+        "sensor.trains": {
+            "state": "4",
+            "attributes": {
+                "friendly_name": "Trains",
+                "map_feed_version": 1,
+                "attribution": "Fintraffic / digitraffic.fi, CC BY 4.0",
+                "area": {
+                    "center": [
+                        61.4978,
+                        23.761
+                    ],
+                    "radius_km": 30
+                },
+                "updated": "2026-10-14T07:39:00+03:00",
+                "geojson": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "id": "train:2026-10-14/45",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.705,
+                                    61.612
+                                ]
+                            },
+                            "properties": {
+                                "name": "IC 45",
+                                "kind": "train.long_distance",
+                                "badge": "IC 45",
+                                "heading": 340,
+                                "speed_kmh": 142,
+                                "delay_minutes": 4,
+                                "subtitle": "Helsinki → Oulu",
+                                "updated": "2026-10-14T07:39:00+03:00"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "train:2026-10-14/9671",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.862,
+                                    61.392
+                                ]
+                            },
+                            "properties": {
+                                "name": "R",
+                                "kind": "train.commuter",
+                                "badge": "R",
+                                "heading": 160,
+                                "speed_kmh": 118,
+                                "delay_minutes": 0,
+                                "subtitle": "Tampere → Riihimäki",
+                                "updated": "2026-10-14T07:39:00+03:00"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "train:2026-10-14/266",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.512,
+                                    61.468
+                                ]
+                            },
+                            "properties": {
+                                "name": "IC 266",
+                                "kind": "train.long_distance",
+                                "badge": "IC 266",
+                                "heading": 255,
+                                "speed_kmh": 96,
+                                "delay_minutes": 1,
+                                "subtitle": "Tampere → Turku",
+                                "updated": "2026-10-14T07:39:00+03:00"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "train:2026-10-14/3012",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    24.045,
+                                    61.452
+                                ]
+                            },
+                            "properties": {
+                                "name": "T 3012",
+                                "kind": "train.cargo",
+                                "badge": "T",
+                                "heading": 75,
+                                "speed_kmh": 64,
+                                "updated": "2026-10-14T07:38:00+03:00"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "sensor.road_weather_stations": {
+            "state": "5",
+            "attributes": {
+                "friendly_name": "Road weather stations",
+                "map_feed_version": 1,
+                "attribution": "Fintraffic / digitraffic.fi, CC BY 4.0",
+                "area": {
+                    "center": [
+                        61.4978,
+                        23.761
+                    ],
+                    "radius_km": 30
+                },
+                "updated": "2026-10-14T07:39:00+03:00",
+                "geojson": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "id": "weather_station:1",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.62,
+                                    61.552
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 9 Example, Hillside",
+                                "kind": "road.weather_station",
+                                "badge": "-6°",
+                                "updated": "2026-10-14T07:35:00+03:00",
+                                "color": "#f9a825"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "weather_station:2",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.931,
+                                    61.508
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 12 Example, Lakeview",
+                                "kind": "road.weather_station",
+                                "badge": "1°",
+                                "updated": "2026-10-14T07:35:00+03:00"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "weather_station:3",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.801,
+                                    61.401
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 3 Example, Riverbend",
+                                "kind": "road.weather_station",
+                                "badge": "0°",
+                                "updated": "2026-10-14T07:35:00+03:00",
+                                "color": "#c62828"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "weather_station:4",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.452,
+                                    61.531
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 11 Example, Westwood",
+                                "kind": "road.weather_station",
+                                "badge": "-2°",
+                                "updated": "2026-10-14T07:35:00+03:00"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "weather_station:5",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    24.102,
+                                    61.571
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 9 Example, Eastfield",
+                                "kind": "road.weather_station",
+                                "badge": "-1°",
+                                "updated": "2026-10-14T07:35:00+03:00"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "sensor.traffic_messages": {
+            "state": "1",
+            "attributes": {
+                "friendly_name": "Traffic messages",
+                "map_feed_version": 1,
+                "attribution": "Fintraffic / digitraffic.fi, CC BY 4.0",
+                "area": {
+                    "center": [
+                        61.4978,
+                        23.761
+                    ],
+                    "radius_km": 30
+                },
+                "updated": "2026-10-14T07:39:00+03:00",
+                "geojson": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "id": "traffic_message:EXAMPLE1",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [
+                                    23.905,
+                                    61.452
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 9, Example. Road works",
+                                "kind": "road.roadwork",
+                                "subtitle": "Lane closed, speed limit 50 km/h"
+                            }
+                        },
+                        {
+                            "type": "Feature",
+                            "id": "traffic_message:EXAMPLE1:road",
+                            "geometry": {
+                                "type": "LineString",
+                                "coordinates": [
+                                    [
+                                        23.88,
+                                        61.447
+                                    ],
+                                    [
+                                        23.905,
+                                        61.452
+                                    ],
+                                    [
+                                        23.931,
+                                        61.459
+                                    ]
+                                ]
+                            },
+                            "properties": {
+                                "name": "Road 9, Example. Road works",
+                                "kind": "road.roadwork",
+                                "point": "traffic_message:EXAMPLE1"
+                            }
+                        }
+                    ]
+                }
             }
         }
     },
@@ -231,7 +691,144 @@
             "translation_key": "visibility",
             "display_precision": 1
         },
+        "sensor.lakeview_road_temperature": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "road_temperature",
+            "display_precision": 1
+        },
+        "sensor.lakeview_air_temperature": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "air_temperature",
+            "display_precision": 1
+        },
+        "sensor.lakeview_road_surface": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "road_surface"
+        },
+        "sensor.lakeview_grip": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "grip",
+            "display_precision": 2
+        },
+        "sensor.lakeview_grip_condition": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "grip_condition"
+        },
+        "sensor.lakeview_road_warning": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "road_warning"
+        },
+        "sensor.lakeview_wind_speed": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "wind_speed",
+            "display_precision": 1
+        },
+        "sensor.lakeview_wind_gusts": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "wind_gusts",
+            "display_precision": 1
+        },
+        "sensor.lakeview_precipitation": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "precipitation"
+        },
+        "sensor.lakeview_precipitation_type": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "precipitation_type"
+        },
+        "sensor.lakeview_rain_intensity": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "rain_intensity",
+            "display_precision": 1
+        },
+        "sensor.lakeview_visibility": {
+            "device_id": "lakeview",
+            "platform": "digitraffic_live",
+            "translation_key": "visibility",
+            "display_precision": 1
+        },
+        "sensor.riverbend_road_temperature": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "road_temperature",
+            "display_precision": 1
+        },
+        "sensor.riverbend_air_temperature": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "air_temperature",
+            "display_precision": 1
+        },
+        "sensor.riverbend_road_surface": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "road_surface"
+        },
+        "sensor.riverbend_grip": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "grip",
+            "display_precision": 2
+        },
+        "sensor.riverbend_grip_condition": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "grip_condition"
+        },
+        "sensor.riverbend_road_warning": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "road_warning"
+        },
+        "sensor.riverbend_wind_speed": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "wind_speed",
+            "display_precision": 1
+        },
+        "sensor.riverbend_precipitation": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "precipitation"
+        },
+        "sensor.riverbend_precipitation_type": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "precipitation_type"
+        },
+        "sensor.riverbend_rain_intensity": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "rain_intensity",
+            "display_precision": 1
+        },
+        "sensor.riverbend_visibility": {
+            "device_id": "riverbend",
+            "platform": "digitraffic_live",
+            "translation_key": "visibility",
+            "display_precision": 1
+        },
         "sensor.tampere_station": {
+            "platform": "digitraffic_live"
+        },
+        "sensor.trains": {
+            "platform": "digitraffic_live"
+        },
+        "sensor.road_weather_stations": {
+            "platform": "digitraffic_live"
+        },
+        "sensor.traffic_messages": {
             "platform": "digitraffic_live"
         }
     },
@@ -239,9 +836,99 @@
         "hillside": {
             "name": "Road 9 Example, Hillside",
             "name_by_user": null
+        },
+        "lakeview": {
+            "name": "Road 12 Example, Lakeview",
+            "name_by_user": null
+        },
+        "riverbend": {
+            "name": "Road 3 Example, Riverbend",
+            "name_by_user": null
         }
     },
     "shots": [
+        {
+            "name": "dashboard",
+            "width": 1280,
+            "view": {
+                "type": "sections",
+                "max_columns": 3,
+                "sections": [
+                    {
+                        "type": "grid",
+                        "column_span": 2,
+                        "cards": [
+                            {
+                                "type": "custom:map-card",
+                                "x": 61.49,
+                                "y": 23.78,
+                                "zoom": 10,
+                                "map_options": {
+                                    "zoomControl": false
+                                },
+                                "plugins": [
+                                    {
+                                        "name": "Road works",
+                                        "url": "/local/ha-map-card-plugin-map-feed.js",
+                                        "options": {
+                                            "entity": "sensor.traffic_messages"
+                                        }
+                                    },
+                                    {
+                                        "name": "Road weather stations",
+                                        "url": "/local/ha-map-card-plugin-map-feed.js",
+                                        "options": {
+                                            "entity": "sensor.road_weather_stations"
+                                        }
+                                    },
+                                    {
+                                        "name": "Trains",
+                                        "url": "/local/ha-map-card-plugin-map-feed.js",
+                                        "options": {
+                                            "entity": "sensor.trains"
+                                        }
+                                    }
+                                ],
+                                "grid_options": {
+                                    "columns": "full",
+                                    "rows": 9
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "grid",
+                        "cards": [
+                            {
+                                "type": "custom:departures-card",
+                                "entities": [
+                                    "sensor.tampere_station"
+                                ],
+                                "departures": 3
+                            },
+                            {
+                                "type": "custom:road-conditions-card",
+                                "title": "Road conditions",
+                                "stations": [
+                                    {
+                                        "device": "lakeview",
+                                        "name": "Road 12 Lakeview"
+                                    },
+                                    {
+                                        "device": "hillside",
+                                        "name": "Road 9 Hillside"
+                                    },
+                                    {
+                                        "device": "riverbend",
+                                        "name": "Road 3 Riverbend"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
         {
             "name": "road-weather-station",
             "width": 500,
@@ -265,5 +952,8 @@
                 ]
             }
         }
+    ],
+    "files": [
+        "../../hass-kortit/ha-map-card-plugin-map-feed/dist/ha-map-card-plugin-map-feed.js"
     ]
 }
