@@ -144,7 +144,7 @@ def train_label(train: Mapping[str, Any]) -> str:
 
 
 def format_clock(value: str | None, language: str) -> str:
-    """ "21.04" in Finnish and Swedish, "21:04" in English; "" when missing."""
+    """ "21.04" in Finnish, "21:04" in English; "" when missing."""
     parsed = dt_util.parse_datetime(value) if value else None
     if parsed is None:
         return ""

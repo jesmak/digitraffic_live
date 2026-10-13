@@ -61,7 +61,7 @@ def iso_from_epoch_ms(value: Any) -> str | None:
 
 
 def format_time(value: str | None, language: str, with_date: bool = True) -> str:
-    """ "20.9. 21.04" in Finnish and Swedish, "20.9. 21:04" in English, in local time; "" when missing."""
+    """ "20.9. 21.04" in Finnish, "20.9. 21:04" in English, in local time; "" when missing."""
     parsed = dt_util.parse_datetime(value) if value else None
     if parsed is None:
         return ""

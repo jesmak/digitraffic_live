@@ -67,7 +67,7 @@ so other integrations and template entities can produce feeds for the same card.
 
 | Name     | Type | Description                                                  | Default                   |
 | -------- | ---- | ------------------------------------------------------------ | ------------------------- |
-| language | enum | Language of the texts written into feeds: `fi`, `sv` or `en` | Home Assistant's language |
+| language | enum | Language of the texts written into feeds: `fi` or `en` | Home Assistant's language |
 
 ### Ship feed
 
