@@ -118,6 +118,7 @@ STATION_SENSORS = (
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         # Home Assistant would convert to km/h; Finnish weather services give wind in m/s.
         suggested_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="wind_gusts",
@@ -126,6 +127,7 @@ STATION_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         suggested_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="precipitation",
@@ -147,6 +149,7 @@ STATION_SENSORS = (
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="visibility",
@@ -154,6 +157,7 @@ STATION_SENSORS = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        suggested_display_precision=1,
         icon="mdi:eye",
     ),
 )
