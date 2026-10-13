@@ -101,13 +101,9 @@ DEFAULT_TRAIN_RADIUS_M = 30_000
 DEFAULT_ROAD_RADIUS_M = 30_000
 DEFAULT_ROAD_CONDITION_RADIUS_M = 50_000
 
-MAX_AGE_SELECTOR = NumberSelector(
-    NumberSelectorConfig(min=1, max=240, step=1, unit_of_measurement="min", mode=NumberSelectorMode.BOX)
-)
+MAX_AGE_SELECTOR = NumberSelector(NumberSelectorConfig(min=1, max=240, step=1, unit_of_measurement="min", mode=NumberSelectorMode.BOX))
 REFRESH_SELECTOR = NumberSelector(
-    NumberSelectorConfig(
-        min=MIN_REFRESH_SECONDS, max=3600, step=1, unit_of_measurement="s", mode=NumberSelectorMode.BOX
-    )
+    NumberSelectorConfig(min=MIN_REFRESH_SECONDS, max=3600, step=1, unit_of_measurement="s", mode=NumberSelectorMode.BOX)
 )
 
 
@@ -165,9 +161,7 @@ class FeedFlow(ConfigSubentryFlow):
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         return await self._async_step_feed("reconfigure", user_input, self._get_reconfigure_subentry())
 
-    async def _async_step_feed(
-        self, step_id: str, user_input: dict[str, Any] | None, current: ConfigSubentry | None
-    ) -> SubentryFlowResult:
+    async def _async_step_feed(self, step_id: str, user_input: dict[str, Any] | None, current: ConfigSubentry | None) -> SubentryFlowResult:
         schema = await self.async_schema()
         if isinstance(schema, dict):  # an abort result
             return schema
@@ -316,12 +310,8 @@ class StationDeparturesFlow(FeedFlow):
         return vol.Schema(
             {
                 vol.Required(CONF_NAME): TextSelector(),
-                vol.Required(CONF_STATION): SelectSelector(
-                    SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)
-                ),
-                vol.Optional(CONF_STOPS_AT): SelectSelector(
-                    SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)
-                ),
+                vol.Required(CONF_STATION): SelectSelector(SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)),
+                vol.Optional(CONF_STOPS_AT): SelectSelector(SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)),
                 vol.Required(CONF_DEPARTURES): NumberSelector(
                     NumberSelectorConfig(min=1, max=MAX_DEPARTURES, step=1, mode=NumberSelectorMode.BOX)
                 ),
@@ -417,9 +407,7 @@ class RoadMaintenanceFeedFlow(AreaFeedFlow):
                 vol.Required(CONF_MAX_AGE_MINUTES): MAX_AGE_SELECTOR,
                 vol.Required(CONF_SHOW_ROUTES): BooleanSelector(),
                 vol.Required(CONF_ROUTE_HOURS): NumberSelector(
-                    NumberSelectorConfig(
-                        min=1, max=MAX_ROUTE_HOURS, step=1, unit_of_measurement="h", mode=NumberSelectorMode.BOX
-                    )
+                    NumberSelectorConfig(min=1, max=MAX_ROUTE_HOURS, step=1, unit_of_measurement="h", mode=NumberSelectorMode.BOX)
                 ),
                 vol.Required(CONF_REFRESH_SECONDS): REFRESH_SELECTOR,
             }
@@ -442,9 +430,7 @@ class RoadConditionFeedFlow(AreaFeedFlow):
                 vol.Required(CONF_NAME): TextSelector(),
                 vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:road-variant")),
                 vol.Required(CONF_FORECAST): SelectSelector(
-                    SelectSelectorConfig(
-                        options=list(FORECAST_TIMES), translation_key=CONF_FORECAST, mode=SelectSelectorMode.DROPDOWN
-                    )
+                    SelectSelectorConfig(options=list(FORECAST_TIMES), translation_key=CONF_FORECAST, mode=SelectSelectorMode.DROPDOWN)
                 ),
                 vol.Required(CONF_ONLY_POOR): BooleanSelector(),
                 vol.Required(CONF_REFRESH_SECONDS): REFRESH_SELECTOR,
@@ -467,9 +453,7 @@ class WeatherStationFeedFlow(AreaFeedFlow):
                 vol.Required(CONF_NAME): TextSelector(),
                 vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:thermometer")),
                 vol.Required(CONF_MARKER_VALUE): SelectSelector(
-                    SelectSelectorConfig(
-                        options=list(MARKER_VALUES), translation_key=CONF_MARKER_VALUE, mode=SelectSelectorMode.DROPDOWN
-                    )
+                    SelectSelectorConfig(options=list(MARKER_VALUES), translation_key=CONF_MARKER_VALUE, mode=SelectSelectorMode.DROPDOWN)
                 ),
                 vol.Required(CONF_REFRESH_SECONDS): REFRESH_SELECTOR,
             }

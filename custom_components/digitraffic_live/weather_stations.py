@@ -110,9 +110,7 @@ def station_options(stations: Any) -> list[tuple[str, str]]:
     return [(station.id, f"{station.name.replace('_', ' ')} ({station.id})") for station in result]
 
 
-async def fetch_sensor_values(
-    client: DigitrafficClient, station_ids: Sequence[str]
-) -> dict[str, list[Mapping[str, Any]]]:
+async def fetch_sensor_values(client: DigitrafficClient, station_ids: Sequence[str]) -> dict[str, list[Mapping[str, Any]]]:
     """The latest sensor values of each station, by station id."""
     if len(station_ids) > BULK_THRESHOLD:
         wanted = set(station_ids)

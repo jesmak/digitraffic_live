@@ -51,9 +51,7 @@ def all_cameras(stations: Any) -> list[Camera]:
         if len(coordinates) < 2 or props.get("collectionStatus") not in (None, "GATHERING"):
             continue
         if presets := views_in_collection(feature):
-            result.append(
-                Camera(str(feature.get("id")), coordinates[1], coordinates[0], str(props.get("name") or ""), presets)
-            )
+            result.append(Camera(str(feature.get("id")), coordinates[1], coordinates[0], str(props.get("name") or ""), presets))
     return result
 
 
@@ -103,11 +101,7 @@ async def fetch_picture_times(client: DigitrafficClient, camera_ids: Sequence[st
 
 def picture_times(data: Mapping[str, Any]) -> dict[str, str]:
     """When each of a camera's views was last photographed, from the camera's data: {preset id: time}."""
-    return {
-        str(preset.get("id")): str(preset.get("measuredTime"))
-        for preset in data.get("presets") or []
-        if preset.get("measuredTime")
-    }
+    return {str(preset.get("id")): str(preset.get("measuredTime")) for preset in data.get("presets") or [] if preset.get("measuredTime")}
 
 
 def build_weather_camera_features(

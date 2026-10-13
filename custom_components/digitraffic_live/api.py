@@ -129,9 +129,7 @@ class DigitrafficClient:
         params = bbox_params(bbox)
         if until:
             params.append(("to", until))
-        return await self._request(
-            "GET", f"{ROAD_API}/traffic-message/v2/{TRAFFIC_MESSAGE_PATHS[message_type]}", params=params
-        )
+        return await self._request("GET", f"{ROAD_API}/traffic-message/v2/{TRAFFIC_MESSAGE_PATHS[message_type]}", params=params)
 
     async def maintenance_latest(self, bbox: BoundingBox, end_from: str, tasks: Iterable[str]) -> dict[str, Any]:
         """The latest position of each maintenance vehicle that has worked since `end_from`."""
@@ -153,9 +151,7 @@ class DigitrafficClient:
 
     async def forecasts(self, bbox: BoundingBox) -> dict[str, Any]:
         """Current observation and forecasts for the road sections inside a bounding box."""
-        return await self._request(
-            "GET", f"{ROAD_API}/weather/v1/forecast-sections-simple/forecasts", params=bbox_params(bbox)
-        )
+        return await self._request("GET", f"{ROAD_API}/weather/v1/forecast-sections-simple/forecasts", params=bbox_params(bbox))
 
     async def weather_stations(self) -> dict[str, Any]:
         """Every road weather station, with its position."""

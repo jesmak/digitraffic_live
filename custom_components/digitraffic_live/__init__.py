@@ -66,14 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
         texts=await async_load_texts(hass, language),
         vessel_register=VesselRegister(),
         icebreakers=PeriodicValue("icebreakers", ICEBREAKER_REFRESH_SECONDS, fetch_icebreakers, set()),
-        notices=PeriodicValue(
-            "passenger notices", PASSENGER_NOTICES_REFRESH_SECONDS, fetch_notices, PassengerNotices({}, [])
-        ),
+        notices=PeriodicValue("passenger notices", PASSENGER_NOTICES_REFRESH_SECONDS, fetch_notices, PassengerNotices({}, [])),
         maintenance_tasks=PeriodicValue("maintenance tasks", DAILY_REFRESH_SECONDS, client.maintenance_tasks, []),
         forecast_sections=PeriodicValue("forecast sections", DAILY_REFRESH_SECONDS, client.forecast_sections, {}),
-        weather_station_list=PeriodicValue(
-            "weather stations", STATION_LIST_REFRESH_SECONDS, client.weather_stations, {}
-        ),
+        weather_station_list=PeriodicValue("weather stations", STATION_LIST_REFRESH_SECONDS, client.weather_stations, {}),
         weather_station_details=DetailCache("weather station", client.weather_station),
         camera_list=PeriodicValue("weather cameras", STATION_LIST_REFRESH_SECONDS, client.weathercam_stations, {}),
         camera_details=DetailCache("weather camera", client.weathercam_station),

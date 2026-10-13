@@ -150,9 +150,7 @@ async def test_traffic_messages_are_fetched_per_type_and_limited_to_the_area() -
 
 
 async def test_traffic_message_features() -> None:
-    config = TrafficMessageFeedConfig.from_data(
-        {"area": ROAD_AREA, "message_types": ["road_works", "traffic_announcements"]}
-    )
+    config = TrafficMessageFeedConfig.from_data({"area": ROAD_AREA, "message_types": ["road_works", "traffic_announcements"]})
     situations = await fetch_traffic_messages(FakeRoadClient(), config, NOW)
     features = build_traffic_message_features(situations, TEXTS, NOW)
     by_id = {feature["id"]: feature for feature in features}
@@ -184,9 +182,7 @@ def test_working_hours_group_days_with_the_same_hours() -> None:
         {"weekday": "Saturday", "startTime": "09:00", "endTime": "13:00"},
     ]
     assert working_hours(hours, load_texts("fi")) == "ma, pe 07.00–15.00; la 09.00–13.00"
-    weekdays = [
-        {"weekday": day, "startTime": "18:00", "endTime": "06:00"} for day in ("Wednesday", "Monday", "Tuesday")
-    ]
+    weekdays = [{"weekday": day, "startTime": "18:00", "endTime": "06:00"} for day in ("Wednesday", "Monday", "Tuesday")]
     assert working_hours(weekdays, load_texts("en")) == "Mon–Wed 18:00–06:00"
 
 
@@ -335,9 +331,7 @@ def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
         "grip": 0.31,
         "road_warning": "alarm",
     }
-    optical = station_readings(
-        values(TIEN_LÄMPÖTILA_DST_ANT=-1.4, ILMA=2.0, OPTISEN_ANTURIN_KELI1=5, OPTISEN_ANTURIN_VAROITUS1=3)
-    )
+    optical = station_readings(values(TIEN_LÄMPÖTILA_DST_ANT=-1.4, ILMA=2.0, OPTISEN_ANTURIN_KELI1=5, OPTISEN_ANTURIN_VAROITUS1=3))
     assert optical["road_temperature"] == -1.4
     assert optical["road_surface"] == "frost"
     assert optical["road_warning"] == "frost"

@@ -113,12 +113,7 @@ def ship_heading(props: Mapping[str, Any]) -> float | None:
         return heading
     course = props.get("cog")
     speed = speed_knots(props)
-    if (
-        isinstance(course, (int, float))
-        and 0 <= course < AIS_COURSE_NOT_AVAILABLE
-        and speed is not None
-        and speed >= MOVING_SPEED_KNOTS
-    ):
+    if isinstance(course, (int, float)) and 0 <= course < AIS_COURSE_NOT_AVAILABLE and speed is not None and speed >= MOVING_SPEED_KNOTS:
         return course
     return None
 

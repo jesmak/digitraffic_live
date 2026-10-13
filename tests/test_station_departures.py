@@ -66,9 +66,7 @@ def test_stops_at_keeps_only_trains_that_stop_there_later_and_fetches_more() -> 
 def test_only_passenger_trains_are_listed() -> None:
     cargo = STATION_TRAINS[0] | {"trainNumber": 60001, "trainType": "T", "trainCategory": "Cargo"}
     config = StationDeparturesConfig.from_data({"station": "LR", "stops_at": "HKI"})
-    assert [d["line"] for d in build_departures([cargo, *STATION_TRAINS], config, NAMES, {}, load_texts("fi"))][
-        0
-    ] == "IC 101"
+    assert [d["line"] for d in build_departures([cargo, *STATION_TRAINS], config, NAMES, {}, load_texts("fi"))][0] == "IC 101"
 
 
 def test_station_names_lose_the_asema() -> None:

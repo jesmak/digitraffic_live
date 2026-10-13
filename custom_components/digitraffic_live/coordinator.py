@@ -146,9 +146,7 @@ class SubentryCoordinator[T](DataUpdateCoordinator[T]):
     default_refresh_seconds = DEFAULT_REFRESH_SECONDS
 
     def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
-        refresh_seconds = max(
-            MIN_REFRESH_SECONDS, int(subentry.data.get(CONF_REFRESH_SECONDS, self.default_refresh_seconds))
-        )
+        refresh_seconds = max(MIN_REFRESH_SECONDS, int(subentry.data.get(CONF_REFRESH_SECONDS, self.default_refresh_seconds)))
         super().__init__(
             hass,
             _LOGGER,
@@ -205,9 +203,7 @@ class ShipFeedCoordinator(FeedCoordinator):
         runtime = self.runtime
         now_ms = int(dt_util.utcnow().timestamp() * 1000)
         positions = await fetch_ship_positions(runtime.client, self.feed_config, now_ms)
-        await runtime.vessel_register.ensure(
-            runtime.client, (int(position["properties"]["mmsi"]) for position in positions)
-        )
+        await runtime.vessel_register.ensure(runtime.client, (int(position["properties"]["mmsi"]) for position in positions))
         icebreakers = await runtime.icebreakers.get() if self.feed_config.icebreakers else set()
         return build_ship_features(positions, runtime.vessel_register, icebreakers, self.feed_config, runtime.texts)
 
@@ -353,9 +349,7 @@ class StationDeparturesCoordinator(SubentryCoordinator[StationDepartures]):
             if config.stops_at:
                 trains = await runtime.client.trains_between(config.station, config.stops_at, config.fetch_count)
             else:
-                trains = await runtime.client.station_departures(
-                    config.station, config.fetch_count, PASSENGER_CATEGORIES
-                )
+                trains = await runtime.client.station_departures(config.station, config.fetch_count, PASSENGER_CATEGORIES)
         except DigitrafficError as err:
             raise UpdateFailed(str(err)) from err
         # Notices only add to the departures: without them, the departures are shown all the same.

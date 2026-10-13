@@ -112,17 +112,14 @@ async def fetch_maintenance(
     bbox = config.area.bbox()
     requests = [client.maintenance_latest(bbox, utc_iso(now - timedelta(minutes=config.max_age_minutes)), config.tasks)]
     if config.show_routes:
-        requests.append(
-            client.maintenance_routes(bbox, utc_iso(now - timedelta(hours=config.route_hours)), config.tasks)
-        )
+        requests.append(client.maintenance_routes(bbox, utc_iso(now - timedelta(hours=config.route_hours)), config.tasks))
     responses = await asyncio.gather(*requests)
 
     def inside(response: Any, geometry_types: set[str]) -> list[dict[str, Any]]:
         return [
             feature
             for feature in (response or {}).get("features") or []
-            if (feature.get("geometry") or {}).get("type") in geometry_types
-            and config.area.touches(feature.get("geometry"))
+            if (feature.get("geometry") or {}).get("type") in geometry_types and config.area.touches(feature.get("geometry"))
         ]
 
     vehicles = inside(responses[0], {"Point"})

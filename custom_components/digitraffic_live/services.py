@@ -30,9 +30,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         runtime = entries[0].runtime_data
 
         try:
-            data = await runtime.client.composition(
-                call.data[ATTR_DEPARTURE_DATE].isoformat(), call.data[ATTR_TRAIN_NUMBER]
-            )
+            data = await runtime.client.composition(call.data[ATTR_DEPARTURE_DATE].isoformat(), call.data[ATTR_TRAIN_NUMBER])
         except DigitrafficNotFound:
             # Many trains, e.g. most commuter trains, have no published composition.
             data = None

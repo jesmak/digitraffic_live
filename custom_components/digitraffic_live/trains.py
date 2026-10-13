@@ -59,7 +59,9 @@ TRAIN_FIELDS = """
     last: timeTableRows(where: {actualTime: {unequals: null}}, orderBy: {scheduledTime: DESCENDING}, take: 1) {
       station { name shortCode } type differenceInMinutes actualTime
     }
-    next: timeTableRows(where: {and: [{actualTime: {equals: null}}, {commercialStop: {equals: true}}]}, orderBy: {scheduledTime: ASCENDING}, take: 1) {
+    next: timeTableRows(
+      where: {and: [{actualTime: {equals: null}}, {commercialStop: {equals: true}}]}, orderBy: {scheduledTime: ASCENDING}, take: 1
+    ) {
       station { name shortCode } type scheduledTime liveEstimateTime differenceInMinutes commercialTrack cancelled
     }
     first: timeTableRows(orderBy: {scheduledTime: ASCENDING}, take: 1) { station { name } }
@@ -78,9 +80,7 @@ class TrainFeedConfig:
         """From config subentry data."""
         return cls(
             route=tuple(data.get(CONF_ROUTE) or ()),
-            categories=tuple(
-                TRAIN_CATEGORIES[key] for key in data.get(CONF_CATEGORIES) or () if key in TRAIN_CATEGORIES
-            ),
+            categories=tuple(TRAIN_CATEGORIES[key] for key in data.get(CONF_CATEGORIES) or () if key in TRAIN_CATEGORIES),
             area=Area.from_selector(data[CONF_AREA]) if data.get(CONF_AREA) else None,
             max_age_minutes=int(data.get(CONF_MAX_AGE_MINUTES, DEFAULT_TRAIN_MAX_AGE_MINUTES)),
         )
@@ -103,9 +103,7 @@ def build_train_query(route: Sequence[str] = (), categories: Sequence[str] = ())
         for code in route
     ]
     if categories:
-        options = [
-            f"{{trainType: {{trainCategory: {{name: {{equals: {graphql_string(name)}}}}}}}}}" for name in categories
-        ]
+        options = [f"{{trainType: {{trainCategory: {{name: {{equals: {graphql_string(name)}}}}}}}}}" for name in categories]
         conditions.append(options[0] if len(options) == 1 else f"{{or: [{', '.join(options)}]}}")
 
     arguments = ""

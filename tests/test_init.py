@@ -75,14 +75,10 @@ async def test_feeds_create_map_feed_sensors(hass: HomeAssistant, digitraffic_ap
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_devices_without_a_subentry_are_removed(
-    hass: HomeAssistant, digitraffic_api: AiohttpClientMocker
-) -> None:
+async def test_devices_without_a_subentry_are_removed(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
     entry = feed_entry(hass)
     device_registry = dr.async_get(hass)
-    stale = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "weather_station_3036")}
-    )
+    stale = device_registry.async_get_or_create(config_entry_id=entry.entry_id, identifiers={(DOMAIN, "weather_station_3036")})
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -95,9 +91,7 @@ async def test_feeds_are_kept_out_of_the_recorder() -> None:
     assert MATCH_ALL in MapFeedSensor._unrecorded_attributes
 
 
-async def test_a_failing_feed_does_not_affect_the_others(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_a_failing_feed_does_not_affect_the_others(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(f"{MARINE_API}/ais/v1/locations", json=ais_locations())
     for mmsi, vessel in VESSELS.items():
         aioclient_mock.get(f"{MARINE_API}/ais/v1/vessels/{mmsi}", json=vessel)
@@ -227,9 +221,7 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
     assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_tienpinta") is not None
 
     camera = next(
-        coordinator
-        for coordinator in entry.runtime_data.coordinators.values()
-        if isinstance(coordinator, WeatherCameraCoordinator)
+        coordinator for coordinator in entry.runtime_data.coordinators.values() if isinstance(coordinator, WeatherCameraCoordinator)
     )
     image = hass.data["image"].get_entity(view)
     image._cached_image = object()

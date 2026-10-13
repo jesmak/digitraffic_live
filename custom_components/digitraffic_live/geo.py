@@ -30,10 +30,7 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance between two points in kilometres."""
     d_lat = math.radians(lat2 - lat1)
     d_lon = math.radians(lon2 - lon1)
-    a = (
-        math.sin(d_lat / 2) ** 2
-        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon / 2) ** 2
-    )
+    a = math.sin(d_lat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon / 2) ** 2
     return 2 * EARTH_RADIUS_KM * math.asin(min(1.0, math.sqrt(a)))
 
 
@@ -272,9 +269,7 @@ def _middle_of(paths: Sequence[Sequence[Position]]) -> tuple[float, float] | Non
 
 
 def _path_length_km(path: Sequence[Position]) -> float:
-    return sum(
-        haversine_km(float(start[1]), float(start[0]), float(end[1]), float(end[0])) for start, end in pairwise(path)
-    )
+    return sum(haversine_km(float(start[1]), float(start[0]), float(end[1]), float(end[0])) for start, end in pairwise(path))
 
 
 def _ring_centre(ring: Sequence[Position]) -> tuple[float, float] | None:

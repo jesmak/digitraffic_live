@@ -80,9 +80,7 @@ def test_passenger_notices_are_indexed_by_train() -> None:
 
 
 def test_composition_details() -> None:
-    assert composition_details(COMPOSITION, load_texts("en")) == [
-        {"label": "Train", "value": "5 cars · max 200 km/h · restaurant, pets"}
-    ]
+    assert composition_details(COMPOSITION, load_texts("en")) == [{"label": "Train", "value": "5 cars · max 200 km/h · restaurant, pets"}]
     assert composition_details(None, load_texts("en")) == []
 
 

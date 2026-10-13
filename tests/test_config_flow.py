@@ -89,9 +89,7 @@ async def test_ship_feed_needs_a_radius(hass: HomeAssistant) -> None:
 
 async def test_train_feed_validation_and_creation(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "trains"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "trains"), context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     route_options = result["data_schema"].schema["route"].config["options"]
     assert [option["value"] for option in route_options] == ["HKI", "LR"]
@@ -114,9 +112,7 @@ async def test_train_feed_validation_and_creation(hass: HomeAssistant, digitraff
 
 async def test_adding_station_departures(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "station_departures"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "station_departures"), context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     departures = {"name": "Lappeenranta → Helsinki", "station": "LR", "departures": 5, "refresh_seconds": 60}
 
@@ -164,9 +160,7 @@ async def test_reconfiguring_a_feed(hass: HomeAssistant, digitraffic_api: Aiohtt
 async def test_station_list_failure_aborts(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
     aioclient_mock.get("https://rata.digitraffic.fi/api/v1/metadata/stations", status=500)
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "trains"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "trains"), context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
@@ -174,9 +168,7 @@ async def test_station_list_failure_aborts(hass: HomeAssistant, aioclient_mock: 
 async def test_adding_a_traffic_message_feed(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
 
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "traffic_messages"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "traffic_messages"), context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.subentries.async_configure(
@@ -201,16 +193,12 @@ async def test_adding_a_traffic_message_feed(hass: HomeAssistant, road_api: Aioh
 async def test_adding_a_road_weather_station(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
 
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "road_weather_station"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "road_weather_station"), context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     options = result["data_schema"].schema["station"].config["options"]
     assert options[0] == {"value": "3036", "label": "vt6 Lappeenranta Kärki (3036)"}
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"station": "3036", "refresh_seconds": 300.0}
-    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"station": "3036", "refresh_seconds": 300.0})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Road 6 Lappeenranta, Kärki", "named after the station, in the integration's language"
     await hass.async_block_till_done()
@@ -221,12 +209,8 @@ async def test_adding_a_road_weather_station(hass: HomeAssistant, road_api: Aioh
     assert subentry.data == {"station": "3036", "refresh_seconds": 300}
 
     # The same station can't be added twice.
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "road_weather_station"), context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"station": "3036", "refresh_seconds": 300.0}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "road_weather_station"), context={"source": SOURCE_USER})
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"station": "3036", "refresh_seconds": 300.0})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -243,24 +227,18 @@ async def test_adding_a_road_weather_station(hass: HomeAssistant, road_api: Aioh
 async def test_adding_a_weather_camera(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
 
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "weather_camera"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "weather_camera"), context={"source": SOURCE_USER})
     assert result["data_schema"].schema["camera"].config["options"] == [
         {"value": "C03558", "label": "vt6 Lappeenranta Saimaan kanava (C03558)"}
     ]
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"camera": "C03558", "refresh_seconds": 600.0}
-    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"camera": "C03558", "refresh_seconds": 600.0})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Road 6 Lappeenranta, Saimaa channel"
     await hass.async_block_till_done()
     assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_imatralle").state == "2026-09-15T11:47:33+00:00"
 
 
-async def test_reconfiguring_a_feed_created_before_a_setting_existed(
-    hass: HomeAssistant, road_api: AiohttpClientMocker
-) -> None:
+async def test_reconfiguring_a_feed_created_before_a_setting_existed(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Digitraffic",
@@ -287,9 +265,7 @@ async def test_reconfiguring_a_feed_created_before_a_setting_existed(
 
 async def test_road_feeds_need_a_radius(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
     entry = await setup_entry(hass)
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "weather_cameras"), context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "weather_cameras"), context={"source": SOURCE_USER})
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"name": "Cameras", "area": {**ROAD_AREA, "radius": 0}, "refresh_seconds": 600}
     )

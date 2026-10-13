@@ -56,15 +56,11 @@ class TrafficMessageFeedConfig:
         )
 
 
-async def fetch_traffic_messages(
-    client: DigitrafficClient, config: TrafficMessageFeedConfig, now: datetime
-) -> list[dict[str, Any]]:
+async def fetch_traffic_messages(client: DigitrafficClient, config: TrafficMessageFeedConfig, now: datetime) -> list[dict[str, Any]]:
     """Messages of the chosen types that touch the area."""
     until = utc_iso(now + timedelta(days=config.upcoming_days))
     bbox = config.area.bbox()
-    responses = await asyncio.gather(
-        *(client.traffic_messages(message_type, bbox, until) for message_type in config.message_types)
-    )
+    responses = await asyncio.gather(*(client.traffic_messages(message_type, bbox, until) for message_type in config.message_types))
     return [
         feature
         for response in responses
@@ -73,9 +69,7 @@ async def fetch_traffic_messages(
     ]
 
 
-def build_traffic_message_features(
-    situations: Sequence[Mapping[str, Any]], texts: Texts, now: datetime
-) -> list[dict[str, Any]]:
+def build_traffic_message_features(situations: Sequence[Mapping[str, Any]], texts: Texts, now: datetime) -> list[dict[str, Any]]:
     """A warning sign for each message, and the stretch of road or area it covers."""
     features: list[dict[str, Any]] = []
     for situation in situations:

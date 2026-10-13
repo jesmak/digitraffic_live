@@ -105,8 +105,7 @@ def build_departure(
 
     departure: dict[str, Any] = {
         "id": f"train:{train.get('departureDate')}/{train.get('trainNumber')}",
-        "line": train.get("commuterLineID")
-        or f"{train.get('trainType') or ''} {train.get('trainNumber') or ''}".strip(),
+        "line": train.get("commuterLineID") or f"{train.get('trainType') or ''} {train.get('trainNumber') or ''}".strip(),
         "mode": "train",
         "headsign": station_names.get(destination) or destination,
         "scheduled": scheduled.isoformat(),

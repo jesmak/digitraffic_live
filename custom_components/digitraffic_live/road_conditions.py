@@ -134,7 +134,5 @@ def condition_details(condition: str, forecast: Mapping[str, Any], texts: Texts)
 def count_poor(features: Sequence[Mapping[str, Any]]) -> int:
     """Sections with poor or extremely poor conditions: the feed sensor's state."""
     return sum(
-        1
-        for feature in features
-        if feature["properties"].get("kind") in {f"road.condition.{condition}" for condition in POOR_CONDITIONS}
+        1 for feature in features if feature["properties"].get("kind") in {f"road.condition.{condition}" for condition in POOR_CONDITIONS}
     )
