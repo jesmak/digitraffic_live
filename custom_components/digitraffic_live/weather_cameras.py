@@ -12,7 +12,7 @@ from typing import Any
 
 from homeassistant.util import dt as dt_util
 
-from .api import DigitrafficClient
+from .api import DigitrafficClient, DigitrafficError
 from .cache import DetailCache, details_name, fetch_each
 from .const import CONF_AREA
 from .feed import point_feature
@@ -96,6 +96,9 @@ async def fetch_picture_times(client: DigitrafficClient, camera_ids: Sequence[st
         stations = [station for station in data.get("stations") or [] if str(station.get("id")) in wanted]
     else:
         stations = list((await fetch_each(camera_ids, client.weathercam_station_data, name="weather camera")).values())
+        # A camera that fails alone shows its pictures without their times, but with none, the feed is down.
+        if camera_ids and not stations:
+            raise DigitrafficError(f"None of the {len(camera_ids)} weather cameras' data could be fetched")
     return {str(station.get("id")): picture_times(station) for station in stations}
 
 

@@ -5,8 +5,8 @@ weather station sensors and railway station departures.
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
 
-<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains, road weather stations with their temperatures and a road works site, the departures from Tampere station, and the road conditions at three road weather stations">
-<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains, road weather stations with their temperatures and a road works site, the departures from Tampere station, and the road conditions at three road weather stations">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains coloured by their delay, road weather stations with their temperatures and a road works site, the list of them beside it with a late train's details open, the departures from Tampere station, and the road conditions at three road weather stations">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains coloured by their delay, road weather stations with their temperatures and a road works site, the list of them beside it with a late train's details open, the departures from Tampere station, and the road conditions at three road weather stations">
 
 ## What is it?
 
@@ -119,6 +119,12 @@ streets are not included.
 | Routes from the last            | hours   | How far back routes are drawn, at most 24                          | 2           |
 | Update interval                 | seconds | How often the feed is fetched, at least 30                         | 60          |
 
+Digitraffic gives a vehicle no id of its own, only that of the stretch it drove last, which changes every few
+minutes. The feed follows a vehicle from one update to the next along its route, so its marker keeps its id while the
+route goes on. When the route breaks, such as in a gap in Digitraffic's data, the vehicle starts over as a new item,
+and its details close if they are open. A route line's id changes when its oldest stretch falls out of **Routes from
+the last**.
+
 ### Road condition feed
 
 Add with **Add road condition feed**. Road sections are drawn as lines coloured by driving conditions.
@@ -128,16 +134,17 @@ Add with **Add road condition feed**. Road sections are drawn as lines coloured 
 | Name                 | string  | Name of the feed and its sensor                            |             |
 | Area                 | circle  | Centre and radius, picked on a map                         | home, 50 km |
 | Time                 | enum    | Now, or in 2, 4, 6 or 12 hours                             | now         |
-| Only poor conditions | boolean | Leave out sections with normal driving conditions          | off         |
+| Only poor conditions | boolean | Leave out sections whose conditions are normal or unknown  | off         |
 | Update interval      | seconds | How often the feed is fetched, at least 30                 | 600         |
 
 ### Road weather station and weather camera feeds
 
 Add with **Add road weather station feed** or **Add weather camera feed**. Both have a name, an area (home, 30 km
 by default) and an update interval (300 and 600 seconds). Station markers show the air temperature, or the road
-temperature if you choose so with **Value on the map**. The popup has both. Markers turn amber or red when the
-station warns about frost, snow or ice, or when its grip is that of a winter road or worse (see
-[Grip condition](#grip-condition)).
+temperature if you choose so with **Value on the map**. The popup has both. Markers turn amber when the station
+gives any warning, its road is frosty, snowy or slushy, or its grip is that of a winter road (see
+[Grip condition](#grip-condition)). They turn red when the road is icy, the station raises an alarm or its grip is
+very slippery.
 
 ### Road weather station
 
@@ -254,8 +261,9 @@ the reason there instead, in the integration's language: rolling stock, track wo
 Digitraffic gives the reasons as category codes; their texts are the integration's own.
 
 `notices` holds Digitraffic's passenger notices for the whole station while they are in force, such as track works
-with buses replacing trains, in the integration's language when Digitraffic has it, otherwise in Finnish. Only the
-next departure time is stored in the recorder.
+with buses replacing trains, in the integration's language when Digitraffic has it, otherwise in Finnish. The
+departures and the notices aren't stored in the recorder, only the next departure time and the station's other,
+small attributes.
 
 ## Actions
 
@@ -334,8 +342,8 @@ cards:
 
 Nothing is required. Road weather stations get their new sensors (grip condition, wind, precipitation and
 visibility) on the next restart, and entity IDs and attributes carry over. Swedish is no longer one of the
-integration's languages. An integration set to Swedish writes its feed texts in English, and choosing Finnish or
-English in its settings makes that explicit.
+integration's languages. An integration set to Swedish is switched to English when it starts, and can be set to
+Finnish in its settings.
 
 ## Data
 

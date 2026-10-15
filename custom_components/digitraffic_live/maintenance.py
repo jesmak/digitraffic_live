@@ -108,12 +108,19 @@ class MaintenanceFeedConfig:
 async def fetch_maintenance(
     client: DigitrafficClient, config: MaintenanceFeedConfig, now: datetime
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Latest vehicle positions, and routes if they are shown, inside the area."""
+    """Latest vehicle positions and route pieces inside the area.
+
+    The route pieces are fetched even when routes aren't shown, over the vehicles' own
+    window then: a vehicle is followed from one update to the next through them (see
+    stable_vehicle_ids).
+    """
     bbox = config.area.bbox()
-    requests = [client.maintenance_latest(bbox, utc_iso(now - timedelta(minutes=config.max_age_minutes)), config.tasks)]
-    if config.show_routes:
-        requests.append(client.maintenance_routes(bbox, utc_iso(now - timedelta(hours=config.route_hours)), config.tasks))
-    responses = await asyncio.gather(*requests)
+    vehicles_from = utc_iso(now - timedelta(minutes=config.max_age_minutes))
+    routes_from = utc_iso(now - timedelta(hours=config.route_hours)) if config.show_routes else vehicles_from
+    responses = await asyncio.gather(
+        client.maintenance_latest(bbox, vehicles_from, config.tasks),
+        client.maintenance_routes(bbox, routes_from, config.tasks),
+    )
 
     def inside(response: Any, geometry_types: set[str]) -> list[dict[str, Any]]:
         return [
@@ -122,9 +129,33 @@ async def fetch_maintenance(
             if (feature.get("geometry") or {}).get("type") in geometry_types and config.area.touches(feature.get("geometry"))
         ]
 
-    vehicles = inside(responses[0], {"Point"})
-    routes = inside(responses[1], {"LineString"}) if config.show_routes else []
-    return vehicles, routes
+    return inside(responses[0], {"Point"}), inside(responses[1], {"LineString"})
+
+
+def stable_vehicle_ids(
+    vehicles: Sequence[Mapping[str, Any]], routes: Sequence[Mapping[str, Any]], known: Mapping[Any, Any]
+) -> dict[Any, Any]:
+    """Each vehicle's id by the id Digitraffic gives it now.
+
+    Digitraffic has no vehicle id: a vehicle's id is that of its latest route piece, new every
+    few minutes. Following each piece's previousId back to a piece known from the last update
+    (`known`, this function's previous result) keeps the vehicle's first id while the chain holds.
+    """
+    previous = {(piece.get("properties") or {}).get("id"): (piece.get("properties") or {}).get("previousId") for piece in routes}
+    result: dict[Any, Any] = {}
+    taken: set[Any] = set()
+    for vehicle in vehicles:
+        piece = (vehicle.get("properties") or {}).get("id")
+        if piece is None:
+            continue
+        step, seen = piece, set()
+        while step is not None and step not in known and step not in seen:
+            seen.add(step)
+            step = previous.get(step)
+        stable = known[step] if step in known and known[step] not in taken else piece
+        result[piece] = stable
+        taken.add(stable)
+    return result
 
 
 def task_names(tasks: Any, language: str) -> dict[str, str]:
@@ -145,6 +176,7 @@ def build_maintenance_features(
     routes: Sequence[Mapping[str, Any]],
     names: Mapping[str, str],
     texts: Texts,
+    vehicle_ids: Mapping[Any, Any] | None = None,
 ) -> list[dict[str, Any]]:
     features = []
     for vehicle in vehicles:
@@ -155,9 +187,12 @@ def build_maintenance_features(
         tasks = list(props.get("tasks") or [])
         direction = props.get("direction")
         moving = isinstance(direction, (int, float)) and not isinstance(direction, bool)
+        details = [row(texts("tasks"), task_list(tasks, names))] if tasks else []
+        if props.get("source"):
+            details.append(row(texts("source"), props["source"]))
         features.append(
             point_feature(
-                f"maintenance:{props['id']}",
+                f"maintenance:{(vehicle_ids or {}).get(props['id'], props['id'])}",
                 coordinates[1],
                 coordinates[0],
                 {
@@ -166,14 +201,10 @@ def build_maintenance_features(
                     "updated": props.get("time"),
                     "heading": direction if moving else None,
                     "stationary": not moving,
-                    "details": [
-                        row(texts("tasks"), task_list(tasks, names)) if tasks else None,
-                        row(texts("source"), props["source"]) if props.get("source") else None,
-                    ],
+                    "details": details,
                 },
             )
         )
-        features[-1]["properties"]["details"] = [item for item in features[-1]["properties"]["details"] if item]
 
     for chain in merge_routes(routes):
         geometry = line_geometry([simplify_path(path, SIMPLIFY_TOLERANCE_KM) for path in chain.paths])

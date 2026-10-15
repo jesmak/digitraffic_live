@@ -13,7 +13,7 @@ from custom_components.digitraffic_live.const import DOMAIN
 from .conftest import HAMINA_AREA, ROAD_AREA
 
 SHIP_FEED = {
-    "name": "Ships near the cabin",
+    "name": "Ships near the harbour",
     "area": HAMINA_AREA,
     "ship_types": [],
     "include_moored": True,
@@ -68,13 +68,21 @@ async def test_adding_a_ship_feed_creates_its_sensor(hass: HomeAssistant, digitr
     await hass.async_block_till_done()
 
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.title == "Ships near the cabin"
+    assert subentry.title == "Ships near the harbour"
     assert subentry.data["area"] == HAMINA_AREA
     assert "name" not in subentry.data
 
-    state = hass.states.get("sensor.ships_near_the_cabin")
+    state = hass.states.get("sensor.ships_near_the_harbour")
     assert state is not None
     assert state.state == "2"
+
+
+async def test_a_feed_needs_a_name(hass: HomeAssistant) -> None:
+    entry = await setup_entry(hass)
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "ships"), context={"source": SOURCE_USER})
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {**SHIP_FEED, "name": "   "})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"name": "name_required"}
 
 
 async def test_ship_feed_needs_a_radius(hass: HomeAssistant) -> None:
@@ -145,16 +153,16 @@ async def test_reconfiguring_a_feed(hass: HomeAssistant, digitraffic_api: Aiohtt
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], SHIP_FEED | {"name": "Cabin ships", "include_moored": False}
+        result["flow_id"], SHIP_FEED | {"name": "Harbour ships", "include_moored": False}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
     subentry = entry.subentries[subentry_id]
-    assert subentry.title == "Cabin ships"
+    assert subentry.title == "Harbour ships"
     assert subentry.data["include_moored"] is False
-    assert hass.states.get("sensor.ships_near_the_cabin").state == "1", "the moored ship is left out after reload"
+    assert hass.states.get("sensor.ships_near_the_harbour").state == "1", "the moored ship is left out after reload"
 
 
 async def test_station_list_failure_aborts(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:

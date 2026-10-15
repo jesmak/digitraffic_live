@@ -21,7 +21,7 @@ from homeassistant.loader import async_get_integration
 
 from .api import DigitrafficClient
 from .cache import DetailCache
-from .const import CONF_LANGUAGE, DOMAIN
+from .const import CONF_LANGUAGE, DOMAIN, LANGUAGES
 from .coordinator import COORDINATORS, DigitrafficConfigEntry, DigitrafficRuntimeData, PeriodicValue
 from .services import async_setup_services
 from .ships import VesselRegister, icebreaker_mmsis
@@ -43,6 +43,18 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) -> bool:
+    if entry.version > 1:
+        return False
+    if entry.minor_version < 2:
+        # Swedish was dropped in 1.1. An entry still set to it is switched to English, which it already wrote mostly.
+        data = dict(entry.data)
+        if data.get(CONF_LANGUAGE) not in LANGUAGES:
+            data[CONF_LANGUAGE] = "en"
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=2)
     return True
 
 

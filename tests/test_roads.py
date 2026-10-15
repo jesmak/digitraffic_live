@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+import pytest
 from homeassistant.util import dt as dt_util
 
 from custom_components.digitraffic_live.api import DigitrafficError
@@ -16,6 +17,7 @@ from custom_components.digitraffic_live.maintenance import (
     build_maintenance_features,
     fetch_maintenance,
     merge_routes,
+    stable_vehicle_ids,
     task_names,
 )
 from custom_components.digitraffic_live.road_conditions import (
@@ -183,7 +185,7 @@ def test_working_hours_group_days_with_the_same_hours() -> None:
         {"weekday": "Monday", "startTime": "07:00", "endTime": "15:00"},
         {"weekday": "Saturday", "startTime": "09:00", "endTime": "13:00"},
     ]
-    assert working_hours(hours, load_texts("fi")) == "ma, pe 07.00–15.00; la 09.00–13.00"
+    assert working_hours(hours, load_texts("fi")) == "ma, pe 07.00–15.00 · la 09.00–13.00"
     weekdays = [{"weekday": day, "startTime": "18:00", "endTime": "06:00"} for day in ("Wednesday", "Monday", "Tuesday")]
     assert working_hours(weekdays, load_texts("en")) == "Mon–Wed 18:00–06:00"
 
@@ -191,19 +193,38 @@ def test_working_hours_group_days_with_the_same_hours() -> None:
 # ---------------- maintenance ----------------
 
 
-async def test_maintenance_routes_are_requested_only_when_shown() -> None:
+async def test_hidden_routes_are_requested_only_over_the_vehicles_window() -> None:
     client = FakeRoadClient()
     hidden = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "show_routes": False, "max_age_minutes": 30})
     vehicles, routes = await fetch_maintenance(client, hidden, NOW)
-    assert [call[0] for call in client.calls] == ["maintenance_latest"]
-    assert client.calls[0][1] == ("2026-09-15T11:30:00Z", ())
-    assert len(vehicles) == 2 and routes == []
+    assert client.calls == [
+        ("maintenance_latest", ("2026-09-15T11:30:00Z", ())),
+        ("maintenance_routes", ("2026-09-15T11:30:00Z", ())),
+    ]
+    assert len(vehicles) == 2 and len(routes) == 4
 
     client.calls.clear()
     shown = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "tasks": ["salting"], "route_hours": 99})
     assert shown.route_hours == 24
     await fetch_maintenance(client, shown, NOW)
     assert client.calls[1] == ("maintenance_routes", ("2026-09-14T12:00:00Z", ("SALTING",)))
+
+
+def test_a_vehicle_keeps_its_id_while_its_route_pieces_chain() -> None:
+    def piece(piece_id: int, previous: int | None = None) -> dict[str, Any]:
+        return {"properties": {"id": piece_id, "previousId": previous}}
+
+    first = stable_vehicle_ids([piece(10), piece(20)], [], {})
+    assert first == {10: 10, 20: 20}
+    # Vehicle 10 drove two new pieces; vehicle 20's chain broke, so it starts over with its new id.
+    second = stable_vehicle_ids([piece(12), piece(25)], [piece(11, 10), piece(12, 11), piece(25, 24)], first)
+    assert second == {12: 10, 25: 25}
+    assert stable_vehicle_ids([piece(13)], [piece(13, 12)], second) == {13: 10}
+
+    features = build_maintenance_features(
+        [{**piece(12), "geometry": {"type": "Point", "coordinates": [28.1, 61.0]}}], [], {}, TEXTS, second
+    )
+    assert features[0]["id"] == "maintenance:10"
 
 
 def test_route_pieces_of_the_same_work_are_joined() -> None:
@@ -255,6 +276,11 @@ def test_road_condition_features() -> None:
 
 
 # ---------------- weather stations and cameras ----------------
+
+
+async def test_a_station_feed_is_down_when_no_station_answers() -> None:
+    with pytest.raises(DigitrafficError, match="None of the 1 weather stations"):
+        await fetch_sensor_values(FakeRoadClient(), ["5007"])
 
 
 async def test_weather_station_features() -> None:

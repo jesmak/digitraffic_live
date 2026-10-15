@@ -22,7 +22,7 @@ from .const import (
     DOMAIN,
     SERVICE_GET_TRAIN_COMPOSITION,
 )
-from .feed import point_feature, row
+from .feed import format_time, point_feature, row
 from .geo import Area
 from .texts import Texts
 
@@ -139,14 +139,6 @@ def station_name(name: Any) -> str:
 def train_label(train: Mapping[str, Any]) -> str:
     """ "IC 8" """
     return f"{(train.get('trainType') or {}).get('name') or ''} {train.get('trainNumber') or ''}".strip()
-
-
-def format_clock(value: str | None, language: str) -> str:
-    """ "21.04" in Finnish, "21:04" in English; "" when missing."""
-    parsed = dt_util.parse_datetime(value) if value else None
-    if parsed is None:
-        return ""
-    return dt_util.as_local(parsed).strftime("%H:%M" if language == "en" else "%H.%M")
 
 
 def notice_key(train_number: Any, departure_date: Any) -> str:
@@ -302,11 +294,11 @@ def train_details(train: Mapping[str, Any], texts: Texts) -> list[dict[str, Any]
     rows = []
 
     if last := first_row(train, "last"):
-        clock = format_clock(last.get("actualTime"), texts.language)
+        clock = format_time(last.get("actualTime"), texts.language, with_date=False)
         rows.append(row(texts("passed"), join_words(station_name(last.get("station", {}).get("name")), clock)))
 
     if upcoming := first_row(train, "next"):
-        clock = format_clock(upcoming.get("liveEstimateTime") or upcoming.get("scheduledTime"), texts.language)
+        clock = format_time(upcoming.get("liveEstimateTime") or upcoming.get("scheduledTime"), texts.language, with_date=False)
         value = join_words(station_name(upcoming.get("station", {}).get("name")), clock)
         if track := upcoming.get("commercialTrack"):
             value += f", {texts('track')} {track}"

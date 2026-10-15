@@ -27,7 +27,7 @@ def feed_entry(hass: HomeAssistant) -> MockConfigEntry:
         subentries_data=[
             ConfigSubentryData(
                 subentry_type="ships",
-                title="Ships near the cabin",
+                title="Ships near the harbour",
                 unique_id=None,
                 data={
                     "area": HAMINA_AREA,
@@ -49,12 +49,21 @@ def feed_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+async def test_an_entry_left_on_swedish_is_switched_to_english(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, title="Digitraffic", data={"language": "sv"}, version=1, minor_version=1)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.data["language"] == "en"
+    assert entry.minor_version == 2
+
+
 async def test_feeds_create_map_feed_sensors(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
     entry = feed_entry(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    ships = hass.states.get("sensor.ships_near_the_cabin")
+    ships = hass.states.get("sensor.ships_near_the_harbour")
     assert ships.state == "2"
     assert ships.attributes["map_feed_version"] == 1
     assert ships.attributes["attribution"] == "Fintraffic / digitraffic.fi, CC BY 4.0"
@@ -115,7 +124,7 @@ async def test_a_failing_feed_does_not_affect_the_others(hass: HomeAssistant, ai
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.trains_hki_lr").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.ships_near_the_cabin").state == "2"
+    assert hass.states.get("sensor.ships_near_the_harbour").state == "2"
 
 
 async def test_train_composition_action(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:

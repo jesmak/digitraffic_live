@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from homeassistant.util import dt as dt_util
 
+from custom_components.digitraffic_live.feed import format_time
 from custom_components.digitraffic_live.geo import Area
 from custom_components.digitraffic_live.texts import load_texts
 from custom_components.digitraffic_live.trains import (
@@ -15,7 +16,6 @@ from custom_components.digitraffic_live.trains import (
     build_train_query,
     composition_details,
     delay_minutes,
-    format_clock,
     passenger_notice_index,
     station_name,
     train_label,
@@ -64,9 +64,9 @@ def test_train_helpers() -> None:
 
 
 def test_clock_follows_the_language() -> None:
-    assert re.fullmatch(r"\d\d\.\d\d", format_clock("2026-09-14T18:04:00Z", "fi"))
-    assert re.fullmatch(r"\d\d:\d\d", format_clock("2026-09-14T18:04:00Z", "en"))
-    assert format_clock(None, "fi") == ""
+    assert re.fullmatch(r"\d\d\.\d\d", format_time("2026-09-14T18:04:00Z", "fi", with_date=False))
+    assert re.fullmatch(r"\d\d:\d\d", format_time("2026-09-14T18:04:00Z", "en", with_date=False))
+    assert format_time(None, "fi", with_date=False) == ""
 
 
 def test_passenger_notices_are_indexed_by_train() -> None:

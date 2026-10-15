@@ -119,6 +119,7 @@ def language_schema(default: str) -> vol.Schema:
 
 class DigitrafficLiveConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
@@ -171,6 +172,8 @@ class FeedFlow(ConfigSubentryFlow):
             data = dict(user_input)
             title = data.pop(CONF_NAME).strip()
             errors = self.validate(data)
+            if not title:
+                errors[CONF_NAME] = "name_required"
             if not errors:
                 data = self.clean(data)
                 if current is None:

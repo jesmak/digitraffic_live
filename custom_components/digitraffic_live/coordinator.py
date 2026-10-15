@@ -44,7 +44,7 @@ from .const import (
     SUBENTRY_WEATHER_STATIONS,
 )
 from .geo import Area
-from .maintenance import MaintenanceFeedConfig, build_maintenance_features, fetch_maintenance, task_names
+from .maintenance import MaintenanceFeedConfig, build_maintenance_features, fetch_maintenance, stable_vehicle_ids, task_names
 from .road_conditions import RoadConditionFeedConfig, build_road_condition_features, count_poor, section_index
 from .ships import ShipFeedConfig, VesselRegister, build_ship_features, fetch_ship_positions
 from .station_departures import PASSENGER_CATEGORIES, StationDeparturesConfig, build_departures
@@ -93,7 +93,12 @@ class PeriodicValue[T]:
         self._value = initial
         self._next_fetch: float | None = None
         self._lock = asyncio.Lock()
+        self._failing = False
         self.loaded = False
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     async def get(self) -> T:
         async with self._lock:
@@ -103,8 +108,14 @@ class PeriodicValue[T]:
                     self._value = await self._fetch()
                     self._next_fetch = now + self._interval
                     self.loaded = True
+                    if self._failing:
+                        _LOGGER.info("Updating %s works again", self._name)
+                        self._failing = False
                 except DigitrafficError as err:
-                    _LOGGER.debug("Updating %s failed, using the previous value: %s", self._name, err)
+                    # Once per outage, so a lasting one shows in the log without filling it.
+                    log = _LOGGER.debug if self._failing else _LOGGER.warning
+                    log("Updating %s failed, using the previous value: %s", self._name, err)
+                    self._failing = True
                     self._next_fetch = now + self._retry
         return self._value
 
@@ -186,7 +197,7 @@ class FeedCoordinator(SubentryCoordinator[FeedData]):
         """A shared list the feed can't do without; the feed is unavailable until it has been fetched."""
         result = await value.get()
         if not value.loaded:
-            raise DigitrafficError("Digitraffic's station data couldn't be loaded")
+            raise DigitrafficError(f"Digitraffic's {value.name} couldn't be loaded")
         return result
 
 
@@ -245,6 +256,7 @@ class RoadMaintenanceFeedCoordinator(FeedCoordinator):
     def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
         super().__init__(hass, entry, subentry)
         self.feed_config = MaintenanceFeedConfig.from_data(subentry.data)
+        self._vehicle_ids: dict[Any, Any] = {}
 
     @property
     def area(self) -> Area | None:
@@ -253,9 +265,11 @@ class RoadMaintenanceFeedCoordinator(FeedCoordinator):
     async def _async_fetch_features(self) -> list[dict[str, Any]]:
         runtime = self.runtime
         vehicles, routes = await fetch_maintenance(runtime.client, self.feed_config, dt_util.utcnow())
+        self._vehicle_ids = stable_vehicle_ids(vehicles, routes, self._vehicle_ids)
         # Task names are only labels: without them, the task ids are shown.
         names = task_names(await runtime.maintenance_tasks.get(), runtime.texts.language)
-        return build_maintenance_features(vehicles, routes, names, runtime.texts)
+        shown = routes if self.feed_config.show_routes else []
+        return build_maintenance_features(vehicles, shown, names, runtime.texts, self._vehicle_ids)
 
 
 class RoadConditionFeedCoordinator(FeedCoordinator):

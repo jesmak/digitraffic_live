@@ -33,7 +33,7 @@ def now_ms() -> int:
 
 
 def ais_locations() -> dict[str, Any]:
-    """A pilot boat under way and a moored cargo ship near the cabin, and a ship far away."""
+    """A pilot boat under way and a moored cargo ship near the harbour, and a ship far away."""
     received = now_ms()
     return {
         "type": "FeatureCollection",

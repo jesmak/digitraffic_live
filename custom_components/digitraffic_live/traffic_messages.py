@@ -197,7 +197,7 @@ def working_hours(hours: Any, texts: Texts) -> str:
         names = day_names(days, texts)
         separator = ":" if texts.language == "en" else "."
         parts.append(f"{names} {start.replace(':', separator)}–{end.replace(':', separator)}")
-    return "; ".join(parts)
+    return " · ".join(parts)
 
 
 def day_names(days: Sequence[int], texts: Texts) -> str:
@@ -286,4 +286,4 @@ def itinerary_text(segment: Any, texts: Texts) -> str:
             )
         elif street := (leg or {}).get("streetName"):
             legs.append(str(street))
-    return "; ".join(legs)
+    return " · ".join(legs)

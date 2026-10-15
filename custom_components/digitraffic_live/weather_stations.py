@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from .api import DigitrafficClient
+from .api import DigitrafficClient, DigitrafficError
 from .cache import DetailCache, details_name, fetch_each
 from .const import CONF_AREA, CONF_MARKER_VALUE
 from .feed import number_text, point_feature, row
@@ -172,6 +172,9 @@ async def fetch_sensor_values(client: DigitrafficClient, station_ids: Sequence[s
             if str(station.get("id")) in wanted
         }
     responses = await fetch_each(station_ids, client.weather_station_data, name="weather station")
+    # A station that fails alone is left out, but with none, the feed is down rather than empty.
+    if station_ids and not responses:
+        raise DigitrafficError(f"None of the {len(station_ids)} weather stations' values could be fetched")
     return {station_id: response.get("sensorValues") or [] for station_id, response in responses.items()}
 
 
