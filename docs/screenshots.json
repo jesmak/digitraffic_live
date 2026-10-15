@@ -2,7 +2,7 @@
     "resources": [
         "../../hass-kortit/road-conditions-card/dist/road-conditions-card.js",
         "../../hass-kortit/departures-card/dist/departures-card.js",
-        "https://github.com/nathan-gs/ha-map-card/releases/download/v1.16.0/map-card.js"
+        "../../hass-kortit/map-feed-card/dist/map-feed-card.js"
     ],
     "clock": "2026-10-14T07:40:00+03:00",
     "translations": {
@@ -383,7 +383,21 @@
                                 "speed_kmh": 142,
                                 "delay_minutes": 4,
                                 "subtitle": "Helsinki → Oulu",
-                                "updated": "2026-10-14T07:39:00+03:00"
+                                "updated": "2026-10-14T07:39:00+03:00",
+                                "label": "→ Oulu",
+                                "details": [
+                                    {
+                                        "label": "Passed",
+                                        "value": "Lempäälä 07:31"
+                                    },
+                                    {
+                                        "label": "Next stop",
+                                        "value": "Tampere 07:47, track 3"
+                                    }
+                                ],
+                                "notices": [
+                                    "Delayed by track works between Lempäälä and Tampere."
+                                ]
                             }
                         },
                         {
@@ -404,7 +418,18 @@
                                 "speed_kmh": 118,
                                 "delay_minutes": 0,
                                 "subtitle": "Tampere → Riihimäki",
-                                "updated": "2026-10-14T07:39:00+03:00"
+                                "updated": "2026-10-14T07:39:00+03:00",
+                                "label": "→ Riihimäki",
+                                "details": [
+                                    {
+                                        "label": "Passed",
+                                        "value": "Tampere 07:34"
+                                    },
+                                    {
+                                        "label": "Next stop",
+                                        "value": "Lempäälä 07:45, track 1"
+                                    }
+                                ]
                             }
                         },
                         {
@@ -425,7 +450,18 @@
                                 "speed_kmh": 96,
                                 "delay_minutes": 1,
                                 "subtitle": "Tampere → Turku",
-                                "updated": "2026-10-14T07:39:00+03:00"
+                                "updated": "2026-10-14T07:39:00+03:00",
+                                "label": "→ Turku",
+                                "details": [
+                                    {
+                                        "label": "Passed",
+                                        "value": "Tampere 07:30"
+                                    },
+                                    {
+                                        "label": "Next stop",
+                                        "value": "Toijala 07:58, track 2"
+                                    }
+                                ]
                             }
                         },
                         {
@@ -444,10 +480,34 @@
                                 "badge": "T",
                                 "heading": 75,
                                 "speed_kmh": 64,
-                                "updated": "2026-10-14T07:38:00+03:00"
+                                "updated": "2026-10-14T07:38:00+03:00",
+                                "details": [
+                                    {
+                                        "label": "Passed",
+                                        "value": "Orivesi 07:12"
+                                    }
+                                ]
                             }
                         }
                     ]
+                },
+                "feed_type": "train",
+                "list": {
+                    "sort": [
+                        {
+                            "key": "delay",
+                            "label": "Delay",
+                            "property": "delay_minutes",
+                            "order": "desc"
+                        },
+                        {
+                            "key": "number",
+                            "label": "Number",
+                            "property": "badge"
+                        }
+                    ],
+                    "default": "delay",
+                    "count": "trains"
                 }
             }
         },
@@ -556,7 +616,8 @@
                             }
                         }
                     ]
-                }
+                },
+                "feed_type": "road"
             }
         },
         "sensor.traffic_messages": {
@@ -589,7 +650,26 @@
                             "properties": {
                                 "name": "Road 9, Example. Road works",
                                 "kind": "road.roadwork",
-                                "subtitle": "Lane closed, speed limit 50 km/h"
+                                "subtitle": "Lane closed, speed limit 50 km/h",
+                                "details": [
+                                    {
+                                        "label": "Status",
+                                        "value": "in force"
+                                    },
+                                    {
+                                        "label": "Time",
+                                        "value": "1.9.–31.10."
+                                    },
+                                    {
+                                        "label": "Working hours",
+                                        "value": "Mon–Fri 7–18"
+                                    },
+                                    {
+                                        "label": "Restrictions",
+                                        "value": "One lane closed, speed limit 50 km/h"
+                                    }
+                                ],
+                                "footer": "Example Road Authority"
                             }
                         },
                         {
@@ -619,7 +699,8 @@
                             }
                         }
                     ]
-                }
+                },
+                "feed_type": "road"
             }
         }
     },
@@ -859,40 +940,17 @@
                         "column_span": 2,
                         "cards": [
                             {
-                                "type": "custom:map-card",
-                                "x": 61.49,
-                                "y": 23.78,
-                                "zoom": 10,
-                                "map_options": {
-                                    "zoomControl": false
-                                },
-                                "plugins": [
+                                "type": "custom:map-feed-card",
+                                "map_height": 600,
+                                "entities": [
+                                    "sensor.traffic_messages",
+                                    "sensor.road_weather_stations",
                                     {
-                                        "name": "Road works",
-                                        "url": "/local/ha-map-card-plugin-map-feed.js",
-                                        "options": {
-                                            "entity": "sensor.traffic_messages"
-                                        }
-                                    },
-                                    {
-                                        "name": "Road weather stations",
-                                        "url": "/local/ha-map-card-plugin-map-feed.js",
-                                        "options": {
-                                            "entity": "sensor.road_weather_stations"
-                                        }
-                                    },
-                                    {
-                                        "name": "Trains",
-                                        "url": "/local/ha-map-card-plugin-map-feed.js",
-                                        "options": {
-                                            "entity": "sensor.trains"
-                                        }
+                                        "entity": "sensor.trains",
+                                        "color_by": "delay"
                                     }
                                 ],
-                                "grid_options": {
-                                    "columns": "full",
-                                    "rows": 9
-                                }
+                                "list": true
                             }
                         ]
                     },
@@ -927,7 +985,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "popup": "IC 45"
         },
         {
             "name": "road-weather-station",
@@ -952,8 +1011,5 @@
                 ]
             }
         }
-    ],
-    "files": [
-        "../../hass-kortit/ha-map-card-plugin-map-feed/dist/ha-map-card-plugin-map-feed.js"
     ]
 }
