@@ -395,7 +395,7 @@ class RoadMaintenanceFeedFlow(AreaFeedFlow):
         return vol.Schema(
             {
                 vol.Required(CONF_NAME): TextSelector(),
-                vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:snowplow")),
+                vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:truck-snowflake")),
                 vol.Optional(CONF_TASKS): SelectSelector(
                     SelectSelectorConfig(
                         options=[task.lower() for task in MAINTENANCE_TASKS],

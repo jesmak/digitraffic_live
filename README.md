@@ -14,11 +14,10 @@ A custom component that turns live ships, trains and road traffic data from
 [Fintraffic's Digitraffic](https://www.digitraffic.fi/) open data into **map feeds**: one sensor per feed, holding
 everything in it as GeoJSON.
 
-Show the feeds on a map with [ha-map-card](https://github.com/nathan-gs/ha-map-card) and the
-[map feed plugin](https://github.com/jesmak/ha-map-card-plugin-map-feed), which draws heading arrows, colours
-by ship type or train delay, and popups with details. The feed format is documented in
-[map-feed-format.md](https://github.com/jesmak/ha-map-card-plugin-map-feed/blob/main/docs/map-feed-format.md),
-so other integrations and template entities can produce feeds for the same card.
+Show the feeds on a map with [map-feed-card](https://github.com/jesmak/map-feed-card), which draws heading arrows,
+colours by ship type or train delay, and shows each item's details beside the map or in a list. The feed format is
+documented in [map-feed-format.md](https://github.com/jesmak/map-feed-card/blob/main/docs/map-feed-format.md), so other integrations and template entities can produce feeds
+for the same card.
 
 - **Ship feeds:** AIS positions inside an area, with names, types, destinations and draughts from the vessel
   register. Icebreakers can be highlighted.
@@ -217,7 +216,7 @@ work trains are left out.
 Every feed has one sensor, whose state is the number of items in the feed: ships, trains, traffic messages,
 maintenance vehicles, weather stations or cameras. For road condition feeds it is the number of road sections with
 poor or extremely poor conditions, which is handy in automations. The attributes follow the
-[Map Feed format](https://github.com/jesmak/ha-map-card-plugin-map-feed/blob/main/docs/map-feed-format.md):
+[Map Feed format](https://github.com/jesmak/map-feed-card/blob/main/docs/map-feed-format.md):
 
 | Name               | Description                                        |
 | ------------------ | -------------------------------------------------- |
@@ -226,6 +225,8 @@ poor or extremely poor conditions, which is handy in automations. The attributes
 | `area`             | The feed's area, if it has one                     |
 | `updated`          | When the feed was last fetched                     |
 | `attribution`      | Data credit                                        |
+| `feed_type`        | `ship`, `train` or `road`, what the feed is about  |
+| `list`             | For trains, the orders the card's list offers      |
 
 None of the attributes are stored in the recorder, only the count. A feed that can't be fetched becomes
 unavailable until the next successful update.
@@ -260,7 +261,7 @@ next departure time is stored in the recorder.
 
 ### `digitraffic_live.get_train_composition`
 
-Returns a train's cars and services as popup rows. The map feed plugin calls it when a train's popup is opened.
+Returns a train's cars and services as detail rows. The map feed card calls it when a train is selected.
 
 | Field            | Description                               |
 | ---------------- | ----------------------------------------- |
@@ -269,8 +270,7 @@ Returns a train's cars and services as popup rows. The map feed plugin calls it 
 
 ## Examples
 
-Maps are drawn by the [map feed plugin](https://github.com/jesmak/ha-map-card-plugin-map-feed), whose README has
-examples for every feed type. Entity IDs are made from the station or camera name and Home Assistant's language, so
+Maps are drawn by [map-feed-card](https://github.com/jesmak/map-feed-card), whose README has examples. Entity IDs are made from the station or camera name and Home Assistant's language, so
 check yours on the device's page.
 
 ### A road weather station

@@ -214,5 +214,8 @@
   "cause_S": "Overhead line",
   "cause_T": "Track fault",
   "cause_V": "Locomotive fault",
-  "cause_X": "Other cause"
+  "cause_X": "Other cause",
+  "sort_delay": "Delay",
+  "sort_number": "Number",
+  "trains_count": "trains"
 }

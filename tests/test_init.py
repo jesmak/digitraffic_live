@@ -59,6 +59,8 @@ async def test_feeds_create_map_feed_sensors(hass: HomeAssistant, digitraffic_ap
     assert ships.attributes["map_feed_version"] == 1
     assert ships.attributes["attribution"] == "Fintraffic / digitraffic.fi, CC BY 4.0"
     assert ships.attributes["area"] == {"center": [60.569, 27.198], "radius_km": 15.0}
+    assert ships.attributes["feed_type"] == "ship"
+    assert "list" not in ships.attributes, "only trains offer orders of their own"
     geojson = ships.attributes["geojson"]
     assert geojson["type"] == "FeatureCollection"
     assert [feature["id"] for feature in geojson["features"]] == ["ship:111", "ship:222"]
@@ -66,6 +68,15 @@ async def test_feeds_create_map_feed_sensors(hass: HomeAssistant, digitraffic_ap
     trains = hass.states.get("sensor.trains_hki_lr")
     assert trains.state == "1"
     assert "area" not in trains.attributes
+    assert trains.attributes["feed_type"] == "train"
+    assert trains.attributes["list"] == {
+        "sort": [
+            {"key": "delay", "label": "Delay", "property": "delay_minutes", "order": "desc"},
+            {"key": "number", "label": "Number", "property": "badge"},
+        ],
+        "default": "delay",
+        "count": "trains",
+    }
     assert trains.attributes["geojson"]["features"][0]["properties"]["notices"] == ["Delayed by track works."]
 
     for _method, _url, _data, headers in digitraffic_api.mock_calls:
@@ -197,7 +208,10 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
     kinds = {feature["properties"]["kind"] for feature in road_works.attributes["geojson"]["features"]}
     assert {"road.roadwork", "road.accident", "road.exempted_transport"} <= kinds
 
-    assert hass.states.get("sensor.maintenance").state == "2"
+    assert road_works.attributes["feed_type"] == "road"
+    maintenance = hass.states.get("sensor.maintenance")
+    assert maintenance.state == "2"
+    assert maintenance.attributes["icon"] == "mdi:truck-snowflake"
     conditions = hass.states.get("sensor.road_conditions")
     assert conditions.state == "1", "the state counts sections with poor conditions"
     assert len(conditions.attributes["geojson"]["features"]) == 2

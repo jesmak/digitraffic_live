@@ -2,7 +2,7 @@
 departures from railway stations.
 
 Each feed is a config subentry with its own coordinator and sensor. The sensor
-writes the Map Feed format, which the map feed plugin for ha-map-card draws.
+writes the Map Feed format, which map-feed-card draws.
 Road weather stations and weather cameras are subentries too, each a device
 with its own sensors or image entities.
 """

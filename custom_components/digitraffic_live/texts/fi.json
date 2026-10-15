@@ -214,5 +214,8 @@
   "cause_S": "Sähkörata",
   "cause_T": "Ratavika",
   "cause_V": "Veturivika",
-  "cause_X": "Muu syy"
+  "cause_X": "Muu syy",
+  "sort_delay": "Myöhästyminen",
+  "sort_number": "Numero",
+  "trains_count": "junaa"
 }

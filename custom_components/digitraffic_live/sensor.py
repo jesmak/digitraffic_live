@@ -1,7 +1,7 @@
 """Map feed sensors, one per feed, station departure sensors, and the sensors of road weather stations.
 
 A feed sensor's state is the number of items; the items are in the `geojson`
-attribute, in the Map Feed format (docs/map-feed-format.md in ha-map-card-plugin-map-feed).
+attribute, in the Map Feed format (docs/map-feed-format.md in map-feed-card).
 A station departure sensor's state is the time of the next train that isn't cancelled;
 the departures are in the `departures` attribute, in the departures format
 (docs/departures-format.md in departures-card).
@@ -58,10 +58,22 @@ ICONS = {
     SUBENTRY_SHIPS: "mdi:ferry",
     SUBENTRY_TRAINS: "mdi:train",
     SUBENTRY_TRAFFIC_MESSAGES: "mdi:alert",
-    SUBENTRY_ROAD_MAINTENANCE: "mdi:snowplow",
+    SUBENTRY_ROAD_MAINTENANCE: "mdi:truck-snowflake",
     SUBENTRY_ROAD_CONDITIONS: "mdi:road-variant",
     SUBENTRY_WEATHER_STATIONS: "mdi:thermometer",
     SUBENTRY_WEATHER_CAMERAS: "mdi:cctv",
+}
+
+
+# What each feed is about, as the map feed format's families; the card offers each only the options that fit it.
+FEED_TYPES = {
+    SUBENTRY_SHIPS: "ship",
+    SUBENTRY_TRAINS: "train",
+    SUBENTRY_TRAFFIC_MESSAGES: "road",
+    SUBENTRY_ROAD_MAINTENANCE: "road",
+    SUBENTRY_ROAD_CONDITIONS: "road",
+    SUBENTRY_WEATHER_STATIONS: "road",
+    SUBENTRY_WEATHER_CAMERAS: "road",
 }
 
 
@@ -211,6 +223,19 @@ class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         attributes: dict[str, Any] = {"map_feed_version": MAP_FEED_VERSION}
+        subentry_type = self.coordinator.subentry.subentry_type
+        if feed_type := FEED_TYPES.get(subentry_type):
+            attributes["feed_type"] = feed_type
+        if subentry_type == SUBENTRY_TRAINS:
+            texts = self.coordinator.runtime.texts
+            attributes["list"] = {
+                "sort": [
+                    {"key": "delay", "label": texts("sort_delay"), "property": "delay_minutes", "order": "desc"},
+                    {"key": "number", "label": texts("sort_number"), "property": "badge"},
+                ],
+                "default": "delay",
+                "count": texts("trains_count"),
+            }
         if area := self.coordinator.area:
             attributes["area"] = area.as_attribute()
         if data := self.coordinator.data:
