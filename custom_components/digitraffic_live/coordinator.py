@@ -30,6 +30,8 @@ from .const import (
     DEFAULT_REFRESH_SECONDS,
     DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
     DEFAULT_WEATHER_STATION_REFRESH_SECONDS,
+    DIRECTION_ARRIVALS,
+    DIRECTION_DEPARTURES,
     DOMAIN,
     MIN_REFRESH_SECONDS,
     SUBENTRY_ROAD_CONDITIONS,
@@ -47,7 +49,14 @@ from .geo import Area
 from .maintenance import MaintenanceFeedConfig, build_maintenance_features, fetch_maintenance, stable_vehicle_ids, task_names
 from .road_conditions import RoadConditionFeedConfig, build_road_condition_features, count_poor, section_index
 from .ships import ShipFeedConfig, VesselRegister, build_ship_features, fetch_ship_positions
-from .station_departures import PASSENGER_CATEGORIES, StationDeparturesConfig, build_departures
+from .station_departures import (
+    ARRIVED_LISTED,
+    FETCH_FACTOR,
+    PASSENGER_CATEGORIES,
+    StationDeparturesConfig,
+    build_arrivals,
+    build_departures,
+)
 from .texts import Texts
 from .traffic_messages import TrafficMessageFeedConfig, build_traffic_message_features, fetch_traffic_messages
 from .trains import PassengerNotices, TrainFeedConfig, build_train_features, build_train_query
@@ -333,19 +342,18 @@ class WeatherCameraFeedCoordinator(FeedCoordinator):
 class StationDepartures:
     station: str
     name: str
-    # Departures in the departures format, soonest first.
-    departures: list[dict[str, Any]]
+    # Departures in the departures format, soonest first, and arrivals in the same shape, by direction.
+    trains: dict[str, list[dict[str, Any]]]
     # Station-wide passenger notices in force, such as track works.
     notices: list[str]
 
-    @property
-    def next_departure(self) -> dict[str, Any] | None:
-        """The first departure that isn't cancelled."""
-        return next((departure for departure in self.departures if not departure.get("cancelled")), None)
+    def next_train(self, direction: str) -> dict[str, Any] | None:
+        """The first that isn't cancelled and, for arrivals, hasn't come in."""
+        return next((train for train in self.trains.get(direction, []) if not train.get("cancelled") and not train.get("arrived")), None)
 
 
 class StationDeparturesCoordinator(SubentryCoordinator[StationDepartures]):
-    """The next passenger trains to leave one railway station."""
+    """The next passenger trains to leave or reach one railway station, both directions in one request."""
 
     def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
         super().__init__(hass, entry, subentry)
@@ -360,19 +368,31 @@ class StationDeparturesCoordinator(SubentryCoordinator[StationDepartures]):
         try:
             # A station's own list is mostly commuter trains at a big one: Helsinki's next twenty leave within a quarter
             # of an hour, and a train to the "stops at" station wouldn't be among them.
+            # "Stops at" is for departures only, which the flow sees to.
             if config.stops_at:
                 trains = await runtime.client.trains_between(config.station, config.stops_at, config.fetch_count)
             else:
-                trains = await runtime.client.station_departures(config.station, config.fetch_count, PASSENGER_CATEGORIES)
+                arrivals = DIRECTION_ARRIVALS in config.directions
+                trains = await runtime.client.station_trains(
+                    config.station,
+                    PASSENGER_CATEGORIES,
+                    departing=config.fetch_count if DIRECTION_DEPARTURES in config.directions else 0,
+                    arriving=config.fetch_count if arrivals else 0,
+                    arrived=ARRIVED_LISTED * FETCH_FACTOR if arrivals else 0,
+                )
         except DigitrafficError as err:
             raise UpdateFailed(str(err)) from err
         # Notices only add to the departures: without them, the departures are shown all the same.
         notices = await runtime.notices.get()
-        departures = build_departures(trains, config, names, notices.trains, runtime.texts)
+        built: dict[str, list[dict[str, Any]]] = {}
+        if DIRECTION_DEPARTURES in config.directions:
+            built[DIRECTION_DEPARTURES] = build_departures(trains, config, names, notices.trains, runtime.texts, dt_util.utcnow())
+        if DIRECTION_ARRIVALS in config.directions:
+            built[DIRECTION_ARRIVALS] = build_arrivals(trains, config, names, notices.trains, runtime.texts, dt_util.utcnow())
         return StationDepartures(
             config.station,
             names.get(config.station, config.station),
-            departures,
+            built,
             notices.for_station(config.station, dt_util.utcnow()),
         )
 

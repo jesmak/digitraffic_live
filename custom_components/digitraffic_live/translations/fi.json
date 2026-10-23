@@ -102,7 +102,7 @@
           },
           "data_description": {
             "name": "Myös syötteen sensorin nimi.",
-            "route": "Vain junat, jotka pysähtyvät jokaisella valitulla asemalla, esim. Helsinki ja Lappeenranta.",
+            "route": "Vain junat, jotka pysähtyvät jokaisella valitulla asemalla, esim. Lappeenranta, tai Helsinki ja Lappeenranta.",
             "categories": "Jätä tyhjäksi, niin mukana ovat kaikki junatyypit.",
             "area": "Käytössä vain, kun \"Rajaa alueeseen\" on päällä.",
             "max_age_minutes": "Junat, joiden viimeisin sijainti on tätä vanhempi, jätetään pois."
@@ -122,7 +122,7 @@
           },
           "data_description": {
             "name": "Myös syötteen sensorin nimi.",
-            "route": "Vain junat, jotka pysähtyvät jokaisella valitulla asemalla, esim. Helsinki ja Lappeenranta.",
+            "route": "Vain junat, jotka pysähtyvät jokaisella valitulla asemalla, esim. Lappeenranta, tai Helsinki ja Lappeenranta.",
             "categories": "Jätä tyhjäksi, niin mukana ovat kaikki junatyypit.",
             "area": "Käytössä vain, kun \"Rajaa alueeseen\" on päällä.",
             "max_age_minutes": "Junat, joiden viimeisin sijainti on tätä vanhempi, jätetään pois."
@@ -131,7 +131,6 @@
       },
       "error": {
         "name_required": "Nimi ei voi olla tyhjä.",
-        "route_too_short": "Valitse vähintään kaksi reitin asemaa tai ei yhtään.",
         "route_or_area": "Valitse reitin asemat, laita \"Rajaa alueeseen\" päälle tai molemmat.",
         "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
       },
@@ -382,40 +381,43 @@
       "step": {
         "user": {
           "title": "Aseman lähdöt",
-          "description": "Seuraavat matkustajajunat, jotka lähtevät asemalta. Sensori näkyy lähtökortissa (departures-card).",
+          "description": "Seuraavat matkustajajunat, jotka lähtevät asemalta tai saapuvat sille.",
           "data": {
             "name": "Nimi",
             "station": "Asema",
+            "direction": "Junat",
             "stops_at": "Pysähtyy asemalla",
-            "departures": "Lähtöjen määrä",
+            "departures": "Junien määrä",
             "refresh_seconds": "Päivitysväli"
           },
           "data_description": {
             "name": "Myös sensorin nimi.",
-            "stops_at": "Vain junat, jotka pysähtyvät myöhemmin tällä asemalla, esim. Helsingistä vain Lappeenrantaan kulkevat. Jätä tyhjäksi, niin mukana ovat kaikki.",
-            "departures": "Kuinka monta seuraavaa lähtöä sensori listaa, 1–20."
+            "direction": "Molemmat luo kaksi sensoria, toisen lähtevistä ja toisen saapuvista junista. Ei muutettavissa lisäämisen jälkeen.",
+            "stops_at": "Vain junat, jotka pysähtyvät myöhemmin tällä asemalla, esim. Helsingistä vain Lappeenrantaan kulkevat. Rajaa vain lähteviä junia. Jätä tyhjäksi, niin kaikki kohdeasemalla pysähtyvät junat näytetään.",
+            "departures": "Kuinka monta seuraavaa junaa kukin sensori listaa, 1–20. Perutut vuorot niiden välissä näkyvät lisäksi, ja saapuvissa näytetään enintään kaksi viimeisintä saapunutta tai peruttua."
           }
         },
         "reconfigure": {
           "title": "Aseman lähdöt",
-          "description": "Seuraavat matkustajajunat, jotka lähtevät asemalta. Sensori näkyy lähtökortissa (departures-card).",
+          "description": "Seuraavat matkustajajunat, jotka lähtevät asemalta tai saapuvat sille.",
           "data": {
             "name": "Nimi",
             "station": "Asema",
             "stops_at": "Pysähtyy asemalla",
-            "departures": "Lähtöjen määrä",
+            "departures": "Junien määrä",
             "refresh_seconds": "Päivitysväli"
           },
           "data_description": {
             "name": "Myös sensorin nimi.",
-            "stops_at": "Vain junat, jotka pysähtyvät myöhemmin tällä asemalla, esim. Helsingistä vain Lappeenrantaan kulkevat. Jätä tyhjäksi, niin mukana ovat kaikki.",
-            "departures": "Kuinka monta seuraavaa lähtöä sensori listaa, 1–20."
+            "stops_at": "Vain junat, jotka pysähtyvät myöhemmin tällä asemalla, esim. Helsingistä vain Lappeenrantaan kulkevat. Rajaa vain lähteviä junia. Jätä tyhjäksi, niin mukana ovat kaikki.",
+            "departures": "Kuinka monta seuraavaa junaa kukin sensori listaa, 1–20. Perutut vuorot niiden välissä näkyvät lisäksi, ja saapuvissa näytetään enintään kaksi viimeisintä saapunutta tai peruttua."
           }
         }
       },
       "error": {
         "name_required": "Nimi ei voi olla tyhjä.",
-        "stops_at_same_station": "Valitse jokin muu asema kuin se, jolta junat lähtevät."
+        "stops_at_same_station": "Valitse jokin muu asema kuin se, jolta junat lähtevät.",
+        "stops_at_departures_only": "Pysähtyy asemalla rajaa vain lähteviä junia, joten sitä ei voi käyttää saapuvien kanssa. Jätä se tyhjäksi."
       },
       "abort": {
         "cannot_connect": "Asemaluetteloa ei saatu ladattua Digitrafficista. Yritä hetken päästä uudelleen.",
@@ -593,6 +595,13 @@
         "air_temperature": "Ilman lämpötila",
         "road_temperature": "Tien lämpötila"
       }
+    },
+    "direction": {
+      "options": {
+        "departures": "Lähtevät",
+        "arrivals": "Saapuvat",
+        "both": "Molemmat"
+      }
     }
   },
   "services": {
@@ -706,6 +715,9 @@
       },
       "visibility": {
         "name": "Näkyvyys"
+      },
+      "station_arrivals": {
+        "name": "saapuvat"
       }
     }
   }

@@ -1,7 +1,7 @@
 # Digitraffic Live for Home Assistant
 
 Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds, road
-weather station sensors and railway station departures.
+weather station sensors and railway station departures and arrivals.
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
 
@@ -34,9 +34,9 @@ for the same card.
 - **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
   surface, grip and its grade, road weather warnings, wind, precipitation and visibility, and an image entity for
   each camera view. Shown by [road-conditions-card](https://github.com/jesmak/road-conditions-card).
-- **Station departures:** the next passenger trains to leave a railway station, optionally only those that stop at
-  another station later, with live estimates, delays, tracks, cancellations and their reasons. Shown by
-  [departures-card](https://github.com/jesmak/departures-card).
+- **Station departures:** the next passenger trains to leave or reach a railway station, the departures optionally only
+  those that stop at another station later, with live estimates, delays, tracks, cancellations and their reasons.
+  Shown by [departures-card](https://github.com/jesmak/departures-card).
 
 ## Installation
 
@@ -81,15 +81,15 @@ Add with **Add ship feed** on the integration page. Every feed creates one senso
 
 Add with **Add train feed** on the integration page. Choose route stations, an area, or both.
 
-| Name                 | Type    | Description                                                                         | Default     |
-| -------------------- | ------- | ----------------------------------------------------------------------------------- | ----------- |
-| Name                 | string  | Name of the feed and its sensor                                                     |             |
-| Route stations       | list    | Only trains that stop at every chosen station, e.g. Helsinki and Lappeenranta       | none        |
-| Train categories     | list    | Long-distance, commuter, cargo, locomotive, test drive, on-track machines, shunting | all         |
-| Limit to an area     | boolean | Only trains inside the area                                                         | off         |
-| Area                 | circle  | Centre and radius, picked on a map                                                  | home, 30 km |
-| Maximum position age | minutes | Trains whose latest position is older are left out                                  | 15          |
-| Update interval      | seconds | How often the feed is fetched, at least 30                                          | 60          |
+| Name                 | Type    | Description                                                                                    | Default     |
+| -------------------- | ------- | ---------------------------------------------------------------------------------------------- | ----------- |
+| Name                 | string  | Name of the feed and its sensor                                                                |             |
+| Route stations       | list    | Only trains that stop at every chosen station, e.g. Lappeenranta, or Helsinki and Lappeenranta | none        |
+| Train categories     | list    | Long-distance, commuter, cargo, locomotive, test drive, on-track machines, shunting            | all         |
+| Limit to an area     | boolean | Only trains inside the area                                                                    | off         |
+| Area                 | circle  | Centre and radius, picked on a map                                                             | home, 30 km |
+| Maximum position age | minutes | Trains whose latest position is older are left out                                             | 15          |
+| Update interval      | seconds | How often the feed is fetched, at least 30                                                     | 60          |
 
 ### Traffic message feed
 
@@ -204,19 +204,21 @@ seconds, and **Change weather camera** changes the interval.
 
 ### Station departures
 
-Add with **Add station departures** to get a sensor with the next passenger trains to leave one station. Cargo and
-work trains are left out.
+Add with **Add station departures** to get a sensor with the next passenger trains to leave one station, to reach it,
+or both. Both makes two sensors from one request, the arrivals named after the departures with "arrivals" added. The
+direction is chosen when the station is added, and can't be changed after. Cargo and work trains are left out.
 
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/station-departures-light.png#gh-light-mode-only" width="510" alt="A station departures sensor on departures-card, with a track works notice, the next train large with its delay and track, and a cancelled train among the ones after it">
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/station-departures-dark.png#gh-dark-mode-only" width="510" alt="A station departures sensor on departures-card, with a track works notice, the next train large with its delay and track, and a cancelled train among the ones after it">
 
-| Name            | Type    | Description                                                                                   | Default |
-| --------------- | ------- | --------------------------------------------------------------------------------------------- | ------- |
-| Name            | string  | Name of the sensor                                                                            |         |
-| Station         | station | The station the trains leave from                                                             |         |
-| Stops at        | station | Only trains that stop at this station later, such as only those from Helsinki to Lappeenranta | none    |
-| Departures      | number  | How many of the next departures the sensor lists, 1–20                                        | 5       |
-| Update interval | seconds | How often the departures are fetched, at least 30                                             | 60      |
+| Name             | Type    | Description                                                                                             | Default    |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------------------- | ---------- |
+| Name             | string  | Name of the sensor                                                                                      |            |
+| Station          | station | The station the trains leave from or arrive at                                                          |            |
+| Trains           | choice  | Departures, arrivals or both                                                                            | departures |
+| Stops at         | station | Only departing trains that stop at this station later, such as only those from Helsinki to Lappeenranta | none       |
+| Number of trains | number  | How many of the next trains not cancelled each sensor lists, 1–20, with the cancelled ones among them   | 5          |
+| Update interval  | seconds | How often the trains are fetched, at least 30                                                           | 60         |
 
 ## Sensors
 
@@ -240,25 +242,37 @@ unavailable until the next successful update.
 
 ### Station departures
 
-A station departures sensor's state is the time of the next train that isn't cancelled: its live estimate when there
-is one, otherwise the timetable time. The attributes follow the
+A station departures sensor's state is the time of the next train that isn't cancelled, and an arrivals sensor's the
+time of the next one that hasn't come in either. The time is the live estimate when there is one, otherwise the
+timetable time. The attributes follow the
 [departures format](https://github.com/jesmak/departures-card/blob/main/docs/departures-format.md), which
 [departures-card](https://github.com/jesmak/departures-card) shows:
 
-| Name                 | Description                          |
-| -------------------- | ------------------------------------ |
-| `departures_version` | Always `1`                           |
-| `stop_id`            | The station's short code, e.g. `HKI` |
-| `stop_name`          | The station's name                   |
-| `notices`            | Station-wide notices in force now    |
-| `departures`         | The next departures, soonest first   |
-| `attribution`        | Data credit                          |
+| Name                 | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| `departures_version` | Always `1`                                                   |
+| `direction`          | `arrivals`, or `departures` for a station of both directions |
+| `stop_id`            | The station's short code, e.g. `HKI`                         |
+| `stop_name`          | The station's name                                           |
+| `notices`            | Station-wide notices in force now                            |
+| `departures`         | The next departures or arrivals, soonest first               |
+| `attribution`        | Data credit                                                  |
 
 Each departure has its train (`IC 45`, or the line letter of a commuter train), where it is heading, the timetable
 time and the live estimate, the delay in seconds, the track, and whether it is cancelled. A train's own passenger
 notice, such as "Passengers are directed to train S 106", is in `notice`. Without one, a cancelled or late train has
 the reason there instead, in the integration's language: rolling stock, track work, traffic control and so on.
 Digitraffic gives the reasons as category codes; their texts are the integration's own.
+
+An arrivals sensor lists the trains coming in, in the same shape, with where each comes from, its first station, in
+place of where it is heading. A train that starts at the station has no arrival, and a train through it is on both
+sensors. A ring train back where it started, as the I and P trains at Helsinki, comes from there, and one through the
+station twice, as they pass Pasila, is listed once, by its pass still to come. An arrival that has come in is marked
+`arrived`, with its actual time as the estimate, and stays for half an hour after it, as does a cancelled one. A
+departure is listed until a minute past its time, a cancelled one too. The number of trains counts those not cancelled,
+still to come for arrivals, and the cancelled ones among them are listed too, so a run of cancellations doesn't push the
+next train off the list. The latest two arrivals that are over, come in or cancelled and past their time, are listed
+besides them. "Stops at" limits departures only, so it can't be set for arrivals or both.
 
 `notices` holds Digitraffic's passenger notices for the whole station while they are in force, such as track works
 with buses replacing trains, in the integration's language when Digitraffic has it, otherwise in Finnish. The
@@ -313,6 +327,16 @@ type: custom:departures-card
 entities:
   - entity: sensor.trains_tampere_helsinki
     subtitle: to Helsinki
+```
+
+A station's departures and arrivals as one list, by time:
+
+```yaml
+type: custom:departures-card
+combine: true
+entities:
+  - sensor.trains_tampere
+  - sensor.trains_tampere_arrivals
 ```
 
 ### Weather cameras

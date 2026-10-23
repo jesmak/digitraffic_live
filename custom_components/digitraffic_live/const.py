@@ -57,6 +57,17 @@ CONF_STATION: Final = "station"
 # Station departure settings; the station uses CONF_STATION
 CONF_STOPS_AT: Final = "stops_at"
 CONF_DEPARTURES: Final = "departures"
+CONF_DIRECTION: Final = "direction"
+DIRECTION_DEPARTURES: Final = "departures"
+DIRECTION_ARRIVALS: Final = "arrivals"
+DIRECTION_BOTH: Final = "both"
+DIRECTIONS: Final = [DIRECTION_DEPARTURES, DIRECTION_ARRIVALS, DIRECTION_BOTH]
+# The sensors each direction makes.
+DIRECTION_SENSORS: Final[dict[str, list[str]]] = {
+    DIRECTION_DEPARTURES: [DIRECTION_DEPARTURES],
+    DIRECTION_ARRIVALS: [DIRECTION_ARRIVALS],
+    DIRECTION_BOTH: [DIRECTION_DEPARTURES, DIRECTION_ARRIVALS],
+}
 CONF_CAMERA: Final = "camera"
 
 # Digitraffic caches most responses for about a minute, so polling faster only repeats the same data.

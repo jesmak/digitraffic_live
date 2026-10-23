@@ -153,7 +153,7 @@ def timetable_row(station: str, kind: str, scheduled: str, **extra: Any) -> dict
     } | extra
 
 
-# Made-up trains leaving Lappeenranta, shaped like the railway API's live-trains/station answer.
+# Made-up trains leaving or reaching Lappeenranta, shaped like the railway API's live-trains/station answer.
 STATION_TRAINS = [
     {
         "trainNumber": 101,
@@ -218,6 +218,20 @@ STATION_TRAINS = [
         "timeTableRows": [
             timetable_row("LR", "DEPARTURE", "2026-10-04T17:41:00.000Z", commercialTrack="002"),
             timetable_row("HKI", "ARRIVAL", "2026-10-04T19:45:00.000Z"),
+        ],
+    },
+    # Through the station, so it arrives as well as leaves.
+    {
+        "trainNumber": 7,
+        "departureDate": "2026-10-04",
+        "trainType": "IC",
+        "trainCategory": "Long-distance",
+        "cancelled": False,
+        "timeTableRows": [
+            timetable_row("HKI", "DEPARTURE", "2026-10-04T16:15:00.000Z"),
+            timetable_row("LR", "ARRIVAL", "2026-10-04T18:20:00.000Z", commercialTrack="1"),
+            timetable_row("LR", "DEPARTURE", "2026-10-04T18:23:00.000Z", commercialTrack="1"),
+            timetable_row("JNS", "ARRIVAL", "2026-10-04T20:40:00.000Z"),
         ],
     },
 ]

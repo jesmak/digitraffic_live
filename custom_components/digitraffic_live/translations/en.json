@@ -102,7 +102,7 @@
           },
           "data_description": {
             "name": "Also the name of the feed's sensor.",
-            "route": "Only trains that stop at every chosen station, e.g. Helsinki and Lappeenranta.",
+            "route": "Only trains that stop at every chosen station, e.g. Lappeenranta, or Helsinki and Lappeenranta.",
             "categories": "Leave empty for all categories.",
             "area": "Used only when \"Limit to an area\" is on.",
             "max_age_minutes": "Trains whose latest position is older than this are left out."
@@ -122,7 +122,7 @@
           },
           "data_description": {
             "name": "Also the name of the feed's sensor.",
-            "route": "Only trains that stop at every chosen station, e.g. Helsinki and Lappeenranta.",
+            "route": "Only trains that stop at every chosen station, e.g. Lappeenranta, or Helsinki and Lappeenranta.",
             "categories": "Leave empty for all categories.",
             "area": "Used only when \"Limit to an area\" is on.",
             "max_age_minutes": "Trains whose latest position is older than this are left out."
@@ -131,7 +131,6 @@
       },
       "error": {
         "name_required": "The name can't be empty.",
-        "route_too_short": "Choose at least two route stations, or none.",
         "route_or_area": "Choose route stations, turn on \"Limit to an area\", or both.",
         "area_radius": "Drag the circle's edge on the map to set a radius."
       },
@@ -382,40 +381,43 @@
       "step": {
         "user": {
           "title": "Station departures",
-          "description": "The next passenger trains to leave the station. The sensor is shown by the departures card (departures-card).",
+          "description": "The next passenger trains to leave or reach the station.",
           "data": {
             "name": "Name",
             "station": "Station",
+            "direction": "Trains",
             "stops_at": "Stops at",
-            "departures": "Number of departures",
+            "departures": "Number of trains",
             "refresh_seconds": "Update interval"
           },
           "data_description": {
             "name": "Also the sensor's name.",
-            "stops_at": "Only trains that stop at this station later, such as only those from Helsinki that go to Lappeenranta. Leave empty to include all.",
-            "departures": "How many of the next departures the sensor lists, 1–20."
+            "direction": "Both makes two sensors, one of departing and one of arriving trains. Can't be changed once added.",
+            "stops_at": "Only trains that stop at this station later, such as only those from Helsinki that go to Lappeenranta. Limits departing trains only. Leave empty to include all.",
+            "departures": "How many of the next trains each sensor lists, 1–20. Cancelled trains among them are listed too, and arrivals also show at most the latest two that have come in or were cancelled."
           }
         },
         "reconfigure": {
           "title": "Station departures",
-          "description": "The next passenger trains to leave the station. The sensor is shown by the departures card (departures-card).",
+          "description": "The next passenger trains to leave or reach the station.",
           "data": {
             "name": "Name",
             "station": "Station",
             "stops_at": "Stops at",
-            "departures": "Number of departures",
+            "departures": "Number of trains",
             "refresh_seconds": "Update interval"
           },
           "data_description": {
             "name": "Also the sensor's name.",
-            "stops_at": "Only trains that stop at this station later, such as only those from Helsinki that go to Lappeenranta. Leave empty to include all.",
-            "departures": "How many of the next departures the sensor lists, 1–20."
+            "stops_at": "Only trains that stop at this station later, such as only those from Helsinki that go to Lappeenranta. Limits departing trains only. Leave empty to include all.",
+            "departures": "How many of the next trains each sensor lists, 1–20. Cancelled trains among them are listed too, and arrivals also show at most the latest two that have come in or were cancelled."
           }
         }
       },
       "error": {
         "name_required": "The name can't be empty.",
-        "stops_at_same_station": "Choose a station other than the one the trains leave from."
+        "stops_at_same_station": "Choose a station other than the one the trains leave from.",
+        "stops_at_departures_only": "Stops at limits departing trains only, so it can't be used with arrivals. Leave it empty."
       },
       "abort": {
         "cannot_connect": "The station list couldn't be loaded from Digitraffic. Try again in a moment.",
@@ -593,6 +595,13 @@
         "air_temperature": "Air temperature",
         "road_temperature": "Road temperature"
       }
+    },
+    "direction": {
+      "options": {
+        "departures": "Departures",
+        "arrivals": "Arrivals",
+        "both": "Both"
+      }
     }
   },
   "services": {
@@ -706,6 +715,9 @@
       },
       "visibility": {
         "name": "Visibility"
+      },
+      "station_arrivals": {
+        "name": "arrivals"
       }
     }
   }

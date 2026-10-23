@@ -44,6 +44,12 @@ def test_route_stations_are_combined_with_and() -> None:
     assert 'equals: "LR"' in query
 
 
+def test_one_route_station_is_the_only_condition() -> None:
+    query = build_train_query(route=["LR"])
+    assert '(where: {timeTableRows: {contains: {and: [{station: {shortCode: {equals: "LR"}}}, ' in query
+    assert "(where: {and: [" not in query
+
+
 def test_categories_are_combined_with_or() -> None:
     assert "where: {or: [" in build_train_query(categories=["Long-distance", "Commuter"])
     assert '(where: {trainType: {trainCategory: {name: {equals: "Cargo"}}}})' in build_train_query(categories=["Cargo"])

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import pytest
+from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
@@ -102,23 +105,22 @@ async def test_train_feed_validation_and_creation(hass: HomeAssistant, digitraff
     route_options = result["data_schema"].schema["route"].config["options"]
     assert [option["value"] for option in route_options] == ["HKI", "LR"]
 
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], TRAIN_FEED | {"route": ["HKI"]})
-    assert result["errors"] == {"route": "route_too_short"}
-
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], TRAIN_FEED | {"route": []})
     assert result["errors"] == {"base": "route_or_area"}
 
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], TRAIN_FEED)
+    # One station is a route too: the trains that stop there.
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], TRAIN_FEED | {"route": ["LR"]})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.data["route"] == ["HKI", "LR"]
+    assert subentry.data["route"] == ["LR"]
     assert "area" not in subentry.data, "the area is dropped when it's not in use"
     assert hass.states.get("sensor.trains_hki_lr").state == "1"
 
 
-async def test_adding_station_departures(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
+async def test_adding_station_departures(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker, freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to("2026-10-04T14:00:00+00:00")
     entry = await setup_entry(hass)
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "station_departures"), context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
@@ -131,6 +133,10 @@ async def test_adding_station_departures(hass: HomeAssistant, digitraffic_api: A
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
+    [query] = [
+        url.query for _method, url, _data, _headers in digitraffic_api.mock_calls if url.path.endswith("/live-trains/station/LR/HKI")
+    ]
+    assert query["limit"] == "10", "twice the count, for the cargo and stale trains left out afterwards"
     state = hass.states.get("sensor.lappeenranta_helsinki")
     assert state.state == "2026-10-04T14:48:00+00:00", "the first train that isn't cancelled"
     assert state.attributes["departures_version"] == 1
@@ -138,6 +144,120 @@ async def test_adding_station_departures(hass: HomeAssistant, digitraffic_api: A
     assert state.attributes["notices"] == ["Track work: buses replace trains between Lappeenranta and Imatra."]
     assert [departure["line"] for departure in state.attributes["departures"]] == ["IC 101", "S 103", "IC 105"]
     assert state.attributes["device_class"] == "timestamp"
+
+
+async def test_a_station_both_ways_has_two_sensors_and_keeps_its_direction(
+    hass: HomeAssistant, digitraffic_api: AiohttpClientMocker, freezer: FrozenDateTimeFactory
+) -> None:
+    freezer.move_to("2026-10-04T14:00:00+00:00")
+    entry = await setup_entry(hass)
+    result = await hass.config_entries.subentries.async_init((entry.entry_id, "station_departures"), context={"source": SOURCE_USER})
+    station = {"name": "Lappeenranta", "station": "LR", "direction": "both", "departures": 5, "refresh_seconds": 60}
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], station | {"stops_at": "HKI"})
+    assert result["errors"] == {"stops_at": "stops_at_departures_only"}, "arrivals list every train"
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], station)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    departures, arrivals = hass.states.get("sensor.lappeenranta"), hass.states.get("sensor.lappeenranta_arrivals")
+    assert departures.attributes["direction"] == "departures", "next to its arrivals, the departures say so"
+    assert departures.state == "2026-10-04T14:48:00+00:00"
+    assert arrivals.attributes["direction"] == "arrivals"
+    assert arrivals.state == "2026-10-04T18:20:00+00:00"
+    assert [(arrival["line"], arrival["headsign"]) for arrival in arrivals.attributes["departures"]] == [("IC 7", "Helsinki")]
+
+    subentry_id = next(iter(entry.subentries))
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station_departures"), context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id}
+    )
+    assert "direction" not in result["data_schema"].schema, "the direction is chosen only when adding"
+    reconfigured = {key: value for key, value in station.items() if key != "direction"}
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], reconfigured | {"stops_at": "HKI"})
+    assert result["errors"] == {"stops_at": "stops_at_departures_only"}, "the kept direction counts"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], reconfigured | {"departures": 3})
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data["direction"] == "both"
+
+
+async def test_a_station_from_before_arrivals_stays_departures(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Digitraffic",
+        data={"language": "en"},
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type="station_departures",
+                title="Lappeenranta",
+                unique_id=None,
+                data={"station": "LR", "departures": 5, "refresh_seconds": 60},
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert "direction" not in hass.states.get("sensor.lappeenranta").attributes, "a station of departures alone reads as before"
+    assert hass.states.get("sensor.lappeenranta_arrivals") is None
+
+    subentry_id = next(iter(entry.subentries))
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station_departures"), context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"name": "Lappeenranta", "station": "LR", "stops_at": "HKI", "departures": 5, "refresh_seconds": 60}
+    )
+    assert result["reason"] == "reconfigure_successful", "stops at is fine for departures"
+    assert entry.subentries[subentry_id].data == {"station": "LR", "stops_at": "HKI", "departures": 5, "refresh_seconds": 60}
+
+
+# What each direction asks Digitraffic for, twice the count for the trains left out afterwards, and the sensors it
+# makes: the departures keep the subentry's own unique id and name, as before arrivals, and the arrivals have theirs.
+@pytest.mark.parametrize(
+    ("direction", "counts", "sensors"),
+    [
+        (None, ("10", "0", "0"), {"sensor.lappeenranta": ("{id}", "Lappeenranta", None, "mdi:train-variant")}),
+        ("departures", ("10", "0", "0"), {"sensor.lappeenranta": ("{id}", "Lappeenranta", None, "mdi:train-variant")}),
+        (
+            "arrivals",
+            ("0", "10", "4"),
+            {"sensor.lappeenranta_arrivals": ("{id}_arrivals", "Lappeenranta arrivals", "arrivals", "mdi:train")},
+        ),
+        (
+            "both",
+            ("10", "10", "4"),
+            {
+                "sensor.lappeenranta": ("{id}", "Lappeenranta", "departures", "mdi:train-variant"),
+                "sensor.lappeenranta_arrivals": ("{id}_arrivals", "Lappeenranta arrivals", "arrivals", "mdi:train"),
+            },
+        ),
+    ],
+)
+async def test_a_stations_direction_decides_its_request_and_sensors(
+    hass: HomeAssistant, digitraffic_api: AiohttpClientMocker, direction: str | None, counts: tuple, sensors: dict
+) -> None:
+    data = {"station": "LR", "departures": 5, "refresh_seconds": 60} | ({"direction": direction} if direction else {})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Digitraffic",
+        data={"language": "en"},
+        subentries_data=[ConfigSubentryData(subentry_type="station_departures", title="Lappeenranta", unique_id=None, data=data)],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    [query] = [url.query for _method, url, _data, _headers in digitraffic_api.mock_calls if url.path.endswith("/live-trains/station/LR")]
+    assert (query["departing_trains"], query["arriving_trains"], query["arrived_trains"]) == counts
+    subentry_id = next(iter(entry.subentries))
+    registry = er.async_get(hass)
+    found = {entity.entity_id for entity in er.async_entries_for_config_entry(registry, entry.entry_id) if entity.domain == "sensor"}
+    assert found == set(sensors)
+    for entity_id, (unique_id, name, stated, icon) in sensors.items():
+        assert registry.async_get(entity_id).unique_id == unique_id.format(id=subentry_id)
+        state = hass.states.get(entity_id)
+        assert (state.attributes["friendly_name"], state.attributes.get("direction"), state.attributes["icon"]) == (name, stated, icon)
 
 
 async def test_reconfiguring_a_feed(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:

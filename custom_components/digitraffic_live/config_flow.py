@@ -13,6 +13,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -44,6 +45,7 @@ from .const import (
     CONF_CAMERA,
     CONF_CATEGORIES,
     CONF_DEPARTURES,
+    CONF_DIRECTION,
     CONF_FORECAST,
     CONF_ICEBREAKERS,
     CONF_INCLUDE_MOORED,
@@ -73,6 +75,8 @@ from .const import (
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
     DEFAULT_WEATHER_STATION_REFRESH_SECONDS,
+    DIRECTION_DEPARTURES,
+    DIRECTIONS,
     DOMAIN,
     LANGUAGES,
     MAX_DEPARTURES,
@@ -280,8 +284,6 @@ class TrainFeedFlow(FeedFlow):
 
     def validate(self, data: dict[str, Any]) -> dict[str, str]:
         route = data.get(CONF_ROUTE) or []
-        if len(route) == 1:
-            return {CONF_ROUTE: "route_too_short"}
         if data[CONF_USE_AREA]:
             area = data.get(CONF_AREA) or {}
             if not area.get("radius"):
@@ -299,9 +301,20 @@ class TrainFeedFlow(FeedFlow):
 
 
 class StationDeparturesFlow(FeedFlow):
-    """The next departures from one station, optionally only trains that stop at another station later."""
+    """The next departures from one station, its arrivals or both, the departures optionally only of trains that stop at
+    another station later.
+
+    The direction is chosen when the station is added and kept after, as an airport's is in finavia_flights, so changing
+    the station never leaves a sensor behind.
+    """
 
     _stations: list[SelectOptionDict] | None = None
+
+    def _direction(self, data: dict[str, Any]) -> str:
+        """The direction being added, or the one the station being changed has."""
+        if self.source == SOURCE_RECONFIGURE:
+            return str(self._get_reconfigure_subentry().data.get(CONF_DIRECTION, DIRECTION_DEPARTURES))
+        return str(data.get(CONF_DIRECTION, DIRECTION_DEPARTURES))
 
     async def async_schema(self) -> vol.Schema | SubentryFlowResult:
         if self._stations is None:
@@ -310,10 +323,16 @@ class StationDeparturesFlow(FeedFlow):
                 return stations
             self._stations = stations
 
+        direction: dict[vol.Marker, Any] = {}
+        if self.source != SOURCE_RECONFIGURE:
+            direction[vol.Required(CONF_DIRECTION, default=DIRECTION_DEPARTURES)] = SelectSelector(
+                SelectSelectorConfig(options=DIRECTIONS, translation_key=CONF_DIRECTION, mode=SelectSelectorMode.LIST)
+            )
         return vol.Schema(
             {
                 vol.Required(CONF_NAME): TextSelector(),
                 vol.Required(CONF_STATION): SelectSelector(SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)),
+                **direction,
                 vol.Optional(CONF_STOPS_AT): SelectSelector(SelectSelectorConfig(options=self._stations, mode=SelectSelectorMode.DROPDOWN)),
                 vol.Required(CONF_DEPARTURES): NumberSelector(
                     NumberSelectorConfig(min=1, max=MAX_DEPARTURES, step=1, mode=NumberSelectorMode.BOX)
@@ -328,11 +347,19 @@ class StationDeparturesFlow(FeedFlow):
     def validate(self, data: dict[str, Any]) -> dict[str, str]:
         if data.get(CONF_STOPS_AT) and data[CONF_STOPS_AT] == data[CONF_STATION]:
             return {CONF_STOPS_AT: "stops_at_same_station"}
+        # Arrivals list every train, as a bus stop lists every bus.
+        if data.get(CONF_STOPS_AT) and self._direction(data) != DIRECTION_DEPARTURES:
+            return {CONF_STOPS_AT: "stops_at_departures_only"}
         return {}
 
     def clean(self, data: dict[str, Any]) -> dict[str, Any]:
         data = super().clean(data)
         data[CONF_DEPARTURES] = int(data[CONF_DEPARTURES])
+        # A subentry from before arrivals has no direction, and stays without one: it is departures.
+        if self.source == SOURCE_RECONFIGURE:
+            data.pop(CONF_DIRECTION, None)
+            if CONF_DIRECTION in self._get_reconfigure_subentry().data:
+                data[CONF_DIRECTION] = self._direction(data)
         if not data.get(CONF_STOPS_AT):
             data.pop(CONF_STOPS_AT, None)
         return data

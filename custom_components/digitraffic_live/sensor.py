@@ -28,6 +28,8 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTRIBUTION,
     DEPARTURES_VERSION,
+    DIRECTION_ARRIVALS,
+    DIRECTION_BOTH,
     DOMAIN,
     MAP_FEED_VERSION,
     SUBENTRY_ROAD_CONDITIONS,
@@ -184,7 +186,10 @@ async def async_setup_entry(
         if isinstance(coordinator, FeedCoordinator):
             async_add_entities([MapFeedSensor(coordinator)], config_subentry_id=subentry_id)
         elif isinstance(coordinator, StationDeparturesCoordinator):
-            async_add_entities([StationDeparturesSensor(coordinator)], config_subentry_id=subentry_id)
+            async_add_entities(
+                [StationDeparturesSensor(coordinator, direction) for direction in coordinator.departures_config.directions],
+                config_subentry_id=subentry_id,
+            )
         elif isinstance(coordinator, WeatherStationCoordinator):
             async_add_entities(
                 [StationSensor(coordinator, description) for description in STATION_SENSORS],
@@ -245,20 +250,29 @@ class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
 
 
 class StationDeparturesSensor(CoordinatorEntity[StationDeparturesCoordinator], SensorEntity):
-    """The time of a station's next train that isn't cancelled, with the live estimate when there is one."""
+    """The time of a station's next train to leave that isn't cancelled, or to arrive that hasn't come in, with the live
+    estimate when there is one."""
 
     # The departures change on every update; the next departure time is history enough.
     _unrecorded_attributes = frozenset({"departures", "notices"})
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_has_entity_name = True
-    _attr_name = None
-    _attr_icon = "mdi:train-variant"
 
-    def __init__(self, coordinator: StationDeparturesCoordinator) -> None:
+    def __init__(self, coordinator: StationDeparturesCoordinator, direction: str) -> None:
         super().__init__(coordinator)
         subentry = coordinator.subentry
-        self._attr_unique_id = subentry.subentry_id
+        self.direction = direction
+        if direction == DIRECTION_ARRIVALS:
+            # "Lappeenranta saapuvat"; the station's name alone is its departures'.
+            self._attr_unique_id = f"{subentry.subentry_id}_arrivals"
+            self._attr_translation_key = "station_arrivals"
+            self._attr_icon = "mdi:train"
+        else:
+            # The departures' unique id is the subentry's, as it was before arrivals.
+            self._attr_unique_id = subentry.subentry_id
+            self._attr_name = None
+            self._attr_icon = "mdi:train-variant"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
@@ -270,8 +284,8 @@ class StationDeparturesSensor(CoordinatorEntity[StationDeparturesCoordinator], S
     @property
     def native_value(self) -> datetime | None:
         data = self.coordinator.data
-        departure = data.next_departure if data else None
-        return dt_util.parse_datetime(departure["estimated"]) if departure else None
+        train = data.next_train(self.direction) if data else None
+        return dt_util.parse_datetime(train["estimated"]) if train else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -283,9 +297,12 @@ class StationDeparturesSensor(CoordinatorEntity[StationDeparturesCoordinator], S
             "stop_id": data.station,
             "stop_name": data.name,
         }
+        # Departures say so only next to their station's arrivals, so a station board of departures alone reads as before.
+        if self.direction == DIRECTION_ARRIVALS or self.coordinator.departures_config.direction == DIRECTION_BOTH:
+            attributes["direction"] = self.direction
         if data.notices:
             attributes["notices"] = data.notices
-        attributes["departures"] = data.departures
+        attributes["departures"] = data.trains.get(self.direction, [])
         return attributes
 
 
