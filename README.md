@@ -85,7 +85,7 @@ Add with **Add train feed** on the integration page. Choose route stations, an a
 | Name                 | Type    | Description                                                                                    | Default     |
 | -------------------- | ------- | ---------------------------------------------------------------------------------------------- | ----------- |
 | Name                 | string  | Name of the feed and its sensor                                                                |             |
-| Route stations       | list    | Only trains that stop at every chosen station, e.g. Lappeenranta, or Helsinki and Lappeenranta | none        |
+| Route stations       | list    | Only trains that stop at every chosen station, e.g. Lappeenranta, or Helsinki and Lappeenranta |             |
 | Train categories     | list    | Long-distance, commuter, cargo, locomotive, test drive, on-track machines, shunting            | all         |
 | Limit to an area     | boolean | Only trains inside the area                                                                    | off         |
 | Area                 | circle  | Centre and radius, picked on a map                                                             | home, 30 km |
@@ -213,7 +213,7 @@ direction is chosen when the station is added, and can't be changed after. Cargo
 | Name             | string  | Name of the sensor                                                                                      |            |
 | Station          | station | The station the trains leave from or arrive at                                                          |            |
 | Trains           | choice  | Departures, arrivals or both                                                                            | departures |
-| Stops at         | station | Only departing trains that stop at this station later, such as only those from Helsinki to Lappeenranta | none       |
+| Stops at         | station | Only departing trains that stop at this station later, such as only those from Helsinki to Lappeenranta |            |
 | Number of trains | number  | How many of the next trains not cancelled each sensor lists, 1–20, with the cancelled ones among them   | 5          |
 | Update interval  | seconds | How often the trains are fetched, at least 30                                                           | 60         |
 
@@ -314,11 +314,11 @@ itself, and the log says which line to add, change or remove.
 
 ### Card options
 
-| Name       | Type   | Default  | Description                                                                     |
-| ---------- | ------ | -------- | ------------------------------------------------------------------------------- |
-| `type`     | string | required | `custom:road-conditions-card`                                                   |
-| `stations` | list   | required | Road weather stations, as device ids or objects with a name. One fills the card |
-| `title`    | string |          | Shown at the top of the card                                                    |
+| Name       | Type   | Description                                                                     | Default  |
+| ---------- | ------ | ------------------------------------------------------------------------------- | -------- |
+| `type`     | string | `custom:road-conditions-card`                                                   | required |
+| `stations` | list   | Road weather stations, as device ids or objects with a name. One fills the card | required |
+| `title`    | string | Shown at the top of the card                                                    |          |
 
 Each item of `stations` is a device id, or an object with these keys:
 
