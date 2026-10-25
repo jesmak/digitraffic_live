@@ -1,5 +1,6 @@
 Weather Icons, Copyright (c) Erik Flowers (https://erikflowers.github.io/weather-icons).
-The card draws some of its glyphs from their SVG versions, in src/weather-icons.ts.
+The road conditions card draws some of its glyphs from their SVG versions, in frontend/src/weather-icons.ts, and the
+built card, custom_components/digitraffic_live/www/road-conditions-card.js, carries them.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

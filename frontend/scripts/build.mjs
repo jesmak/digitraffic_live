@@ -60,7 +60,9 @@ await build({
     minify: false,
     legalComments: "none",
     banner: {
-        js: `/*! road-conditions-card ${manifest.version} | MIT License | Includes Weather Icons by Erik Flowers, SIL OFL 1.1, see LICENSE-weather-icons */`,
+        js:
+            `/*! road-conditions-card ${manifest.version} | MIT License | Includes Weather Icons by Erik Flowers, SIL OFL 1.1, ` +
+            "see https://github.com/jesmak/digitraffic_live/blob/main/LICENSE-weather-icons */",
     },
     define: {
         __CARD_VERSION__: JSON.stringify(manifest.version),

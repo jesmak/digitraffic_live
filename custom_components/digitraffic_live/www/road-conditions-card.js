@@ -1,4 +1,4 @@
-/*! road-conditions-card 1.4.0 | MIT License | Includes Weather Icons by Erik Flowers, SIL OFL 1.1, see LICENSE-weather-icons */
+/*! road-conditions-card 1.4.1 | MIT License | Includes Weather Icons by Erik Flowers, SIL OFL 1.1, see https://github.com/jesmak/digitraffic_live/blob/main/LICENSE-weather-icons */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -597,7 +597,7 @@ function r5(r6) {
 }
 
 // src/const.ts
-var CARD_VERSION = "1.4.0";
+var CARD_VERSION = "1.4.1";
 var PLATFORM = "digitraffic_live";
 var SENSORS = [
   "road_temperature",
