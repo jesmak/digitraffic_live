@@ -178,6 +178,7 @@ async def test_a_station_both_ways_has_two_sensors_and_keeps_its_direction(
     assert result["errors"] == {"stops_at": "stops_at_departures_only"}, "the kept direction counts"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], reconfigured | {"departures": 3})
     assert result["reason"] == "reconfigure_successful"
+    assert result.get("translation_domain") is None, "the integration's own text"
     assert entry.subentries[subentry_id].data["direction"] == "both"
 
 
@@ -209,6 +210,7 @@ async def test_a_station_from_before_arrivals_stays_departures(hass: HomeAssista
         result["flow_id"], {"name": "Lappeenranta", "station": "LR", "stops_at": "HKI", "departures": 5, "refresh_seconds": 60}
     )
     assert result["reason"] == "reconfigure_successful", "stops at is fine for departures"
+    assert result.get("translation_domain") is None, "the integration's own text"
     assert entry.subentries[subentry_id].data == {"station": "LR", "stops_at": "HKI", "departures": 5, "refresh_seconds": 60}
 
 
@@ -277,6 +279,7 @@ async def test_reconfiguring_a_feed(hass: HomeAssistant, digitraffic_api: Aiohtt
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert result.get("translation_domain") is None, "the integration's own text"
     await hass.async_block_till_done()
 
     subentry = entry.subentries[subentry_id]
@@ -348,6 +351,7 @@ async def test_adding_a_road_weather_station(hass: HomeAssistant, road_api: Aioh
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"refresh_seconds": 120.0})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert result.get("translation_domain") is None, "the integration's own text"
     await hass.async_block_till_done()
     assert entry.subentries[subentry.subentry_id].data == {"station": "3036", "refresh_seconds": 120}
 

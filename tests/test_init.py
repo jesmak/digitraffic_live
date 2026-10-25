@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from types import MappingProxyType
 
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+import pytest
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry, ConfigSubentryData
 from homeassistant.const import MATCH_ALL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -49,6 +51,44 @@ def feed_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+@pytest.mark.parametrize("change", ["data", "subentry"])
+async def test_a_change_saved_while_setting_up_is_applied(
+    hass: HomeAssistant, digitraffic_api: AiohttpClientMocker, monkeypatch: pytest.MonkeyPatch, change: str
+) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, title="Digitraffic", data={"language": "en"})
+    entry.add_to_hass(hass)
+    trains = ConfigSubentry(
+        data=MappingProxyType({"route": ["HKI", "LR"], "use_area": False, "max_age_minutes": 15, "refresh_seconds": 60}),
+        subentry_type="trains",
+        title="Trains HKI–LR",
+        unique_id=None,
+    )
+    forward = hass.config_entries.async_forward_entry_setups
+    setups = []
+
+    async def save_while_setting_up(entry: MockConfigEntry, platforms) -> None:
+        # Saved as a flow would save it, before setup has added its update listener.
+        if not setups:
+            if change == "data":
+                hass.config_entries.async_update_entry(entry, data={"language": "fi"})
+            else:
+                hass.config_entries.async_add_subentry(entry, trains)
+        setups.append(entry.runtime_data)
+        await forward(entry, platforms)
+
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", save_while_setting_up)
+    # Not asserted: the reload may already be under way when the setup returns.
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(setups) == 2, "set up again with the change"
+    if change == "data":
+        assert entry.runtime_data.texts.language == "fi"
+    else:
+        assert trains.subentry_id in entry.runtime_data.coordinators
+
+
 async def test_an_entry_left_on_swedish_is_switched_to_english(hass: HomeAssistant, digitraffic_api: AiohttpClientMocker) -> None:
     entry = MockConfigEntry(domain=DOMAIN, title="Digitraffic", data={"language": "sv"}, version=1, minor_version=1)
     entry.add_to_hass(hass)
@@ -85,6 +125,7 @@ async def test_feeds_create_map_feed_sensors(hass: HomeAssistant, digitraffic_ap
         ],
         "default": "delay",
         "count": "trains",
+        "count_one": "train",
     }
     assert trains.attributes["geojson"]["features"][0]["properties"]["notices"] == ["Delayed by track works."]
 

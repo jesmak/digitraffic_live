@@ -38,6 +38,12 @@ class Texts:
         text = self._texts.get(key) or self._fallback.get(key) or key
         return PLACEHOLDER.sub(lambda match: str(values.get(match.group(1), "")), text)
 
+    def number(self, value: float, decimals: int = 1) -> str:
+        """ "2.5", or "2,5" in Finnish, and "3" rather than "3.0"."""
+        text = f"{value:.{decimals}f}"
+        text = text.rstrip("0").rstrip(".") if "." in text else text
+        return text.replace(".", self("decimal_separator"))
+
 
 @cache
 def read_texts_file(language: str) -> dict[str, str]:

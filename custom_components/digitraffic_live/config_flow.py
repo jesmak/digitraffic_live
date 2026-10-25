@@ -182,7 +182,7 @@ class FeedFlow(ConfigSubentryFlow):
                 data = self.clean(data)
                 if current is None:
                     return self.async_create_entry(title=title, data=data)
-                return self.async_update_and_abort(self._get_entry(), current, title=title, data=data)
+                return self.async_update_and_abort(self._get_entry(), current, title=title, data=data, reason="reconfigure_successful")
 
         if user_input is not None:
             values = user_input
@@ -581,6 +581,7 @@ class RoadDeviceFlow(ConfigSubentryFlow):
                 self._get_entry(),
                 subentry,
                 data={**subentry.data, CONF_REFRESH_SECONDS: int(user_input[CONF_REFRESH_SECONDS])},
+                reason="reconfigure_successful",
             )
         refresh_seconds = subentry.data.get(CONF_REFRESH_SECONDS, self.default_refresh_seconds)
         return self.async_show_form(

@@ -86,9 +86,3 @@ def time_range(start: str | None, end: str | None, texts: Texts) -> str:
 def utc_iso(moment: datetime) -> str:
     """A time as Digitraffic's query parameters expect it: 2026-09-15T12:00:00Z."""
     return moment.astimezone(dt_util.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def number_text(value: float, decimals: int = 1) -> str:
-    """ "2.5", and "3" rather than "3.0"."""
-    text = f"{value:.{decimals}f}"
-    return text.rstrip("0").rstrip(".") if "." in text else text

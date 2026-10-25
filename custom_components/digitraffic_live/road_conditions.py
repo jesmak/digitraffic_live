@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .const import CONF_AREA, CONF_FORECAST, CONF_ONLY_POOR
-from .feed import format_time, number_text, row, shape_feature
+from .feed import format_time, row, shape_feature
 from .geo import Area, simplify_geometry
 from .texts import Texts
 
@@ -127,7 +127,7 @@ def condition_details(condition: str, forecast: Mapping[str, Any], texts: Texts)
     ):
         value = forecast.get(field)
         if isinstance(value, (int, float)) and not isinstance(value, bool):
-            rows.append(row(texts(label), number_text(value), unit))
+            rows.append(row(texts(label), texts.number(value), unit))
     return rows
 
 

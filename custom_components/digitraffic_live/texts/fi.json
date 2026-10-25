@@ -217,5 +217,7 @@
   "cause_X": "Muu syy",
   "sort_delay": "Myöhästyminen",
   "sort_number": "Numero",
-  "trains_count": "junaa"
+  "trains_count": "junaa",
+  "trains_count_one": "juna",
+  "decimal_separator": ","
 }

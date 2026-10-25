@@ -147,7 +147,7 @@ async def test_features_follow_the_map_feed_format() -> None:
     assert props["details"] == [
         {"label": "Tyyppi", "value": "Luotsivene"},
         {"label": "Tila", "value": "Matkalla konevoimalla"},
-        {"label": "Syväys", "value": 2.2, "unit": "m"},
+        {"label": "Syväys", "value": "2,2", "unit": "m"},
         {"label": "Pituus × leveys", "value": "13 × 4", "unit": "m"},
     ]
 

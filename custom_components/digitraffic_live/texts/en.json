@@ -217,5 +217,7 @@
   "cause_X": "Other cause",
   "sort_delay": "Delay",
   "sort_number": "Number",
-  "trains_count": "trains"
+  "trains_count": "trains",
+  "trains_count_one": "train",
+  "decimal_separator": "."
 }

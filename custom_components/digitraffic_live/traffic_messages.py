@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from .api import TRAFFIC_MESSAGE_PATHS, DigitrafficClient
 from .const import CONF_AREA, CONF_MESSAGE_TYPES, CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
-from .feed import format_time, number_text, point_feature, row, shape_feature, time_range, utc_iso
+from .feed import format_time, point_feature, row, shape_feature, time_range, utc_iso
 from .geo import Area, representative_position, simplify_geometry
 from .texts import Texts
 
@@ -150,7 +150,7 @@ def message_details(announcement: Mapping[str, Any], texts: Texts, now: datetime
             rows.append(row(texts("restrictions"), restrictions))
         if len(phases) > 1:
             rows.append(row(texts("phases"), len(phases)))
-    if effects := feature_texts(announcement.get("features")):
+    if effects := feature_texts(announcement.get("features"), texts):
         rows.append(row(texts("effects"), effects))
     if route := itinerary_text(announcement.get("lastActiveItinerarySegment"), texts):
         rows.append(row(texts("route"), route))
@@ -249,22 +249,22 @@ def restriction_texts(restrictions: Any, texts: Texts) -> str:
         key = f"restriction_{str(item.get('type') or '').replace(' ', '_')}"
         name = texts(key) if texts.has(key) else str(detail.get("name") or "").strip()
         if name:
-            names.append(join_quantity(name, detail.get("quantity"), detail.get("unit")))
+            names.append(join_quantity(name, detail.get("quantity"), detail.get("unit"), texts))
     return ", ".join(dict.fromkeys(names))
 
 
-def feature_texts(features: Any) -> str:
+def feature_texts(features: Any, texts: Texts) -> str:
     """The message's own descriptions of its effects, such as "Ajokaista suljettu liikenteeltä"."""
     names = []
     for item in features if isinstance(features, list) else []:
         if isinstance(item, Mapping) and (name := str(item.get("name") or "").strip()):
-            names.append(join_quantity(name, item.get("quantity"), item.get("unit")))
+            names.append(join_quantity(name, item.get("quantity"), item.get("unit"), texts))
     return ", ".join(dict.fromkeys(names))
 
 
-def join_quantity(name: str, quantity: Any, unit: Any) -> str:
+def join_quantity(name: str, quantity: Any, unit: Any, texts: Texts) -> str:
     if isinstance(quantity, (int, float)) and not isinstance(quantity, bool):
-        return f"{name} {number_text(quantity)} {unit or ''}".strip()
+        return f"{name} {texts.number(quantity)} {unit or ''}".strip()
     return name
 
 

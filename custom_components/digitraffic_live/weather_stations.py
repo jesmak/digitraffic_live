@@ -13,7 +13,7 @@ from typing import Any
 from .api import DigitrafficClient, DigitrafficError
 from .cache import DetailCache, details_name, fetch_each
 from .const import CONF_AREA, CONF_MARKER_VALUE
-from .feed import number_text, point_feature, row
+from .feed import point_feature, row
 from .geo import Area
 from .texts import Texts
 
@@ -295,7 +295,7 @@ def station_details(values: Mapping[str, Mapping[str, Any]], texts: Texts) -> li
     def measurement(names: Sequence[str], label: str, unit: str, decimals: int = 1, skip_zero: bool = False) -> None:
         value = first_numeric(values, names)
         if value is not None and not (skip_zero and value == 0):
-            rows.append(row(texts(label), number_text(value, decimals), unit))
+            rows.append(row(texts(label), texts.number(value, decimals), unit))
 
     def coded(code: int | None, label: str, prefix: str, skip: int | None = None) -> None:
         if code is not None and code != skip and texts.has(f"{prefix}_{code}"):
@@ -320,6 +320,6 @@ def station_details(values: Mapping[str, Mapping[str, Any]], texts: Texts) -> li
     coded(sensor_code(PRECIPITATION_TYPE), "precipitation_type", "rain_type", skip=PRECIPITATION_TYPE_NONE)
     measurement(RAIN_INTENSITY, "rain_intensity", "mm/h", skip_zero=True)
     if (visibility := visibility_km(values)) is not None:
-        rows.append(row(texts("visibility"), number_text(visibility), "km"))
+        rows.append(row(texts("visibility"), texts.number(visibility), "km"))
     measurement(("ILMAN_KOSTEUS",), "humidity", "%", decimals=0)
     return rows

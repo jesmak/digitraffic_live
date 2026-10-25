@@ -10,7 +10,9 @@ import pytest
 
 from custom_components.digitraffic_live.const import LANGUAGES
 from custom_components.digitraffic_live.feed import iso_from_epoch_ms, point_feature, row
+from custom_components.digitraffic_live.ships import ship_details
 from custom_components.digitraffic_live.texts import TEXTS_DIR, load_texts
+from custom_components.digitraffic_live.traffic_messages import join_quantity
 
 TRANSLATIONS_DIR = Path(TEXTS_DIR).parent / "translations"
 
@@ -56,6 +58,28 @@ def test_texts_fill_placeholders_and_fall_back_to_english() -> None:
     assert load_texts("fi")("cars", n=5) == "5 vaunua"
     assert load_texts("de")("cars", n=5) == "5 cars"
     assert load_texts("en")("no_such_key") == "no_such_key"
+
+
+@pytest.mark.parametrize(
+    ("language", "value", "decimals", "text"),
+    [
+        ("en", 2.5, 1, "2.5"),
+        ("fi", 2.5, 1, "2,5"),
+        ("fi", 3.0, 1, "3"),
+        ("en", 3.0, 1, "3"),
+        ("fi", 12.25, 2, "12,25"),
+        ("de", 2.5, 1, "2.5"),
+    ],
+)
+def test_numbers_are_written_in_the_feeds_language(language: str, value: float, decimals: int, text: str) -> None:
+    assert load_texts(language).number(value, decimals) == text
+
+
+def test_a_ships_draught_and_a_restrictions_quantity_in_finnish() -> None:
+    finnish = load_texts("fi")
+    [draught] = [detail for detail in ship_details({}, {"draught": 75}, "cargo", finnish) if detail["label"] == finnish("draught")]
+    assert draught["value"] == "7,5"
+    assert join_quantity("Ajoneuvon korkeus", 4.4, "m", finnish) == "Ajoneuvon korkeus 4,4 m"
 
 
 def test_point_feature_rounds_and_drops_empty_properties() -> None:

@@ -317,7 +317,7 @@ def ship_details(props: Mapping[str, Any], meta: Mapping[str, Any], kind: str, t
 
     draught = meta.get("draught")  # tenths of a metre
     if isinstance(draught, (int, float)) and 0 < draught < AIS_DRAUGHT_NOT_AVAILABLE:
-        rows.append(row(texts("draught"), round(draught / 10, 1), "m"))
+        rows.append(row(texts("draught"), texts.number(draught / 10), "m"))
 
     # Reference points are distances from the AIS antenna to the bow, stern, port and starboard.
     length = (meta.get("referencePointA") or 0) + (meta.get("referencePointB") or 0)

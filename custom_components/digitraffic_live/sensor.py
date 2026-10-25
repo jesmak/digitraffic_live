@@ -240,6 +240,7 @@ class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
                 ],
                 "default": "delay",
                 "count": texts("trains_count"),
+                "count_one": texts("trains_count_one"),
             }
         if area := self.coordinator.area:
             attributes["area"] = area.as_attribute()
