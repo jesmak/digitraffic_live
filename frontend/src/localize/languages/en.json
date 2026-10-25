@@ -1,0 +1,52 @@
+{
+    "common": {
+        "name": "Road conditions",
+        "description": "Grip, temperatures, road surface, wind, rain and visibility from road weather stations",
+        "invalid_configuration": "Invalid configuration. Add at least one road weather station.",
+        "station_without_device": "Invalid configuration. Every station needs its device.",
+        "no_station": "No sensors found for this station",
+        "no_readings": "No readings from this station right now"
+    },
+    "labels": {
+        "road_temperature": "Road temperature",
+        "air_temperature": "Air temperature",
+        "road_surface": "Road surface",
+        "wind": "Wind",
+        "precipitation": "Precipitation",
+        "visibility": "Visibility",
+        "road_warning": "Road weather warning"
+    },
+    "scale": {
+        "very_slippery": "Very slippery",
+        "winter": "Winter road",
+        "good": "Good grip"
+    },
+    "precipitation": {
+        "none": "No rain",
+        "very_light": "Light",
+        "drizzle": "Drizzle",
+        "rain": "Rain",
+        "snow": "Snow",
+        "wet_sleet": "Wet sleet",
+        "sleet": "Sleet",
+        "hail": "Hail",
+        "ice_crystals": "Ice crystals",
+        "snow_grains": "Snow grains",
+        "graupel": "Graupel",
+        "freezing_drizzle": "Freezing drizzle",
+        "freezing_rain": "Freezing rain",
+        "snow_or_sleet": "Snow/sleet",
+        "heavy_rain": "Heavy rain",
+        "heavy_snow": "Heavy snow",
+        "heavy_sleet": "Heavy sleet",
+        "heavy_snow_or_sleet": "Heavy snow/sleet"
+    },
+    "editor": {
+        "title": "Title",
+        "stations": "Stations",
+        "stations_helper": "Road weather stations of Digitraffic Live. The card has two modes. With a single station, it shows full details in a roomier layout. With several stations, it shows the details condensed, one row per station.",
+        "device": "Road weather station",
+        "name": "Name",
+        "name_helper": "Replaces the station's own name"
+    }
+}

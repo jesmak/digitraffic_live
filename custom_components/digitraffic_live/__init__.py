@@ -21,6 +21,7 @@ from homeassistant.loader import async_get_integration
 
 from .api import DigitrafficClient
 from .cache import DetailCache
+from .card import async_add_card_resource, async_remove_card_resource, async_serve_card
 from .const import CONF_LANGUAGE, DOMAIN, LANGUAGES
 from .coordinator import COORDINATORS, DigitrafficConfigEntry, DigitrafficRuntimeData, PeriodicValue
 from .services import async_setup_services
@@ -43,6 +44,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
+    await async_serve_card(hass)
     return True
 
 
@@ -63,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
     # Identifies the integration to Digitraffic, as its terms ask. Contains no personal information.
     client = DigitrafficClient(async_get_clientsession(hass), f"{DOMAIN}/{integration.version}")
     language = entry.data[CONF_LANGUAGE]
+    await async_add_card_resource(hass)
 
     async def fetch_icebreakers() -> set[int]:
         return icebreaker_mmsis(await client.winter_navigation_vessels())
@@ -117,3 +120,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry)
 
 async def async_unload_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) -> None:
+    await async_remove_card_resource(hass)

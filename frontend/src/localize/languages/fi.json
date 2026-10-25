@@ -1,0 +1,52 @@
+{
+    "common": {
+        "name": "Keli",
+        "description": "Tiesääasemien pito, lämpötilat, tienpinta, tuuli, sade ja näkyvyys",
+        "invalid_configuration": "Virheellinen konfiguraatio. Lisää vähintään yksi tiesääasema.",
+        "station_without_device": "Virheellinen konfiguraatio. Jokaiselle asemalle tarvitaan laite (device).",
+        "no_station": "Asemalta ei löytynyt sensoreita",
+        "no_readings": "Asemalta ei juuri nyt saada lukemia"
+    },
+    "labels": {
+        "road_temperature": "Tien lämpötila",
+        "air_temperature": "Ilman lämpötila",
+        "road_surface": "Tienpinta",
+        "wind": "Tuuli",
+        "precipitation": "Sade",
+        "visibility": "Näkyvyys",
+        "road_warning": "Tiesäävaroitus"
+    },
+    "scale": {
+        "very_slippery": "Erittäin liukas",
+        "winter": "Talvikeli",
+        "good": "Hyvä pito"
+    },
+    "precipitation": {
+        "none": "Pouta",
+        "very_light": "Heikko sade",
+        "drizzle": "Tihku",
+        "rain": "Sade",
+        "snow": "Lumi",
+        "wet_sleet": "Märkä räntä",
+        "sleet": "Räntä",
+        "hail": "Rakeita",
+        "ice_crystals": "Jääkiteitä",
+        "snow_grains": "Lumijyväsiä",
+        "graupel": "Lumirakeita",
+        "freezing_drizzle": "Jäätävä tihku",
+        "freezing_rain": "Jäätävä sade",
+        "snow_or_sleet": "Lumi/räntä",
+        "heavy_rain": "Runsas sade",
+        "heavy_snow": "Runsas lumisade",
+        "heavy_sleet": "Runsas räntä",
+        "heavy_snow_or_sleet": "Runsas lumi/räntä"
+    },
+    "editor": {
+        "title": "Otsikko",
+        "stations": "Asemat",
+        "stations_helper": "Digitraffic Liven tiesääasemat. Kortilla on kaksi tilaa. Lisäämällä vain yhden aseman, näytetään kattavat tiedot väljemmällä asettelulla. Lisäämällä useamman aseman, näytetään tiedot tiivistettynä ja asemakohtaisesti rivitettynä.",
+        "device": "Tiesääasema",
+        "name": "Nimi",
+        "name_helper": "Korvaa aseman oman nimen"
+    }
+}

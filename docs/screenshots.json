@@ -1,6 +1,6 @@
 {
     "resources": [
-        "../../hass-cards/road-conditions-card/dist/road-conditions-card.js",
+        "custom_components/digitraffic_live/www/road-conditions-card.js",
         "../../hass-cards/departures-card/dist/departures-card.js",
         "../../hass-cards/map-feed-card/dist/map-feed-card.js"
     ],
@@ -989,7 +989,17 @@
             "popup": "IC 45"
         },
         {
-            "name": "road-weather-station",
+            "name": "station-departures",
+            "width": 500,
+            "card": {
+                "type": "custom:departures-card",
+                "entities": [
+                    "sensor.tampere_station"
+                ]
+            }
+        },
+        {
+            "name": "road-conditions-one-station",
             "width": 500,
             "card": {
                 "type": "custom:road-conditions-card",
@@ -1002,12 +1012,71 @@
             }
         },
         {
-            "name": "station-departures",
+            "name": "road-conditions-stations",
             "width": 500,
             "card": {
-                "type": "custom:departures-card",
-                "entities": [
-                    "sensor.tampere_station"
+                "type": "custom:road-conditions-card",
+                "title": "Road conditions",
+                "stations": [
+                    {
+                        "device": "lakeview",
+                        "name": "Road 12 Lakeview"
+                    },
+                    {
+                        "device": "hillside",
+                        "name": "Road 9 Hillside"
+                    },
+                    {
+                        "device": "riverbend",
+                        "name": "Road 3 Riverbend"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "road-conditions-narrow",
+            "width": 240,
+            "card": {
+                "type": "custom:road-conditions-card",
+                "stations": [
+                    {
+                        "device": "riverbend",
+                        "name": "Road 3 Riverbend"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "road-conditions-narrow-stations",
+            "width": 240,
+            "card": {
+                "type": "custom:road-conditions-card",
+                "stations": [
+                    {
+                        "device": "lakeview",
+                        "name": "Road 12 Lakeview"
+                    },
+                    {
+                        "device": "hillside",
+                        "name": "Road 9 Hillside"
+                    },
+                    {
+                        "device": "riverbend",
+                        "name": "Road 3 Riverbend"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "road-conditions-wide",
+            "width": 980,
+            "card": {
+                "type": "custom:road-conditions-card",
+                "stations": [
+                    {
+                        "device": "lakeview",
+                        "name": "Road 12 Lakeview"
+                    }
                 ]
             }
         }

@@ -33,7 +33,8 @@ for the same card.
 - **Weather camera feeds:** the latest picture from each view of Fintraffic's road cameras.
 - **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
   surface, grip and its grade, road weather warnings, wind, precipitation and visibility, and an image entity for
-  each camera view. Shown by [road-conditions-card](https://github.com/jesmak/road-conditions-card).
+  each camera view. The [road conditions card](#road-conditions-card) that comes with the integration shows the
+  stations.
 - **Station departures:** the next passenger trains to leave or reach a railway station, the departures optionally only
   those that stop at another station later, with live estimates, delays, tracks, cancellations and their reasons.
   Shown by [departures-card](https://github.com/jesmak/departures-card).
@@ -149,12 +150,8 @@ very slippery.
 ### Road weather station
 
 Add with **Add road weather station** to get sensors for one station anywhere in Finland, for example to show on a
-dashboard. The station becomes a device named after it, with these sensors, which
-[road-conditions-card](https://github.com/jesmak/road-conditions-card) shows:
-
-<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-weather-station-light.png#gh-light-mode-only" width="510" alt="A road weather station on road-conditions-card, in good winter conditions with snow on the road, wind with gusts, snowfall and a road weather warning">
-<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-weather-station-dark.png#gh-dark-mode-only" width="510" alt="A road weather station on road-conditions-card, in good winter conditions with snow on the road, wind with gusts, snowfall and a road weather warning">
-
+dashboard. The station becomes a device named after it, with these sensors, which the
+[road conditions card](#road-conditions-card) shows:
 
 | Sensor               | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
@@ -262,7 +259,7 @@ Each departure has its train (`IC 45`, or the line letter of a commuter train), 
 time and the live estimate, the delay in seconds, the track, and whether it is cancelled. A train's own passenger
 notice, such as "Passengers are directed to train S 106", is in `notice`. Without one, a cancelled or late train has
 the reason there instead, in the integration's language: rolling stock, track work, traffic control and so on.
-Digitraffic gives the reasons as category codes; their texts are the integration's own.
+Digitraffic gives the reasons as category codes. Their texts are the integration's own.
 
 An arrivals sensor lists the trains coming in, in the same shape, with where each comes from, its first station, in
 place of where it is heading. A train that starts at the station has no arrival, and a train through it is on both
@@ -290,6 +287,97 @@ Returns a train's cars and services as detail rows. The map feed card calls it w
 | `departure_date` | The date the train left its first station |
 | `train_number`   | For example `8` for IC 8                  |
 
+## Road conditions card
+
+<p>
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-one-station-light.png#gh-light-mode-only" width="400" alt="One road weather station in good winter conditions, four of six parts of the meter lit in amber, with its temperatures, snow on the road, wind with gusts, snowfall, visibility and a road weather warning">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-one-station-dark.png#gh-dark-mode-only" width="400" alt="One road weather station in good winter conditions, four of six parts of the meter lit in amber, with its temperatures, snow on the road, wind with gusts, snowfall, visibility and a road weather warning">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-stations-light.png#gh-light-mode-only" width="400" alt="Three road weather stations as rows, each with its grip condition and a small meter, one of them very slippery with freezing rain">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-stations-dark.png#gh-dark-mode-only" width="400" alt="Three road weather stations as rows, each with its grip condition and a small meter, one of them very slippery with freezing rain">
+</p>
+
+The integration comes with a dashboard card for its road weather stations. It shows how much grip the road has on a
+meter, with the road and air temperature, the road surface, wind, precipitation and visibility. You pick stations,
+and the card finds their sensors by itself.
+
+The grip on the road is the heart of it. Each station's measured friction is graded into six classes, from very
+slippery to good grip, and shown on a meter that lights up to the station's class. Around it are the values that
+explain it: road and air temperature, what is on the road, wind and its gusts, what is falling from the sky and how
+far you can see.
+
+One station fills the card. Several stations get a row each, with the grade and a small meter, so you can see the
+roads you drive at a glance before you leave.
+
+The integration serves the card itself and adds it to the dashboards' resources when it starts, so the card is always
+the integration's own version. With the resources set in YAML (`resource_mode: yaml`), it can't add or update
+itself, and the log says which line to add, change or remove.
+
+### Card options
+
+| Name       | Type   | Default  | Description                                                                     |
+| ---------- | ------ | -------- | ------------------------------------------------------------------------------- |
+| `type`     | string | required | `custom:road-conditions-card`                                                   |
+| `stations` | list   | required | Road weather stations, as device ids or objects with a name. One fills the card |
+| `title`    | string |          | Shown at the top of the card                                                    |
+
+Each item of `stations` is a device id, or an object with these keys:
+
+| Name     | Type   | Description                                                                                              |
+| -------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| `device` | string | The road weather station's device                                                                        |
+| `name`   | string | Replaces the station's own name, which is long, such as "Road 9 Hillside" for "Road 9 Example, Hillside" |
+
+Everything can be set in the card's visual editor, where the station picker offers only road weather stations.
+
+### What the card shows
+
+- **The grip condition** in words, the friction coefficient µ next to it, and the meter. The meter's six parts each
+  have their own colour, from red for very slippery to green for good grip. The parts up to the station's class are
+  lit in that class's colour, and the rest stay faint in their own.
+- **Road and air temperature, road surface and wind.** Gusts are shown in brackets after the mean wind when they
+  are at least 3 m/s stronger, whichever unit the wind sensors show.
+- **Precipitation** as a weather icon and a short word, such as snow, sleet or drizzle. The full description and the
+  amount in mm/h are in its tooltip. Freezing drizzle, freezing rain and heavy precipitation are shown in the warning
+  colour.
+- **Visibility.**
+- **The road weather warning**, when the station gives one.
+
+A value the station doesn't measure is left out, so a station without a grip sensor shows no meter, and one without
+a present weather sensor shows only whether it rains or snows. When none of a station's sensors has a reading, such
+as when the integration can't reach the station, the card says so. Clicking a value opens its sensor.
+
+In the rows of several stations, each row shows the road temperature, the road surface and the wind, the grade with
+its small meter, and freezing or heavy precipitation when there is some. The grip classes and their limits are in
+[Grip condition](#grip-condition).
+
+### Sizes
+
+In a sections view the card takes a whole section by default and can be made as narrow as half of one. Its values
+follow the card's width. A narrow card has two to a row, a normal one three, and a card two sections wide has them
+all on one row. A value too long for its column wraps rather than being cut. On a narrow card the rows of several
+stations put the grade below the values.
+
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-light.png#gh-light-mode-only" width="250" alt="A very slippery station on a card half a section wide, its values two to a row and freezing rain wrapped onto two lines">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-dark.png#gh-dark-mode-only" width="250" alt="A very slippery station on a card half a section wide, its values two to a row and freezing rain wrapped onto two lines">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-stations-light.png#gh-light-mode-only" width="250" alt="Three stations on a card half a section wide, each with its grade and meter below its values">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-stations-dark.png#gh-dark-mode-only" width="250" alt="Three stations on a card half a section wide, each with its grade and meter below its values">
+
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-wide-light.png#gh-light-mode-only" width="990" alt="A station with good grip on a card two sections wide, with the meter across the card and all six values on one row">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-wide-dark.png#gh-dark-mode-only" width="990" alt="A station with good grip on a card two sections wide, with the meter across the card and all six values on one row">
+
+### Colours
+
+The meter's colours can be changed in a theme:
+
+| Variable                                | Default                      |
+| --------------------------------------- | ---------------------------- |
+| `--road-conditions-very-slippery-color` | `--error-color`, `#db4437`   |
+| `--road-conditions-slippery-color`      | `#f4511e`                    |
+| `--road-conditions-fair-winter-color`   | `#fb8c00`                    |
+| `--road-conditions-good-winter-color`   | `#ffb300`                    |
+| `--road-conditions-fair-color`          | `#9ccc65`                    |
+| `--road-conditions-good-color`          | `--success-color`, `#43a047` |
+
 ## Examples
 
 Maps are drawn by [map-feed-card](https://github.com/jesmak/map-feed-card), whose README has examples. Entity IDs are made from the station or camera name and Home Assistant's language, so
@@ -297,14 +385,28 @@ check yours on the device's page.
 
 ### A road weather station
 
-[road-conditions-card](https://github.com/jesmak/road-conditions-card) finds a station's sensors by itself, so it
-needs only the station's device. Pick it in the card's visual editor:
+The [road conditions card](#road-conditions-card) finds a station's sensors by itself, so it needs only the
+station's device. Device ids are easiest to pick in the card's visual editor:
 
 ```yaml
 type: custom:road-conditions-card
 stations:
   - device: 0123456789abcdef0123456789abcdef
     name: Road 9 Hillside
+```
+
+The roads to work, a row each:
+
+```yaml
+type: custom:road-conditions-card
+title: Road conditions
+stations:
+  - device: 0123456789abcdef0123456789abcdef
+    name: Road 12 Lakeview
+  - device: 1123456789abcdef0123456789abcdef
+    name: Road 9 Hillside
+  - device: 2123456789abcdef0123456789abcdef
+    name: Road 3 Riverbend
 ```
 
 Home Assistant's own cards work too:
@@ -362,6 +464,13 @@ cards:
       columns: 6
 ```
 
+## Upgrading from the separate road conditions card
+
+The road conditions card used to be a repository of its own, Road conditions card. It now comes with the integration,
+and the separate repository has been removed. If you installed it, remove it in HACS, and check that its resource
+(`/hacsfiles/road-conditions-card/…`) is gone from Settings › Dashboards › Resources. Until it is, the log warns about
+it at every start. Your dashboards need no changes, as the card's type stays `custom:road-conditions-card`.
+
 ## Upgrading from 1.0
 
 Nothing is required. Road weather stations get their new sensors (grip condition, wind, precipitation and
@@ -393,6 +502,11 @@ language's code, translate the values, and add the code to `LANGUAGES` in `const
 language has the same keys and placeholders as English. Names of stations, places and traffic messages come from
 Digitraffic as they are.
 
+The road conditions card's texts are in `frontend/src/localize/languages/`, one JSON file per language. The card
+finds a new file by itself and uses it when Home Assistant is set to that language. A text left out falls back to
+English. The sensors' states, such as the grip condition and the road surface, come from the integration's own
+translations.
+
 ## Development
 
 Requires Python 3.14.
@@ -403,6 +517,19 @@ python3.14 -m venv .venv
 .venv/bin/pytest
 .venv/bin/ruff check .
 ```
+
+The road conditions card is in `frontend/` and requires Node 22.13 or newer:
+
+```
+cd frontend
+npm install
+npm run check
+```
+
+`npm run check` typechecks, lints, checks formatting, runs the tests and builds
+`custom_components/digitraffic_live/www/road-conditions-card.js`, which is the file the integration serves and is
+committed to the repository. The card carries the integration's version from `manifest.json`. To have git refuse a
+commit whose built card doesn't match `frontend/`, run `git config core.hooksPath .githooks` once.
 
 | Path                                | What it contains                                      |
 | ----------------------------------- | ----------------------------------------------------- |
@@ -420,6 +547,8 @@ python3.14 -m venv .venv
 | `services.py`                       | The composition action                                |
 | `texts.py`, `texts/<language>.json` | Texts written into feeds                              |
 | `translations/<language>.json`      | Home Assistant UI texts                               |
+| `card.py`, `www/`                   | Serving the road conditions card and adding it to the dashboards' resources |
+| `frontend/`                         | The road conditions card's source, tests and build    |
 | `docs/screenshots.json`             | The made-up data the README's screenshots are taken from |
 
 ## Support
@@ -428,9 +557,15 @@ Hey dude! Help me out for a couple of :beers: or a :coffee:!
 
 [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/jesmak)
 
+## Thanks
+
+The road conditions card's weather icons are from [Weather Icons](https://erikflowers.github.io/weather-icons/) by
+Erik Flowers.
+
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE). The road conditions card's weather icons are under the SIL Open Font License 1.1, see
+[LICENSE-weather-icons](LICENSE-weather-icons).
 
 [releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/digitraffic_live?style=for-the-badge
