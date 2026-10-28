@@ -150,8 +150,8 @@ very slippery.
 ### Road weather station
 
 Add with **Add road weather station** to get sensors for one station anywhere in Finland, for example to show on a
-dashboard. The station becomes a device named after it, with these sensors, which the
-[road conditions card](#road-conditions-card) shows:
+dashboard. The station becomes a device named after it, with a sensor for each of these values that the station
+reports, which the [road conditions card](#road-conditions-card) shows:
 
 | Sensor               | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
@@ -169,9 +169,10 @@ dashboard. The station becomes a device named after it, with these sensors, whic
 | Visibility           | km                                                                                   |
 
 Stations have up to four road sensors and two optical sensors, and many lack the first of them. Each value comes from
-the first sensor that has one, road sensors before optical ones. A value that the station doesn't measure at all stays
-unknown. Values are fetched every 300 seconds, and **Change road weather station** changes the interval. Wind is in
-m/s, as Finnish weather services give it. If you prefer km/h, change the unit in the entity's settings.
+the first sensor that has one, road sensors before optical ones. A value that the station doesn't report gets no sensor,
+and one it starts reporting later gets its sensor then. Values are fetched every 300 seconds, and **Change road weather
+station** changes the interval. Wind is in m/s, as Finnish weather services give it. If you prefer km/h, change the unit
+in the entity's settings.
 
 #### Grip condition
 
@@ -473,10 +474,10 @@ it at every start. Your dashboards need no changes, as the card's type stays `cu
 
 ## Upgrading from 1.0
 
-Nothing is required. Road weather stations get their new sensors (grip condition, wind, precipitation and
-visibility) on the next restart, and entity IDs and attributes carry over. Swedish is no longer one of the
-integration's languages. An integration set to Swedish is switched to English when it starts, and can be set to
-Finnish in its settings.
+Nothing is required. Road weather stations get the new sensors (grip condition, wind, precipitation and visibility) for
+the values the station reports, from the next restart on, and entity IDs and attributes carry over. Swedish is no longer
+one of the integration's languages. An integration set to Swedish is switched to English when it starts, and can be set
+to Finnish in its settings.
 
 ## Data
 

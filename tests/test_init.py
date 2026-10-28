@@ -6,17 +6,20 @@ from dataclasses import replace
 from types import MappingProxyType
 
 import pytest
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry, ConfigSubentryData
 from homeassistant.const import MATCH_ALL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
+from custom_components.digitraffic_live import sensor
 from custom_components.digitraffic_live.api import MARINE_API, RAILWAY_API
 from custom_components.digitraffic_live.const import DOMAIN
-from custom_components.digitraffic_live.coordinator import WeatherCameraCoordinator
-from custom_components.digitraffic_live.sensor import MapFeedSensor
+from custom_components.digitraffic_live.coordinator import WeatherCameraCoordinator, WeatherStationCoordinator
+from custom_components.digitraffic_live.sensor import MapFeedSensor, StationSensor
 
 from .conftest import HAMINA_AREA, ROAD_AREA, VESSELS, ais_locations
 
@@ -299,3 +302,80 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
     assert hass.states.get(view).state == "2026-09-15T11:57:33+00:00"
     assert image._cached_image is None, "a new picture replaces the cached one"
     assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_tienpinta").state == STATE_UNAVAILABLE
+
+
+STATION_KEYS_ADDED = {"air_temperature", "road_temperature", "wind_speed", "visibility", "road_surface", "grip", "grip_condition"}
+
+
+async def test_a_station_gets_sensors_only_for_what_it_reports(
+    hass: HomeAssistant, road_api: AiohttpClientMocker, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Station 5007's first fetch fails, so it starts with nothing. Its sensors appear as it reports them, each one
+    # created once, and a reload starts over.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Digitraffic",
+        data={"language": "en"},
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type="road_weather_station",
+                title="Road 13 Example",
+                unique_id="5007",
+                data={"station": "5007", "refresh_seconds": 300},
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+    created: list[str] = []
+
+    def count(coordinator: WeatherStationCoordinator, description: SensorEntityDescription) -> StationSensor:
+        created.append(description.key)
+        return StationSensor(coordinator, description)
+
+    monkeypatch.setattr(sensor, "StationSensor", count)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    entity_registry = er.async_get(hass)
+
+    def station_entities() -> set[str]:
+        return {entity.translation_key for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)}
+
+    assert station_entities() == set()
+
+    [coordinator] = entry.runtime_data.coordinators.values()
+    assert isinstance(coordinator, WeatherStationCoordinator)
+    readings = {"ILMA": 3.1, "TIEN_LÄMPÖTILA_DST-ANT": 1.2, "KESKITUULI": 4.0, "NÄKYVYYS_M": 900}
+    coordinator.async_set_updated_data({name: {"name": name, "value": value} for name, value in readings.items()})
+    await hass.async_block_till_done()
+    assert station_entities() == {"air_temperature", "road_temperature", "wind_speed", "visibility"}
+    assert hass.states.get("sensor.road_13_example_visibility").state == "0.9"
+
+    # A sensor reporting a fault code still gets its entity, and a sensor that drops out keeps its entity.
+    coordinator.async_set_updated_data({"KELI_1": {"name": "KELI_1", "value": 0}, "KITKA1": {"name": "KITKA1", "value": 0.31}})
+    await hass.async_block_till_done()
+    assert station_entities() == STATION_KEYS_ADDED
+    assert hass.states.get("sensor.road_13_example_road_surface").state == "unknown"
+    assert hass.states.get("sensor.road_13_example_grip_condition").state == "fair"
+    assert hass.states.get("sensor.road_13_example_air_temperature").state == "unknown"
+
+    # Each sensor is created once, also when the station reports it again.
+    coordinator.async_set_updated_data({name: {"name": name, "value": value} for name, value in readings.items()})
+    await hass.async_block_till_done()
+    assert sorted(created) == sorted(STATION_KEYS_ADDED)
+    assert hass.states.get("sensor.road_13_example_air_temperature").state == "3.1"
+
+    # A reload starts over: the old coordinator is left with no listeners, and a sensor is created again only once
+    # the station reports it.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not coordinator._listeners
+    [coordinator] = entry.runtime_data.coordinators.values()
+    del created[:]
+    coordinator.async_set_updated_data({"ILMA": {"name": "ILMA", "value": 2.5}})
+    await hass.async_block_till_done()
+    assert created == ["air_temperature"]
+    assert hass.states.get("sensor.road_13_example_air_temperature").state == "2.5"
+    grip = hass.states.get("sensor.road_13_example_grip")
+    assert grip.state == STATE_UNAVAILABLE
+    assert grip.attributes["restored"] is True
+    assert station_entities() == STATION_KEYS_ADDED

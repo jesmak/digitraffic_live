@@ -19,7 +19,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import MATCH_ALL, UnitOfLength, UnitOfSpeed, UnitOfTemperature, UnitOfVolumetricFlux
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -54,6 +54,7 @@ from .weather_stations import (
     SURFACE_STATES,
     WARNING_STATES,
     station_readings,
+    station_values,
 )
 
 ICONS = {
@@ -79,7 +80,7 @@ FEED_TYPES = {
 }
 
 
-# Sensors every road weather station gets. The keys are those of station_readings().
+# A road weather station's sensors, each created once the station reports it. The keys are those of station_readings().
 STATION_SENSORS = (
     SensorEntityDescription(
         key="road_temperature",
@@ -191,10 +192,31 @@ async def async_setup_entry(
                 config_subentry_id=subentry_id,
             )
         elif isinstance(coordinator, WeatherStationCoordinator):
+            add_station_sensors(entry, coordinator, async_add_entities, subentry_id)
+
+
+def add_station_sensors(
+    entry: DigitrafficConfigEntry,
+    coordinator: WeatherStationCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    subentry_id: str,
+) -> None:
+    """Adds a sensor for each value the station reports, now and whenever it starts reporting another. For as long as
+    the entry is set up, a sensor stays once added, so one that stops reporting turns unknown rather than disappearing."""
+    added: set[str] = set()
+
+    @callback
+    def add_new() -> None:
+        new = station_values(coordinator.data or {}) - added
+        if new:
+            added.update(new)
             async_add_entities(
-                [StationSensor(coordinator, description) for description in STATION_SENSORS],
+                [StationSensor(coordinator, description) for description in STATION_SENSORS if description.key in new],
                 config_subentry_id=subentry_id,
             )
+
+    add_new()
+    entry.async_on_unload(coordinator.async_add_listener(add_new))
 
 
 class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
@@ -308,7 +330,7 @@ class StationDeparturesSensor(CoordinatorEntity[StationDeparturesCoordinator], S
 
 
 class StationSensor(CoordinatorEntity[WeatherStationCoordinator], SensorEntity):
-    """One value of a road weather station. Values the station doesn't measure stay unknown."""
+    """One value of a road weather station."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { precipitation, scale, showGusts, stationDevices, stationName, stationSensors, stationsOf } from "../src/stations";
 import type { HassEntity } from "../src/hass";
 import { DRY, SPARSE, hass } from "./fixtures";
+import type { Readings } from "./fixtures";
 
 describe("stations", () => {
     it("finds a station's sensors by translation key, leaving out other integrations and what it lacks", () => {
@@ -17,8 +18,13 @@ describe("stations", () => {
         expect(stationSensors(state, "station-gone")).toEqual({});
     });
 
-    it("offers only devices with a road temperature sensor as stations", () => {
-        expect(stationDevices(hass({ "station-a": DRY, "station-b": SPARSE }))).toEqual(["station-a", "station-b"]);
+    it("offers devices with any station sensor as stations, a road temperature or not", () => {
+        const windOnly: Readings = { wind_speed: ["3.0", "m/s"] };
+        expect(stationDevices(hass({ "station-a": DRY, "station-b": SPARSE, "station-c": windOnly }))).toEqual([
+            "station-a",
+            "station-b",
+            "station-c",
+        ]);
     });
 
     it("writes plain device ids as stations and drops empty ones", () => {

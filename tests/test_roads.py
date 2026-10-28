@@ -49,6 +49,7 @@ from custom_components.digitraffic_live.weather_stations import (
     station_details,
     station_options,
     station_readings,
+    station_values,
     stations_in_area,
 )
 
@@ -351,6 +352,79 @@ def test_station_readings() -> None:
         "rain_intensity": 0.0,
         "visibility": 20.0,
     }
+
+
+STATION_KEYS = {
+    "road_temperature",
+    "air_temperature",
+    "road_surface",
+    "grip",
+    "grip_condition",
+    "road_warning",
+    "wind_speed",
+    "wind_gusts",
+    "precipitation",
+    "precipitation_type",
+    "rain_intensity",
+    "visibility",
+}
+
+
+@pytest.mark.parametrize(
+    ("sensors", "expected"),
+    [
+        ({}, set()),
+        # A station with no friction, surface or warning sensor, only a DST road temperature and visibility in both units.
+        (
+            ["ILMA", "TIEN_LÄMPÖTILA_DST-ANT", "KESKITUULI", "MAKSIMITUULI", "SADE", "SADE_INTENSITEETTI"]
+            + ["SATEEN_OLOMUOTO_PWDXX", "NÄKYVYYS_KM", "NÄKYVYYS_M"],
+            STATION_KEYS - {"road_surface", "grip", "grip_condition", "road_warning"},
+        ),
+        # Each sensor on its own, so no two values' sources can be swapped unnoticed.
+        (["TIE_1"], {"road_temperature"}),
+        (["TIE_2"], {"road_temperature"}),
+        (["TIE_3"], {"road_temperature"}),
+        (["TIE_4"], {"road_temperature"}),
+        (["TIEN_LÄMPÖTILA_DST-ANT"], {"road_temperature"}),
+        (["ILMA"], {"air_temperature"}),
+        (["KELI_1"], {"road_surface"}),
+        (["KELI_2"], {"road_surface"}),
+        (["KELI_3"], {"road_surface"}),
+        (["KELI_4"], {"road_surface"}),
+        (["OPTISEN_ANTURIN_KELI1"], {"road_surface"}),
+        (["OPTISEN_ANTURIN_KELI2"], {"road_surface"}),
+        (["VAROITUS_1"], {"road_warning"}),
+        (["VAROITUS_2"], {"road_warning"}),
+        (["VAROITUS_3"], {"road_warning"}),
+        (["VAROITUS_4"], {"road_warning"}),
+        (["OPTISEN_ANTURIN_VAROITUS1"], {"road_warning"}),
+        (["OPTISEN_ANTURIN_VAROITUS2"], {"road_warning"}),
+        (["KESKITUULI"], {"wind_speed"}),
+        (["MAKSIMITUULI"], {"wind_gusts"}),
+        (["SADE"], {"precipitation"}),
+        (["SATEEN_OLOMUOTO_PWDXX"], {"precipitation_type"}),
+        (["SADE_INTENSITEETTI"], {"rain_intensity"}),
+        (["NÄKYVYYS_KM"], {"visibility"}),
+        (["NÄKYVYYS_M"], {"visibility"}),
+        (["KITKA1"], {"grip", "grip_condition"}),
+        (["KITKA2"], {"grip", "grip_condition"}),
+        # Sensors no value comes from.
+        (["TUULENSUUNTA", "ILMAN_KOSTEUS", "LUMEN_MÄÄRÄ1"], set()),
+    ],
+)
+def test_a_station_has_the_values_whose_sensors_it_reports(sensors: list[str], expected: set[str]) -> None:
+    assert station_values({name: {"name": name, "value": 1.0} for name in sensors}) == expected
+
+
+def test_a_sensor_that_reports_a_fault_still_counts() -> None:
+    # Surface code 0 is the sensor's fault: the station measures the surface, just not right now.
+    assert station_values({"KELI_1": {"name": "KELI_1", "value": 0}}) == {"road_surface"}
+
+
+def test_every_value_has_its_sensors() -> None:
+    values = {value["name"]: value for value in fixture("weather_station_3036_data")["sensorValues"]}
+    assert set(station_readings(values)) == STATION_KEYS
+    assert station_values(values) == STATION_KEYS
 
 
 def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:

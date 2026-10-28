@@ -41,6 +41,23 @@ VISIBILITY = "NÄKYVYYS_KM"
 # A few stations give visibility only in metres.
 VISIBILITY_METRES = "NÄKYVYYS_M"
 
+# The sensors each value of station_readings() comes from. A station's metadata lists sensors some stations never
+# report (3031 lists friction, surface and warning sensors), so what a station measures is told by its data.
+VALUE_SOURCES: dict[str, tuple[str, ...]] = {
+    "road_temperature": ROAD_TEMPERATURE,
+    "air_temperature": AIR_TEMPERATURE,
+    "road_surface": SURFACE,
+    "grip": GRIP,
+    "grip_condition": GRIP,
+    "road_warning": WARNING,
+    "wind_speed": WIND_SPEED,
+    "wind_gusts": WIND_GUSTS,
+    "precipitation": (PRECIPITATION,),
+    "precipitation_type": (PRECIPITATION_TYPE,),
+    "rain_intensity": RAIN_INTENSITY,
+    "visibility": (VISIBILITY, VISIBILITY_METRES),
+}
+
 # Finnra's slipperiness classes by friction, each with its lower limit, from the most grip down. Source: Nurmi, Hippi
 # and Juga, "Evaluation of FMI's new forecast model of road surface friction", SIRWEC 2010, figure 1. The top two
 # share "good road condition" there and are kept apart here. They are named for grip alone: the figure calls them
@@ -264,6 +281,11 @@ def station_color(values: Mapping[str, Mapping[str, Any]]) -> str | None:
     if surface in SURFACE_CAUTION or (warning is not None and warning > 0) or grip in GRIP_CAUTION:
         return CAUTION_COLOR
     return None
+
+
+def station_values(values: Mapping[str, Mapping[str, Any]]) -> set[str]:
+    """The keys of station_readings() whose sensors the station reports, whether they have a value now or not."""
+    return {key for key, names in VALUE_SOURCES.items() if any(name in values for name in names)}
 
 
 def station_readings(values: Mapping[str, Mapping[str, Any]]) -> dict[str, float | str | None]:

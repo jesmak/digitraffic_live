@@ -28,8 +28,17 @@ function schema(text: (key: string) => string) {
                         device: {
                             label: text("editor.device"),
                             required: true,
-                            // Only a road weather station has a temperature sensor of the integration; its feeds have none.
-                            selector: { device: { entity: { integration: PLATFORM, domain: "sensor", device_class: "temperature" } } },
+                            // The device classes of a station's sensors, as a station has only those it reports. The integration's
+                            // other devices have none of them: feeds no class, departures timestamps.
+                            selector: {
+                                device: {
+                                    entity: {
+                                        integration: PLATFORM,
+                                        domain: "sensor",
+                                        device_class: ["temperature", "enum", "wind_speed", "precipitation_intensity", "distance"],
+                                    },
+                                },
+                            },
                         },
                         // A field inside the object selector takes its helper from here; ha-form's computeHelper doesn't reach it.
                         name: { label: text("editor.name"), description: text("editor.name_helper"), selector: { text: {} } },

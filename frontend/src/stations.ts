@@ -35,10 +35,10 @@ export function stationSensors(hass: HomeAssistant, device: string): Partial<Rec
     return found;
 }
 
-/** The road weather stations there are, for the picker. Only a station has a road temperature sensor. */
+/** The road weather stations there are, for the picker: devices with any of a station's sensors. */
 export function stationDevices(hass: HomeAssistant): string[] {
     const devices = Object.values(hass.entities ?? {})
-        .filter((entry) => entry?.platform === PLATFORM && entry.translation_key === "road_temperature" && entry.device_id)
+        .filter((entry) => entry?.platform === PLATFORM && SENSORS.includes(entry.translation_key as SensorKey) && entry.device_id)
         .map((entry) => entry?.device_id as string);
     return [...new Set(devices)];
 }
