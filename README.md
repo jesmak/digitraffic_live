@@ -60,8 +60,8 @@ for the same card.
 
 ### Integration
 
-| Name     | Type | Description                                                  | Default                   |
-| -------- | ---- | ------------------------------------------------------------ | ------------------------- |
+| Name     | Type | Description                                            | Default                   |
+| -------- | ---- | ------------------------------------------------------ | ------------------------- |
 | language | enum | Language of the texts written into feeds: `fi` or `en` | Home Assistant's language |
 
 ### Ship feed
@@ -110,15 +110,15 @@ the feed's area are included.
 Add with **Add road maintenance feed**. Covers state roads maintained under Fintraffic's contracts. Most city
 streets are not included.
 
-| Name                            | Type    | Description                                                        | Default     |
-| ------------------------------- | ------- | ------------------------------------------------------------------ | ----------- |
-| Name                            | string  | Name of the feed and its sensor                                    |             |
-| Area                            | circle  | Centre and radius, picked on a map                                 | home, 30 km |
-| Tasks                           | list    | Ploughing, salting, sanding, brushing and 43 other tasks           | all         |
-| Maximum position age            | minutes | Vehicles whose latest position is older are left out               | 60          |
-| Show where vehicles have worked | boolean | Draw the vehicles' routes as lines                                 | on          |
-| Routes from the last            | hours   | How far back routes are drawn, at most 24                          | 2           |
-| Update interval                 | seconds | How often the feed is fetched, at least 30                         | 60          |
+| Name                            | Type    | Description                                              | Default     |
+| ------------------------------- | ------- | -------------------------------------------------------- | ----------- |
+| Name                            | string  | Name of the feed and its sensor                          |             |
+| Area                            | circle  | Centre and radius, picked on a map                       | home, 30 km |
+| Tasks                           | list    | Ploughing, salting, sanding, brushing and 43 other tasks | all         |
+| Maximum position age            | minutes | Vehicles whose latest position is older are left out     | 60          |
+| Show where vehicles have worked | boolean | Draw the vehicles' routes as lines                       | on          |
+| Routes from the last            | hours   | How far back routes are drawn, at most 24                | 2           |
+| Update interval                 | seconds | How often the feed is fetched, at least 30               | 60          |
 
 Digitraffic gives a vehicle no id of its own, only that of the stretch it drove last, which changes every few
 minutes. The feed follows a vehicle from one update to the next along its route, so its marker keeps its id while the
@@ -130,13 +130,13 @@ the last**.
 
 Add with **Add road condition feed**. Road sections are drawn as lines coloured by driving conditions.
 
-| Name                 | Type    | Description                                                | Default     |
-| -------------------- | ------- | ---------------------------------------------------------- | ----------- |
-| Name                 | string  | Name of the feed and its sensor                            |             |
-| Area                 | circle  | Centre and radius, picked on a map                         | home, 50 km |
-| Time                 | enum    | Now, or in 2, 4, 6 or 12 hours                             | now         |
-| Only poor conditions | boolean | Leave out sections whose conditions are normal or unknown  | off         |
-| Update interval      | seconds | How often the feed is fetched, at least 30                 | 600         |
+| Name                 | Type    | Description                                               | Default     |
+| -------------------- | ------- | --------------------------------------------------------- | ----------- |
+| Name                 | string  | Name of the feed and its sensor                           |             |
+| Area                 | circle  | Centre and radius, picked on a map                        | home, 50 km |
+| Time                 | enum    | Now, or in 2, 4, 6 or 12 hours                            | now         |
+| Only poor conditions | boolean | Leave out sections whose conditions are normal or unknown | off         |
+| Update interval      | seconds | How often the feed is fetched, at least 30                | 600         |
 
 ### Road weather station and weather camera feeds
 
@@ -181,14 +181,14 @@ Finnish Meteorological Institute (Nurmi, Hippi and Juga, *Evaluation of FMI's ne
 friction*, SIRWEC 2010). The classification puts the two highest classes together as a good road condition. Here
 they are kept apart as good and fair grip.
 
-| Grip µ      | Condition              | Typical surface         | On the map |
-| ----------- | ---------------------- | ----------------------- | ---------- |
-| 0.45 and up | Good grip              | Clear                   |            |
-| 0.30–0.44   | Fair grip              | Clear                   |            |
-| 0.25–0.29   | Good winter conditions | Rough ice, packed snow  | Amber      |
-| 0.20–0.24   | Fair winter conditions | Packed snow             | Amber      |
-| 0.15–0.19   | Slippery               | Icy                     | Amber      |
-| below 0.15  | Very slippery          | Wet ice                 | Red        |
+| Grip µ      | Condition              | Typical surface        | On the map |
+| ----------- | ---------------------- | ---------------------- | ---------- |
+| 0.45 and up | Good grip              | Clear                  |            |
+| 0.30–0.44   | Fair grip              | Clear                  |            |
+| 0.25–0.29   | Good winter conditions | Rough ice, packed snow | Amber      |
+| 0.20–0.24   | Fair winter conditions | Packed snow            | Amber      |
+| 0.15–0.19   | Slippery               | Icy                    | Amber      |
+| below 0.15  | Very slippery          | Wet ice                | Red        |
 
 A value on a limit belongs to the class above it. The condition comes from the grip alone. The road surface sensor
 tells whether the road is dry or wet, and a wet road often still has good grip.
@@ -225,15 +225,15 @@ maintenance vehicles, weather stations or cameras. For road condition feeds it i
 poor or extremely poor conditions, which is handy in automations. The attributes follow the
 [Map Feed format](https://github.com/jesmak/map-feed-card/blob/main/docs/map-feed-format.md):
 
-| Name               | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `map_feed_version` | Always `1`                                         |
-| `geojson`          | The feed's items as a GeoJSON FeatureCollection    |
-| `area`             | The feed's area, if it has one                     |
-| `updated`          | When the feed was last fetched                     |
-| `attribution`      | Data credit                                        |
-| `feed_type`        | `ship`, `train` or `road`, what the feed is about  |
-| `list`             | For trains, the orders the card's list offers      |
+| Name               | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `map_feed_version` | Always `1`                                        |
+| `geojson`          | The feed's items as a GeoJSON FeatureCollection   |
+| `area`             | The feed's area, if it has one                    |
+| `updated`          | When the feed was last fetched                    |
+| `attribution`      | Data credit                                       |
+| `feed_type`        | `ship`, `train` or `road`, what the feed is about |
+| `list`             | For trains, the orders the card's list offers     |
 
 None of the attributes are stored in the recorder, only the count. A feed that can't be fetched becomes
 unavailable until the next successful update.
@@ -315,14 +315,14 @@ itself, and the log says which line to add, change or remove.
 
 ### Card options
 
-| Name          | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                            | Default                                                                         |
-| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `type`        | string | `custom:road-conditions-card`                                                                                                                                                                                                                                                                                                                                                                                                                          | required                                                                        |
-| `stations`    | list   | Road weather stations, as device ids or objects with a name. One fills the card                                                                                                                                                                                                                                                                                                                                                                        | required                                                                        |
-| `title`       | string | Shown at the top of the card                                                                                                                                                                                                                                                                                                                                                                                                                           |                                                                                 |
+| Name          | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                             | Default                                                                         |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `type`        | string | `custom:road-conditions-card`                                                                                                                                                                                                                                                                                                                                                                                                                           | required                                                                        |
+| `stations`    | list   | Road weather stations, as device ids or objects with a name. One fills the card                                                                                                                                                                                                                                                                                                                                                                         | required                                                                        |
+| `title`       | string | Shown at the top of the card                                                                                                                                                                                                                                                                                                                                                                                                                            |                                                                                 |
 | `height_mode` | string | How tall the card is. `auto` fits its content, `fixed` keeps it at `height`, `max` lets it grow up to `max_height`. In `fixed` and `max` the list of stations scrolls under the title, or one station's view under its name. The card never gets lower than the title and one station's row need, or for one station its name, its grade and its first line of values. A height in grid rows, set in the layout tab of a sections view, is used instead | `fixed` when `height` is set, `max` when only `max_height` is, otherwise `auto` |
-| `height`      | number | The card's height in pixels, for `fixed`                                                                                                                                                                                                                                                                                                                                                                                                               |                                                                                 |
-| `max_height`  | number | The card's greatest height in pixels, for `max`                                                                                                                                                                                                                                                                                                                                                                                                        |                                                                                 |
+| `height`      | number | The card's height in pixels, for `fixed`                                                                                                                                                                                                                                                                                                                                                                                                                |                                                                                 |
+| `max_height`  | number | The card's greatest height in pixels, for `max`                                                                                                                                                                                                                                                                                                                                                                                                         |                                                                                 |
 
 Each item of `stations` is a device id, or an object with these keys:
 
@@ -535,25 +535,25 @@ npm run check
 committed to the repository. The card carries the integration's version from `manifest.json`. To have git refuse a
 commit whose built card doesn't match `frontend/`, run `git config core.hooksPath .githooks` once.
 
-| Path                                | What it contains                                      |
-| ----------------------------------- | ----------------------------------------------------- |
-| `__init__.py`                       | Setup: one coordinator per feed                       |
-| `config_flow.py`                    | The integration, feed, station and camera forms       |
-| `coordinator.py`                    | Fetching feeds, and data shared between feeds         |
-| `sensor.py`                         | The feed sensors and road weather station sensors     |
-| `image.py`                          | Weather camera image entities                         |
-| `ships.py`, `trains.py`             | Interpreting Digitraffic data and building feed items |
-| `traffic_messages.py`, `maintenance.py`, `road_conditions.py`, `weather_stations.py`, `weather_cameras.py` | The same for road data |
-| `geo.py`                            | Areas, geometry tests and line simplification         |
-| `cache.py`                          | Caching station details                               |
-| `feed.py`                           | Map Feed format building blocks                       |
-| `api.py`                            | Digitraffic HTTP client                               |
-| `services.py`                       | The composition action                                |
-| `texts.py`, `texts/<language>.json` | Texts written into feeds                              |
-| `translations/<language>.json`      | Home Assistant UI texts                               |
-| `card.py`, `www/`                   | Serving the road conditions card and adding it to the dashboards' resources |
-| `frontend/`                         | The road conditions card's source, tests and build    |
-| `docs/screenshots.json`             | The made-up data the README's screenshots are taken from |
+| Path                                                                                                       | What it contains                                                            |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `__init__.py`                                                                                              | Setup: one coordinator per feed                                             |
+| `config_flow.py`                                                                                           | The integration, feed, station and camera forms                             |
+| `coordinator.py`                                                                                           | Fetching feeds, and data shared between feeds                               |
+| `sensor.py`                                                                                                | The feed sensors and road weather station sensors                           |
+| `image.py`                                                                                                 | Weather camera image entities                                               |
+| `ships.py`, `trains.py`                                                                                    | Interpreting Digitraffic data and building feed items                       |
+| `traffic_messages.py`, `maintenance.py`, `road_conditions.py`, `weather_stations.py`, `weather_cameras.py` | The same for road data                                                      |
+| `geo.py`                                                                                                   | Areas, geometry tests and line simplification                               |
+| `cache.py`                                                                                                 | Caching station details                                                     |
+| `feed.py`                                                                                                  | Map Feed format building blocks                                             |
+| `api.py`                                                                                                   | Digitraffic HTTP client                                                     |
+| `services.py`                                                                                              | The composition action                                                      |
+| `texts.py`, `texts/<language>.json`                                                                        | Texts written into feeds                                                    |
+| `translations/<language>.json`                                                                             | Home Assistant UI texts                                                     |
+| `card.py`, `www/`                                                                                          | Serving the road conditions card and adding it to the dashboards' resources |
+| `frontend/`                                                                                                | The road conditions card's source, tests and build                          |
+| `docs/screenshots.json`                                                                                    | The made-up data the README's screenshots are taken from                    |
 
 ## Support
 
