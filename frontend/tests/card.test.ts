@@ -403,9 +403,9 @@ describe("editor", () => {
         expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], ...kept }]);
     });
 
-    it("keeps a height mode other than the one its heights give, and both heights", () => {
+    it("keeps only the height its mode uses, so one left from another mode can't come back", () => {
         const height = { height_mode: "max", height: 300, max_height: 500 };
-        expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], ...height }]);
+        expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], max_height: 500 }]);
     });
 
     it("puts the height fields in a form of their own after the stations' help, and saves them into the configuration", async () => {
@@ -427,9 +427,7 @@ describe("editor", () => {
         height.dispatchEvent(
             new CustomEvent("value-changed", { detail: { value: { ...height.data, height_mode: "fixed", height: 300 } } }),
         );
-        expect(configs).toEqual([
-            { type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], height: 300, max_height: 500 },
-        ]);
+        expect(configs).toEqual([{ type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], height: 300 }]);
         editor.remove();
     });
 });
