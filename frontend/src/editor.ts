@@ -1,10 +1,11 @@
-/** The card's visual editor: the title, and the stations with the names the card gives them. */
+/** The card's visual editor: the title, the stations with the names the card gives them, and the card's height. */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 
 import { PLATFORM } from "./const";
 import type { HomeAssistant } from "./hass";
+import { heightData, heightSchema, tidyHeight } from "./height";
 import { browserLanguage, translate } from "./localize/localize";
 import { stationsOf } from "./stations";
 import type { RoadConditionsCardConfig, StationConfig } from "./types";
@@ -66,17 +67,28 @@ export class RoadConditionsCardEditor extends LitElement {
         if (!this.hass) {
             return nothing;
         }
-        // The form edits every station as an object; plain device ids are expanded for it.
+        // The first form edits every station as an object; plain device ids are expanded for it.
         return html`
             <ha-form
                 .hass=${this.hass}
                 .data=${{ ...this.config, stations: stationsOf(this.config.stations) }}
                 .schema=${schema((key) => this.text(key))}
                 .computeLabel=${(entry: SchemaEntry) => this.text(`editor.${entry.name}`)}
-                @value-changed=${this.valueChanged}
+                @value-changed=${(event: CustomEvent<{ value: RoadConditionsCardConfig }>) => this.changed(event.detail.value)}
             ></ha-form>
-            <!-- Home Assistant's list of objects shows no helper text, so the stations' one is drawn here, under the list. -->
+            <!-- Home Assistant's list of objects shows no helper text, so the stations' one is drawn here, between the list and
+                 the height fields, which are a form of their own so it can sit there. -->
             <p class="helper">${this.text("editor.stations_helper")}</p>
+            <ha-form
+                class="height"
+                .hass=${this.hass}
+                .data=${heightData(this.config)}
+                .schema=${heightSchema(this.config, (key) => this.text(key))}
+                .computeLabel=${(entry: SchemaEntry) => this.text(`editor.${entry.name}`)}
+                .computeHelper=${(entry: SchemaEntry) => this.helper(entry.name)}
+                @value-changed=${(event: CustomEvent<{ value: RoadConditionsCardConfig }>) =>
+                    this.changed({ ...this.config, ...event.detail.value })}
+            ></ha-form>
         `;
     }
 
@@ -89,11 +101,17 @@ export class RoadConditionsCardEditor extends LitElement {
                 line-height: 1.4;
                 color: var(--secondary-text-color);
             }
+
+            /* As far from the paragraph as ha-form keeps its own fields apart. */
+            ha-form.height {
+                display: block;
+                margin-top: 24px;
+            }
         `;
     }
 
-    private valueChanged(event: CustomEvent<{ value: RoadConditionsCardConfig }>): void {
-        const config: RoadConditionsCardConfig = { ...event.detail.value };
+    private changed(value: RoadConditionsCardConfig): void {
+        const config: RoadConditionsCardConfig = tidyHeight(value);
         config.stations = compactStations((config.stations ?? []) as StationConfig[]);
         if (!config.title) {
             delete config.title;
@@ -103,6 +121,13 @@ export class RoadConditionsCardEditor extends LitElement {
 
     private text(key: string): string {
         return translate(this.language(), key);
+    }
+
+    /** The height fields' helpers, for the fields that have one. */
+    private helper(name: string): string | undefined {
+        const key = `editor.${name}_helper`;
+        const helper = translate(this.language(), key);
+        return helper === key ? undefined : helper;
     }
 
     private language(): string {

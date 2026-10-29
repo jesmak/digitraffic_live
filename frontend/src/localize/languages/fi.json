@@ -3,6 +3,7 @@
         "name": "Keli",
         "description": "Tiesääasemien pito, lämpötilat, tienpinta, tuuli, sade ja näkyvyys",
         "invalid_configuration": "Virheellinen konfiguraatio. Lisää vähintään yksi tiesääasema.",
+        "invalid_height": "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikseleinä, ja korkeustilan (height_mode) auto, fixed tai max.",
         "station_without_device": "Virheellinen konfiguraatio. Jokaiselle asemalle tarvitaan laite (device).",
         "no_station": "Asemalta ei löytynyt sensoreita",
         "no_readings": "Asemalta ei juuri nyt saada lukemia"
@@ -47,6 +48,15 @@
         "stations_helper": "Digitraffic Liven tiesääasemat. Kortilla on kaksi tilaa. Lisäämällä vain yhden aseman, näytetään kattavat tiedot väljemmällä asettelulla. Lisäämällä useamman aseman, näytetään tiedot tiivistettynä ja asemakohtaisesti rivitettynä.",
         "device": "Tiesääasema",
         "name": "Nimi",
-        "name_helper": "Korvaa aseman oman nimen"
+        "name_helper": "Korvaa aseman oman nimen",
+        "height_mode": "Korkeus",
+        "height_mode_helper": "Osioihin jaetun näkymän asettelu-välilehdellä asetettu korkeus ohittaa tämän.",
+        "height_mode_auto": "Sisällön mukaan",
+        "height_mode_fixed": "Kiinteä",
+        "height_mode_max": "Kasvaa rajaan asti",
+        "height": "Kiinteä korkeus",
+        "height_helper": "Kortti on aina näin korkea, ja loput vierivät sen sisällä.",
+        "max_height": "Enimmäiskorkeus",
+        "max_height_helper": "Kortti kasvaa sisältönsä mukana tähän korkeuteen asti, ja sen jälkeen loput vierivät."
     }
 }

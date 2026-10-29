@@ -3,6 +3,7 @@
         "name": "Road conditions",
         "description": "Grip, temperatures, road surface, wind, rain and visibility from road weather stations",
         "invalid_configuration": "Invalid configuration. Add at least one road weather station.",
+        "invalid_height": "Invalid height. height and max_height must be positive numbers of pixels, and height_mode auto, fixed or max.",
         "station_without_device": "Invalid configuration. Every station needs its device.",
         "no_station": "No sensors found for this station",
         "no_readings": "No readings from this station right now"
@@ -47,6 +48,15 @@
         "stations_helper": "Road weather stations of Digitraffic Live. The card has two modes. With a single station, it shows full details in a roomier layout. With several stations, it shows the details condensed, one row per station.",
         "device": "Road weather station",
         "name": "Name",
-        "name_helper": "Replaces the station's own name"
+        "name_helper": "Replaces the station's own name",
+        "height_mode": "Height",
+        "height_mode_helper": "A height set in the layout tab of a sections view is used instead.",
+        "height_mode_auto": "Fits the content",
+        "height_mode_fixed": "Fixed",
+        "height_mode_max": "Grows up to a limit",
+        "height": "Fixed height",
+        "height_helper": "The card is always this tall, and the rest scrolls inside it.",
+        "max_height": "Maximum height",
+        "max_height_helper": "The card grows with its content up to this height, and then the rest scrolls."
     }
 }

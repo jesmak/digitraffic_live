@@ -1,4 +1,5 @@
 import type { LovelaceCardConfig } from "./hass";
+import type { HeightConfig } from "./height";
 
 /** One road weather station: its device, and the name the card gives it. */
 export interface StationConfig {
@@ -7,7 +8,7 @@ export interface StationConfig {
     name?: string;
 }
 
-export interface RoadConditionsCardConfig extends LovelaceCardConfig {
+export interface RoadConditionsCardConfig extends LovelaceCardConfig, HeightConfig {
     /** Road weather station devices of digitraffic_live: a device id, or one with its name. One draws the full card, more a row each. */
     stations: Array<string | StationConfig>;
     /** Shown at the top of the card. */

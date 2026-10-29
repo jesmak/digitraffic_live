@@ -13,7 +13,9 @@ import { property, state } from "lit/decorators.js";
 import { CARD_VERSION, HEAVY, ICONS } from "./const";
 import type { SensorKey } from "./const";
 import "./editor";
+import { ScrollFade, fadeStyles } from "./fade";
 import type { HassEntity, HomeAssistant } from "./hass";
+import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
 import { browserLanguage, translate } from "./localize/localize";
 import { precipitation, reading, scale, showGusts, stationDevices, stationName, stationSensors, stationsOf } from "./stations";
 import type { RoadConditionsCardConfig, StationConfig } from "./types";
@@ -44,8 +46,17 @@ interface Value {
 
 export class RoadConditionsCard extends LitElement {
     @property({ attribute: false }) public hass?: HomeAssistant;
+    @property({ attribute: false }) public layout?: string;
     @state() private config?: RoadConditionsCardConfig;
     private sensorCache?: { entities: HomeAssistant["entities"]; byDevice: Map<string, Sensors> };
+
+    constructor() {
+        super();
+        // Fades the scroller's edges while the card is held to a height, through the card's own lifecycle.
+        new ScrollFade(this, () =>
+            this.heightStyle() ? this.renderRoot.querySelectorAll<HTMLElement>("ha-card > .station, ha-card > .rows") : [],
+        );
+    }
 
     public static getConfigElement(): HTMLElement {
         return document.createElement("road-conditions-card-editor");
@@ -64,22 +75,29 @@ export class RoadConditionsCard extends LitElement {
         if (stationsOf(config.stations).length !== config.stations.length) {
             throw new Error(translate(browserLanguage(), "common.station_without_device"));
         }
+        if (!validHeight(config)) {
+            throw new Error(translate(browserLanguage(), "common.invalid_height"));
+        }
         this.config = { ...config };
     }
 
-    /** In a sections view the card takes a whole section by default and is never narrower than half of one. */
+    /**
+     * In a sections view the card takes a whole section by default and is never narrower than half of one, nor lower
+     * than its minimum height.
+     */
     public getGridOptions(): Record<string, unknown> {
-        return { columns: 12, rows: "auto", min_columns: 6 };
+        return { columns: 12, rows: "auto", min_columns: 6, min_rows: gridMinRows(this.minimumHeight()) };
     }
 
     public getCardSize(): number {
         const count = this.config ? stationsOf(this.config.stations).length : 1;
-        return count === 1 ? 4 : 1 + count;
+        return heightCardSize(this.config ?? {}, count === 1 ? 4 : 1 + count, this.minimumHeight());
     }
 
     protected shouldUpdate(changed: PropertyValues): boolean {
         const previous = changed.get("hass") as HomeAssistant | undefined;
-        if (changed.has("config") || !this.config || !this.hass || !changed.has("hass") || !previous) {
+        // The layout decides whether the card is held to a height, even when a change of the house comes with it.
+        if (changed.has("config") || changed.has("layout") || !this.config || !this.hass || !changed.has("hass") || !previous) {
             return true;
         }
         if (previous.entities !== this.hass.entities || previous.devices !== this.hass.devices) {
@@ -119,22 +137,30 @@ export class RoadConditionsCard extends LitElement {
             return nothing;
         }
         const stations = stationsOf(this.config.stations);
+        const height = this.heightStyle();
         return html`
-            <ha-card>
+            <ha-card class=${height ? "held" : ""} style=${height}>
                 ${this.config.title ? html`<h1 class="card-title">${this.config.title}</h1>` : nothing}
-                ${stations.length === 1 ? this.station(stations[0]) : html`<div class="rows">${stations.map((station) => this.row(station))}</div>`}
+                ${
+                    stations.length === 1
+                        ? this.station(stations[0])
+                        : html`<div class="rows">${stations.map((station) => this.row(station))}</div>`
+                }
             </ha-card>
         `;
     }
 
-    /** The whole card for one station: the grade on its scale, the values in a grid and a warning when there is one. */
+    /**
+     * The whole card for one station: its name, and under it the grade on its scale, the values in a grid and a warning
+     * when there is one, which is the part that scrolls when the card is held to a height.
+     */
     private station(station: StationConfig): TemplateResult {
         const hass = this.hass as HomeAssistant;
         const sensors = this.sensors(station.device);
         const name = stationName(hass, station);
         if (Object.keys(sensors).length === 0) {
             return html`<div class="name">${name}</div>
-                <div class="message">${this.text("common.no_station")}</div>`;
+                <div class="station"><div class="message">${this.text("common.no_station")}</div></div>`;
         }
         const condition = reading(hass, sensors.grip_condition);
         const grip = reading(hass, sensors.grip);
@@ -143,51 +169,53 @@ export class RoadConditionsCard extends LitElement {
         // The integration keeps its sensors when it can't reach the station; they are all unavailable then.
         if (!condition && values.length === 0 && !warning) {
             return html`<div class="name">${name}</div>
-                <div class="message">${this.text("common.no_readings")}</div>`;
+                <div class="station"><div class="message">${this.text("common.no_readings")}</div></div>`;
         }
         return html`
             <div class="name">${name}</div>
-            ${
-                condition
-                    ? html`
-                          <button class="grade" @click=${() => this.moreInfo(condition.entity_id)}>
-                              <span class="grade-text">${this.format(condition)}</span>
-                              ${grip ? html`<span class="grip">${this.format(grip)}</span>` : nothing}
-                          </button>
-                          ${this.scale(condition.state, "large")}
-                          <div class="scale-labels" aria-hidden="true">
-                              <span>${this.text("scale.very_slippery")}</span><span>${this.text("scale.winter")}</span
-                              ><span>${this.text("scale.good")}</span>
-                          </div>
-                      `
-                    : nothing
-            }
-            ${
-                values.length
-                    ? html`<div class="values ${condition ? "divided" : ""}">
-                          ${values.map(
-                              (value) => html`
-                                  <button
-                                      class="value ${value.key} ${value.notable ? "notable" : ""}"
-                                      title="${value.label}"
-                                      aria-label="${value.spoken}"
-                                      @click=${() => this.moreInfo(value.entity)}
-                                  >
-                                      ${this.icon(value.icon)} ${value.text ? html`<span>${value.text}</span>` : nothing}
-                                  </button>
-                              `,
-                          )}
-                      </div>`
-                    : nothing
-            }
-            ${
-                warning && warning.state !== "ok"
-                    ? html`<button class="warning" @click=${() => this.moreInfo(warning.entity_id)}>
-                          ${this.icon(ICONS.road_warning)}
-                          <span>${this.text("labels.road_warning")}: ${this.format(warning)}</span>
-                      </button>`
-                    : nothing
-            }
+            <div class="station">
+                ${
+                    condition
+                        ? html`
+                              <button class="grade" @click=${() => this.moreInfo(condition.entity_id)}>
+                                  <span class="grade-text">${this.format(condition)}</span>
+                                  ${grip ? html`<span class="grip">${this.format(grip)}</span>` : nothing}
+                              </button>
+                              ${this.scale(condition.state, "large")}
+                              <div class="scale-labels" aria-hidden="true">
+                                  <span>${this.text("scale.very_slippery")}</span><span>${this.text("scale.winter")}</span
+                                  ><span>${this.text("scale.good")}</span>
+                              </div>
+                          `
+                        : nothing
+                }
+                ${
+                    values.length
+                        ? html`<div class="values ${condition ? "divided" : ""}">
+                              ${values.map(
+                                  (value) => html`
+                                      <button
+                                          class="value ${value.key} ${value.notable ? "notable" : ""}"
+                                          title="${value.label}"
+                                          aria-label="${value.spoken}"
+                                          @click=${() => this.moreInfo(value.entity)}
+                                      >
+                                          ${this.icon(value.icon)} ${value.text ? html`<span>${value.text}</span>` : nothing}
+                                      </button>
+                                  `,
+                              )}
+                          </div>`
+                        : nothing
+                }
+                ${
+                    warning && warning.state !== "ok"
+                        ? html`<button class="warning" @click=${() => this.moreInfo(warning.entity_id)}>
+                              ${this.icon(ICONS.road_warning)}
+                              <span>${this.text("labels.road_warning")}: ${this.format(warning)}</span>
+                          </button>`
+                        : nothing
+                }
+            </div>
         `;
     }
 
@@ -242,6 +270,27 @@ export class RoadConditionsCard extends LitElement {
             spoken.push(grip ? `${this.format(condition)} ${this.format(grip)}` : this.format(condition));
         }
         return html`<button class="row" aria-label=${spoken.join(", ")} @click=${() => this.moreInfo(target)}>${content}</button>`;
+    }
+
+    private heightStyle(): string {
+        return heightStyle(this.config ?? {}, this.layout, this.minimumHeight());
+    }
+
+    /**
+     * The lowest the card is held to, in pixels: its padding, the title when it has one, and for one station its name,
+     * the grade on its scale and the first line of values, for several the first station's row. The padding, the title,
+     * the station's name and the row as measured on a full section's width, the grade and the values estimated from the
+     * styles.
+     */
+    private minimumHeight(): number {
+        const padding = 34;
+        const title = 37;
+        const name = 31;
+        const grade = 88;
+        const values = 20;
+        const row = 62;
+        const one = this.config ? stationsOf(this.config.stations).length === 1 : true;
+        return padding + (this.config?.title ? title : 0) + (one ? name + grade + values : row);
     }
 
     private scale(condition: string, size: "large" | "small"): TemplateResult {
@@ -330,307 +379,339 @@ export class RoadConditionsCard extends LitElement {
     }
 
     static get styles(): CSSResultGroup {
-        return css`
-            ha-card {
-                padding: 16px;
-                container-type: inline-size;
-                font-variant-numeric: tabular-nums;
-                --road-very-slippery: var(--road-conditions-very-slippery-color, var(--error-color, #db4437));
-                --road-slippery: var(--road-conditions-slippery-color, #f4511e);
-                --road-fair-winter: var(--road-conditions-fair-winter-color, #fb8c00);
-                --road-good-winter: var(--road-conditions-good-winter-color, #ffb300);
-                --road-fair: var(--road-conditions-fair-color, #9ccc65);
-                --road-good: var(--road-conditions-good-color, var(--success-color, #43a047));
-            }
-
-            button {
-                font: inherit;
-                color: inherit;
-                background: none;
-                border: none;
-                padding: 0;
-                margin: 0;
-                text-align: inherit;
-                cursor: pointer;
-            }
-
-            .card-title {
-                margin: 0 0 12px;
-                font-size: var(--ha-card-header-font-size, 24px);
-                font-weight: var(--ha-font-weight-normal, 400);
-                line-height: 1.2;
-            }
-
-            .name {
-                font-size: 16px;
-                font-weight: var(--ha-font-weight-medium, 500);
-                margin-bottom: 12px;
-            }
-
-            .message {
-                color: var(--secondary-text-color);
-            }
-
-            .grip-very_slippery {
-                color: var(--road-very-slippery);
-            }
-            .grip-slippery {
-                color: var(--road-slippery);
-            }
-            .grip-fair_winter {
-                color: var(--road-fair-winter);
-            }
-            .grip-good_winter {
-                color: var(--road-good-winter);
-            }
-            .grip-fair {
-                color: var(--road-fair);
-            }
-            .grip-good {
-                color: var(--road-good);
-            }
-
-            .grade {
-                display: flex;
-                justify-content: space-between;
-                align-items: baseline;
-                gap: 12px;
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .grade-text {
-                font-size: 20px;
-                font-weight: var(--ha-font-weight-medium, 500);
-            }
-
-            /* "0,22 µ" stays whole on its line. */
-            .grip {
-                color: var(--primary-text-color);
-                white-space: nowrap;
-            }
-
-            .grade .grip {
-                font-size: 16px;
-            }
-
-            /* The scale is six parts, faint in the colours of their conditions, lit up to the one the road is in. */
-            .scale {
-                display: grid;
-                grid-template-columns: repeat(6, minmax(0, 1fr));
-                gap: 3px;
-            }
-
-            .scale.large .part {
-                height: 8px;
-            }
-
-            .scale.small {
-                width: 72px;
-                gap: 2px;
-            }
-
-            .scale.small .part {
-                height: 4px;
-            }
-
-            .part {
-                background: currentColor;
-                opacity: 0.25;
-            }
-
-            .part.lit {
-                opacity: 1;
-            }
-
-            .scale.large .part:first-child {
-                border-radius: 4px 0 0 4px;
-            }
-
-            .scale.large .part:last-child {
-                border-radius: 0 4px 4px 0;
-            }
-
-            /* Equal side columns keep the middle label on the meter's middle gap, however long the outer ones are. */
-            .scale-labels {
-                display: grid;
-                grid-template-columns: 1fr auto 1fr;
-                gap: 8px;
-                margin-top: 6px;
-                font-size: 11px;
-                color: var(--secondary-text-color);
-            }
-
-            .scale-labels span:last-child {
-                text-align: right;
-            }
-
-            /* The values flow into three columns, so a value the station lacks leaves no gap. */
-            .values {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 12px 8px;
-            }
-
-            /* Two columns on a narrow card (half a section), every value on one row on a wide one (two sections). */
-            @container (max-width: 299px) {
-                .values {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
+        return [
+            css`
+                ha-card {
+                    padding: 16px;
+                    container-type: inline-size;
+                    font-variant-numeric: tabular-nums;
+                    --road-very-slippery: var(--road-conditions-very-slippery-color, var(--error-color, #db4437));
+                    --road-slippery: var(--road-conditions-slippery-color, #f4511e);
+                    --road-fair-winter: var(--road-conditions-fair-winter-color, #fb8c00);
+                    --road-good-winter: var(--road-conditions-good-winter-color, #ffb300);
+                    --road-fair: var(--road-conditions-fair-color, #9ccc65);
+                    --road-good: var(--road-conditions-good-color, var(--success-color, #43a047));
                 }
-            }
 
-            @container (min-width: 800px) {
-                .values {
-                    grid-template-columns: none;
-                    grid-auto-flow: column;
-                    grid-auto-columns: minmax(0, 1fr);
+                button {
+                    font: inherit;
+                    color: inherit;
+                    background: none;
+                    border: none;
+                    padding: 0;
+                    margin: 0;
+                    text-align: inherit;
+                    cursor: pointer;
                 }
-            }
 
-            .values.divided {
-                margin-top: 14px;
-                padding-top: 12px;
-                border-top: 1px solid var(--divider-color);
-            }
+                .card-title {
+                    margin: 0 0 12px;
+                    font-size: var(--ha-card-header-font-size, 24px);
+                    font-weight: var(--ha-font-weight-normal, 400);
+                    line-height: 1.2;
+                }
 
-            .value {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                min-width: 0;
-                font-size: 15px;
-            }
+                .name {
+                    font-size: 16px;
+                    font-weight: var(--ha-font-weight-medium, 500);
+                    margin-bottom: 12px;
+                }
 
-            .icon {
-                flex: 0 0 auto;
-                width: 20px;
-                height: 20px;
-                --mdc-icon-size: 20px;
-                color: var(--state-icon-color, var(--secondary-text-color));
-            }
+                .message {
+                    color: var(--secondary-text-color);
+                }
 
-            /* Weather Icons leave a wide margin inside their canvas, so they are drawn larger to match. */
-            svg.icon {
-                width: 26px;
-                height: 26px;
-                margin: -3px;
-                fill: currentColor;
-            }
+                .grip-very_slippery {
+                    color: var(--road-very-slippery);
+                }
+                .grip-slippery {
+                    color: var(--road-slippery);
+                }
+                .grip-fair_winter {
+                    color: var(--road-fair-winter);
+                }
+                .grip-good_winter {
+                    color: var(--road-good-winter);
+                }
+                .grip-fair {
+                    color: var(--road-fair);
+                }
+                .grip-good {
+                    color: var(--road-good);
+                }
 
-            /* A value too long for its column wraps rather than being cut. */
-            .value span {
-                min-width: 0;
-                overflow-wrap: anywhere;
-                line-height: 1.25;
-            }
+                .grade {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    gap: 12px;
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
 
-            /* Freezing or heavy precipitation matters at a glance. */
-            .notable,
-            .notable .icon {
-                color: var(--warning-color, #ffa600);
-            }
+                .grade-text {
+                    font-size: 20px;
+                    font-weight: var(--ha-font-weight-medium, 500);
+                }
 
-            .warning {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                margin-top: 12px;
-                font-size: 14px;
-                line-height: 1.25;
-                color: var(--warning-color, #ffa600);
-            }
+                /* "0,22 µ" stays whole on its line. */
+                .grip {
+                    color: var(--primary-text-color);
+                    white-space: nowrap;
+                }
 
-            .warning .icon {
-                color: inherit;
-            }
+                .grade .grip {
+                    font-size: 16px;
+                }
 
-            .rows {
-                display: flex;
-                flex-direction: column;
-            }
+                /* The scale is six parts, faint in the colours of their conditions, lit up to the one the road is in. */
+                .scale {
+                    display: grid;
+                    grid-template-columns: repeat(6, minmax(0, 1fr));
+                    gap: 3px;
+                }
 
-            .row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 12px;
-                width: 100%;
-                padding: 10px 0;
-            }
+                .scale.large .part {
+                    height: 8px;
+                }
 
-            .row + .row {
-                border-top: 1px solid var(--divider-color);
-            }
+                .scale.small {
+                    width: 72px;
+                    gap: 2px;
+                }
 
-            .row-text {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                min-width: 0;
-            }
+                .scale.small .part {
+                    height: 4px;
+                }
 
-            .row-name {
-                font-size: 15px;
-                overflow-wrap: anywhere;
-            }
+                .part {
+                    background: currentColor;
+                    opacity: 0.25;
+                }
 
-            .row-values {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 2px 12px;
-                font-size: 13px;
-                color: var(--secondary-text-color);
-            }
+                .part.lit {
+                    opacity: 1;
+                }
 
-            .row-value {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                min-width: 0;
-                overflow-wrap: anywhere;
-            }
+                .scale.large .part:first-child {
+                    border-radius: 4px 0 0 4px;
+                }
 
-            .row-value .icon {
-                width: 16px;
-                height: 16px;
-                --mdc-icon-size: 16px;
-            }
+                .scale.large .part:last-child {
+                    border-radius: 0 4px 4px 0;
+                }
 
-            .row-value svg.icon {
-                width: 21px;
-                height: 21px;
-                margin: -2.5px;
-            }
+                /* Equal side columns keep the middle label on the meter's middle gap, however long the outer ones are. */
+                .scale-labels {
+                    display: grid;
+                    grid-template-columns: 1fr auto 1fr;
+                    gap: 8px;
+                    margin-top: 6px;
+                    font-size: 11px;
+                    color: var(--secondary-text-color);
+                }
 
-            .row-grade {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 4px;
-                flex: 0 0 auto;
-                font-size: 14px;
-                text-align: right;
-            }
+                .scale-labels span:last-child {
+                    text-align: right;
+                }
 
-            .row-grade .grip {
-                font-size: 12px;
-                color: var(--secondary-text-color);
-            }
+                /* The values flow into three columns, so a value the station lacks leaves no gap. */
+                .values {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 12px 8px;
+                }
 
-            /* Beside a long grade a narrow card leaves the name and values no room, so the grade goes below them. */
-            @container (max-width: 339px) {
-                .row {
-                    flex-direction: column;
-                    align-items: stretch;
+                /* Two columns on a narrow card (half a section), every value on one row on a wide one (two sections). */
+                @container (max-width: 299px) {
+                    .values {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+                }
+
+                @container (min-width: 800px) {
+                    .values {
+                        grid-template-columns: none;
+                        grid-auto-flow: column;
+                        grid-auto-columns: minmax(0, 1fr);
+                    }
+                }
+
+                .values.divided {
+                    margin-top: 14px;
+                    padding-top: 12px;
+                    border-top: 1px solid var(--divider-color);
+                }
+
+                .value {
+                    display: flex;
+                    align-items: center;
                     gap: 6px;
+                    min-width: 0;
+                    font-size: 15px;
+                }
+
+                .icon {
+                    flex: 0 0 auto;
+                    width: 20px;
+                    height: 20px;
+                    --mdc-icon-size: 20px;
+                    color: var(--state-icon-color, var(--secondary-text-color));
+                }
+
+                /* Weather Icons leave a wide margin inside their canvas, so they are drawn larger to match. */
+                svg.icon {
+                    width: 26px;
+                    height: 26px;
+                    margin: -3px;
+                    fill: currentColor;
+                }
+
+                /* A value too long for its column wraps rather than being cut. */
+                .value span {
+                    min-width: 0;
+                    overflow-wrap: anywhere;
+                    line-height: 1.25;
+                }
+
+                /* Freezing or heavy precipitation matters at a glance. */
+                .notable,
+                .notable .icon {
+                    color: var(--warning-color, #ffa600);
+                }
+
+                .warning {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    margin-top: 12px;
+                    font-size: 14px;
+                    line-height: 1.25;
+                    color: var(--warning-color, #ffa600);
+                }
+
+                .warning .icon {
+                    color: inherit;
+                }
+
+                .rows {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                /* Held to a height, by its height mode or a sections view's rows, the card is a column in which only the station's
+                   view scrolls, under the title and the station's name, or the list of stations under the title. */
+                ha-card.held {
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: clip;
+                }
+
+                ha-card.held > * {
+                    flex: none;
+                }
+
+                /*
+                 * It clips at its padding box, so it reaches 4 px out on every side, where the focus rings are drawn: over the
+                 * card's padding at the sides and the bottom, and at the top over the 12 px margin under the title or the
+                 * station's name, or over the card's padding, where nothing takes a tap.
+                 */
+                ha-card.held > .station,
+                ha-card.held > .rows {
+                    margin: -4px;
+                    padding: 4px;
+                    flex: 1 1 auto;
+                    min-height: 0;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
+                    scrollbar-width: thin;
+                }
+
+                .row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    padding: 10px 0;
+                }
+
+                .row + .row {
+                    border-top: 1px solid var(--divider-color);
+                }
+
+                .row-text {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    min-width: 0;
+                }
+
+                .row-name {
+                    font-size: 15px;
+                    overflow-wrap: anywhere;
+                }
+
+                .row-values {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 2px 12px;
+                    font-size: 13px;
+                    color: var(--secondary-text-color);
+                }
+
+                .row-value {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    min-width: 0;
+                    overflow-wrap: anywhere;
+                }
+
+                .row-value .icon {
+                    width: 16px;
+                    height: 16px;
+                    --mdc-icon-size: 16px;
+                }
+
+                .row-value svg.icon {
+                    width: 21px;
+                    height: 21px;
+                    margin: -2.5px;
                 }
 
                 .row-grade {
-                    align-items: flex-start;
-                    text-align: left;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 4px;
+                    flex: 0 0 auto;
+                    font-size: 14px;
+                    text-align: right;
                 }
-            }
-        `;
+
+                .row-grade .grip {
+                    font-size: 12px;
+                    color: var(--secondary-text-color);
+                }
+
+                /* Beside a long grade a narrow card leaves the name and values no room, so the grade goes below them. */
+                @container (max-width: 339px) {
+                    .row {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 6px;
+                    }
+
+                    .row-grade {
+                        align-items: flex-start;
+                        text-align: left;
+                    }
+                }
+            `,
+            fadeStyles,
+        ];
     }
 }
 
