@@ -4,6 +4,7 @@
         "description": "Grip, temperatures, road surface, wind, rain and visibility from road weather stations",
         "invalid_configuration": "Invalid configuration. Add at least one road weather station.",
         "invalid_height": "Invalid height. height and max_height must be positive numbers of pixels, and height_mode auto, fixed or max.",
+        "invalid_row_step": "Invalid rounding. row_step must be full or half.",
         "station_without_device": "Invalid configuration. Every station needs its device.",
         "no_station": "No sensors found for this station",
         "no_readings": "No readings from this station right now"
@@ -57,6 +58,10 @@
         "height": "Fixed height",
         "height_helper": "The card is always this tall, and the rest scrolls inside it.",
         "max_height": "Maximum height",
-        "max_height_helper": "The card grows with its content up to this height, and then the rest scrolls."
+        "max_height_helper": "The card grows with its content up to this height, and then the rest scrolls.",
+        "row_step": "Rounding in a sections view",
+        "row_step_helper": "With automatic row height, the card's height is rounded up to whole rows, or to half rows to save space.",
+        "row_step_full": "Whole rows",
+        "row_step_half": "Half rows"
     }
 }

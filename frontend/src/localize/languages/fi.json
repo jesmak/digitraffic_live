@@ -4,6 +4,7 @@
         "description": "Tiesääasemien pito, lämpötilat, tienpinta, tuuli, sade ja näkyvyys",
         "invalid_configuration": "Virheellinen konfiguraatio. Lisää vähintään yksi tiesääasema.",
         "invalid_height": "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikseleinä, ja korkeustilan (height_mode) auto, fixed tai max.",
+        "invalid_row_step": "Virheellinen pyöristys. Pyöristyksen (row_step) on oltava full tai half.",
         "station_without_device": "Virheellinen konfiguraatio. Jokaiselle asemalle tarvitaan laite (device).",
         "no_station": "Asemalta ei löytynyt sensoreita",
         "no_readings": "Asemalta ei juuri nyt saada lukemia"
@@ -57,6 +58,10 @@
         "height": "Kiinteä korkeus",
         "height_helper": "Kortti on aina näin korkea, ja loput vierivät sen sisällä.",
         "max_height": "Enimmäiskorkeus",
-        "max_height_helper": "Kortti kasvaa sisältönsä mukana tähän korkeuteen asti, ja sen jälkeen loput vierivät."
+        "max_height_helper": "Kortti kasvaa sisältönsä mukana tähän korkeuteen asti, ja sen jälkeen loput vierivät.",
+        "row_step": "Pyöristys osioihin jaetussa näkymässä",
+        "row_step_helper": "Automaattisella rivikorkeudella kortin korkeus pyöristetään ylöspäin kokonaisiin riveihin, tai tilan säästämiseksi puolikkaisiin riveihin.",
+        "row_step_full": "Kokonaisiin riveihin",
+        "row_step_half": "Puolikkaisiin riveihin"
     }
 }

@@ -739,6 +739,7 @@ var en_default = {
     description: "Grip, temperatures, road surface, wind, rain and visibility from road weather stations",
     invalid_configuration: "Invalid configuration. Add at least one road weather station.",
     invalid_height: "Invalid height. height and max_height must be positive numbers of pixels, and height_mode auto, fixed or max.",
+    invalid_row_step: "Invalid rounding. row_step must be full or half.",
     station_without_device: "Invalid configuration. Every station needs its device.",
     no_station: "No sensors found for this station",
     no_readings: "No readings from this station right now"
@@ -792,7 +793,11 @@ var en_default = {
     height: "Fixed height",
     height_helper: "The card is always this tall, and the rest scrolls inside it.",
     max_height: "Maximum height",
-    max_height_helper: "The card grows with its content up to this height, and then the rest scrolls."
+    max_height_helper: "The card grows with its content up to this height, and then the rest scrolls.",
+    row_step: "Rounding in a sections view",
+    row_step_helper: "With automatic row height, the card's height is rounded up to whole rows, or to half rows to save space.",
+    row_step_full: "Whole rows",
+    row_step_half: "Half rows"
   }
 };
 
@@ -803,6 +808,7 @@ var fi_default = {
     description: "Ties\xE4\xE4asemien pito, l\xE4mp\xF6tilat, tienpinta, tuuli, sade ja n\xE4kyvyys",
     invalid_configuration: "Virheellinen konfiguraatio. Lis\xE4\xE4 v\xE4hint\xE4\xE4n yksi ties\xE4\xE4asema.",
     invalid_height: "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikselein\xE4, ja korkeustilan (height_mode) auto, fixed tai max.",
+    invalid_row_step: "Virheellinen py\xF6ristys. Py\xF6ristyksen (row_step) on oltava full tai half.",
     station_without_device: "Virheellinen konfiguraatio. Jokaiselle asemalle tarvitaan laite (device).",
     no_station: "Asemalta ei l\xF6ytynyt sensoreita",
     no_readings: "Asemalta ei juuri nyt saada lukemia"
@@ -856,7 +862,11 @@ var fi_default = {
     height: "Kiinte\xE4 korkeus",
     height_helper: "Kortti on aina n\xE4in korkea, ja loput vieriv\xE4t sen sis\xE4ll\xE4.",
     max_height: "Enimm\xE4iskorkeus",
-    max_height_helper: "Kortti kasvaa sis\xE4lt\xF6ns\xE4 mukana t\xE4h\xE4n korkeuteen asti, ja sen j\xE4lkeen loput vieriv\xE4t."
+    max_height_helper: "Kortti kasvaa sis\xE4lt\xF6ns\xE4 mukana t\xE4h\xE4n korkeuteen asti, ja sen j\xE4lkeen loput vieriv\xE4t.",
+    row_step: "Py\xF6ristys osioihin jaetussa n\xE4kym\xE4ss\xE4",
+    row_step_helper: "Automaattisella rivikorkeudella kortin korkeus py\xF6ristet\xE4\xE4n yl\xF6sp\xE4in kokonaisiin riveihin, tai tilan s\xE4\xE4st\xE4miseksi puolikkaisiin riveihin.",
+    row_step_full: "Kokonaisiin riveihin",
+    row_step_half: "Puolikkaisiin riveihin"
   }
 };
 
@@ -882,6 +892,41 @@ function read(table, key) {
 }
 function browserLanguage() {
   return document.documentElement.lang || navigator.language || "en";
+}
+
+// src/rows.ts
+var ROW_STEPS = ["full", "half"];
+var ROW_PX = 64;
+var ROW_GAP_PX = 8;
+function validRowStep(config) {
+  return config.row_step === void 0 || config.row_step === null || ROW_STEPS.includes(config.row_step);
+}
+function filledHeight(content, config) {
+  const step = config.row_step === "half" ? ROW_PX / 2 : ROW_PX;
+  return Math.max(1, Math.ceil((content + ROW_GAP_PX) / step)) * step - ROW_GAP_PX;
+}
+function rowStepSchema(config, text) {
+  if (heightMode(config) !== "auto") {
+    return [];
+  }
+  return [
+    {
+      name: "row_step",
+      selector: {
+        select: { mode: "dropdown", options: ROW_STEPS.map((value) => ({ value, label: text(`editor.row_step_${value}`) })) }
+      }
+    }
+  ];
+}
+function rowStepData(config) {
+  return { ...config, row_step: config.row_step ?? "full" };
+}
+function tidyRowStep(config) {
+  const tidied = { ...config };
+  if (tidied.row_step !== "half" || heightMode(tidied) !== "auto") {
+    delete tidied.row_step;
+  }
+  return tidied;
 }
 
 // src/stations.ts
@@ -998,8 +1043,8 @@ var RoadConditionsCardEditor = class extends i4 {
             <ha-form
                 class="height"
                 .hass=${this.hass}
-                .data=${heightData(this.config)}
-                .schema=${heightSchema(this.config, (key) => this.text(key))}
+                .data=${rowStepData(heightData(this.config))}
+                .schema=${[...heightSchema(this.config, (key) => this.text(key)), ...rowStepSchema(this.config, (key) => this.text(key))]}
                 .computeLabel=${(entry) => this.text(`editor.${entry.name}`)}
                 .computeHelper=${(entry) => this.helper(entry.name)}
                 @value-changed=${(event) => this.changed({ ...this.config, ...event.detail.value })}
@@ -1024,7 +1069,7 @@ var RoadConditionsCardEditor = class extends i4 {
         `;
   }
   changed(value) {
-    const config = tidyHeight(value);
+    const config = tidyRowStep(tidyHeight(value));
     config.stations = compactStations(config.stations ?? []);
     if (!config.title) {
       delete config.title;
@@ -1170,9 +1215,15 @@ var WEATHER_ICONS = {
 };
 
 // src/road-conditions-card.ts
+var STEP_PX = 32;
+var FRAME_PX = 24;
+var px = (value) => parseFloat(value) || 0;
 var RoadConditionsCard = class extends i4 {
   constructor() {
     super();
+    this.filled = 0;
+    this.spare = 0;
+    this.resizes = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver(() => this.measureSoon());
     new ScrollFade(
       this,
       () => this.heightStyle() ? this.renderRoot.querySelectorAll("ha-card > .station, ha-card > .rows") : []
@@ -1195,14 +1246,29 @@ var RoadConditionsCard = class extends i4 {
     if (!validHeight(config)) {
       throw new Error(translate(browserLanguage(), "common.invalid_height"));
     }
+    if (!validRowStep(config)) {
+      throw new Error(translate(browserLanguage(), "common.invalid_row_step"));
+    }
     this.config = { ...config };
   }
   /**
-   * In a sections view the card takes a whole section by default and is never narrower than half of one, nor lower
-   * than its minimum height.
+   * In a sections view the card takes a whole section by default, and is never lower than its minimum height. Below 9
+   * columns a station's name and values have too little room: at 6, a 320 px phone with a section background leaves the
+   * card 140 px.
    */
   getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 6, min_rows: gridMinRows(this.minimumHeight()) };
+    return { columns: 12, rows: "auto", min_columns: 9, min_rows: gridMinRows(this.minimumHeight()) };
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    if (this.hasUpdated) {
+      this.requestUpdate();
+    }
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.resizes?.disconnect();
+    cancelAnimationFrame(this.frame ?? 0);
   }
   getCardSize() {
     const count = this.config ? stationsOf(this.config.stations).length : 1;
@@ -1242,13 +1308,64 @@ var RoadConditionsCard = class extends i4 {
       return A;
     }
     const stations = stationsOf(this.config.stations);
-    const height = this.heightStyle();
+    const title = this.config.title;
+    const several = stations.length > 1;
     return b2`
-            <ha-card class=${height ? "held" : ""} style=${height}>
-                ${this.config.title ? b2`<h1 class="card-title">${this.config.title}</h1>` : A}
-                ${stations.length === 1 ? this.station(stations[0]) : b2`<div class="rows">${stations.map((station) => this.row(station))}</div>`}
+            <ha-card class=${this.heightStyle() ? "held" : ""} style=${this.cardStyle()}>
+                ${title ? b2`<h1 class="card-title ${several ? "spare" : ""}" title=${title}>${title}</h1>` : A}
+                ${several ? b2`<div class="rows ${title ? "" : "spare-top"}">${stations.map((station) => this.row(station))}</div>` : this.station(stations[0])}
             </ha-card>
         `;
+  }
+  updated() {
+    const card = this.renderRoot.querySelector("ha-card");
+    if (card && this.isConnected) {
+      this.resizes?.observe(card);
+      this.measureSoon();
+    }
+  }
+  measureSoon() {
+    cancelAnimationFrame(this.frame ?? 0);
+    this.frame = requestAnimationFrame(() => this.fillRows());
+  }
+  /**
+   * In a sections view whose rows are left automatic, the card takes the whole rows its content needs, or the half rows
+   * with `row_step: half`, so the cards under it stay on the rows. The room left over goes under one station's name,
+   * or under the title of several, or above them without one.
+   */
+  fillRows() {
+    const card = this.renderRoot.querySelector("ha-card");
+    if (!card || !card.clientWidth) {
+      return;
+    }
+    if (this.layout !== "grid" || this.heightStyle()) {
+      this.filled = 0;
+      this.spare = 0;
+      return;
+    }
+    const parts = card.querySelectorAll(
+      ":scope > .card-title, :scope > .name, :scope > .station > *, :scope > .rows > .row"
+    );
+    const last = parts[parts.length - 1];
+    if (!last) {
+      return;
+    }
+    const style = getComputedStyle(card);
+    let content = last.getBoundingClientRect().bottom + px(getComputedStyle(last).marginBottom) - card.getBoundingClientRect().top + px(style.paddingBottom) + px(style.borderBottomWidth);
+    const below = card.querySelector(".spare");
+    const above = card.querySelector(".spare-top");
+    content -= (below ? px(getComputedStyle(below).paddingBottom) : 0) + (above ? px(getComputedStyle(above).paddingTop) : 0);
+    const filled = filledHeight(Math.round(content), this.config ?? {});
+    this.filled = filled;
+    this.spare = Math.max(0, Math.floor(filled - content));
+  }
+  /** The card's inline style: the height it is held to, or the rows it fills, with their spare room. */
+  cardStyle() {
+    const held = this.heightStyle();
+    if (held || !this.filled) {
+      return held;
+    }
+    return `min-height: ${this.filled}px; --spare: ${this.spare}px`;
   }
   /**
    * The whole card for one station: its name, and under it the grade on its scale, the values in a grid and a warning
@@ -1258,8 +1375,9 @@ var RoadConditionsCard = class extends i4 {
     const hass = this.hass;
     const sensors = this.sensors(station.device);
     const name = stationName(hass, station);
+    const head = b2`<div class="name spare" title=${name}>${name}</div>`;
     if (Object.keys(sensors).length === 0) {
-      return b2`<div class="name">${name}</div>
+      return b2`${head}
                 <div class="station"><div class="message">${this.text("common.no_station")}</div></div>`;
     }
     const condition = reading(hass, sensors.grip_condition);
@@ -1267,21 +1385,22 @@ var RoadConditionsCard = class extends i4 {
     const warning = reading(hass, sensors.road_warning);
     const values = this.values(sensors);
     if (!condition && values.length === 0 && !warning) {
-      return b2`<div class="name">${name}</div>
+      return b2`${head}
                 <div class="station"><div class="message">${this.text("common.no_readings")}</div></div>`;
     }
     return b2`
-            <div class="name">${name}</div>
+            ${head}
             <div class="station">
                 ${condition ? b2`
                               <button class="grade" @click=${() => this.moreInfo(condition.entity_id)}>
-                                  <span class="grade-text">${this.format(condition)}</span>
+                                  <span class="grade-text" title=${this.format(condition)}>${this.format(condition)}</span>
                                   ${grip ? b2`<span class="grip">${this.format(grip)}</span>` : A}
                               </button>
                               ${this.scale(condition.state, "large")}
                               <div class="scale-labels" aria-hidden="true">
-                                  <span>${this.text("scale.very_slippery")}</span><span>${this.text("scale.winter")}</span
-                                  ><span>${this.text("scale.good")}</span>
+                                  <span title=${this.text("scale.very_slippery")}>${this.text("scale.very_slippery")}</span
+                                  ><span title=${this.text("scale.winter")}>${this.text("scale.winter")}</span
+                                  ><span title=${this.text("scale.good")}>${this.text("scale.good")}</span>
                               </div>
                           ` : A}
                 ${values.length ? b2`<div class="values ${condition ? "divided" : ""}">
@@ -1321,10 +1440,11 @@ var RoadConditionsCard = class extends i4 {
     } else if (summary.length === 0 && !condition) {
       message = this.text("common.no_readings");
     }
+    const values = message ?? summary.map((value) => value.spoken).join(", ");
     const content = b2`
             <span class="row-text">
-                <span class="row-name">${name}</span>
-                <span class="row-values">
+                <span class="row-name" title=${name}>${name}</span>
+                <span class="row-values" title=${values}>
                     ${message ? message : summary.map(
       (value) => b2`<span class="row-value ${value.notable ? "notable" : ""}" title="${value.label}"
                                           >${this.icon(value.icon)}${value.text}</span
@@ -1351,20 +1471,14 @@ var RoadConditionsCard = class extends i4 {
     return heightStyle(this.config ?? {}, this.layout, this.minimumHeight());
   }
   /**
-   * The lowest the card is held to, in pixels: its padding, the title when it has one, and for one station its name,
-   * the grade on its scale and the first line of values, for several the first station's row. The padding, the title,
-   * the station's name and the row as measured on a full section's width, the grade and the values estimated from the
-   * styles.
+   * The lowest the card is held to, in pixels: its padding and border, the title when it has one, and for one station its
+   * name, the grade, the scale and the first line of values, a half-row step each, for several the first station's row.
+   * A row is three steps on a narrow card, where its grade goes under its values, and the minimum is for the narrowest
+   * its columns get. Held, the texts above the values keep to one line, so this holds at any width.
    */
   minimumHeight() {
-    const padding = 34;
-    const title = 37;
-    const name = 31;
-    const grade = 88;
-    const values = 20;
-    const row = 62;
     const one = this.config ? stationsOf(this.config.stations).length === 1 : true;
-    return padding + (this.config?.title ? title : 0) + (one ? name + grade + values : row);
+    return FRAME_PX + ((this.config?.title ? 1 : 0) + (one ? 4 : 3)) * STEP_PX;
   }
   scale(condition, size) {
     return b2`<div class="scale ${size}" aria-hidden="true">
@@ -1445,8 +1559,16 @@ var RoadConditionsCard = class extends i4 {
   static get styles() {
     return [
       i`
+                /*
+                 * Every part is a whole number of half-row steps, 32 px, and the padding and the border make up the 24 px that
+                 * leave the card on the rows of a sections view: k rows are 64k − 8 px. A heading or a row's text that wraps
+                 * adds a step a line, while a value or the warning that wraps keeps its lines together instead.
+                 *
+                 * The container queries measure the card's content box, 34 px narrower than the card: the padding and the
+                 * border at its sides.
+                 */
                 ha-card {
-                    padding: 16px;
+                    padding: 11px 16px;
                     container-type: inline-size;
                     font-variant-numeric: tabular-nums;
                     --road-very-slippery: var(--road-conditions-very-slippery-color, var(--error-color, #db4437));
@@ -1469,19 +1591,43 @@ var RoadConditionsCard = class extends i4 {
                 }
 
                 .card-title {
-                    margin: 0 0 12px;
+                    margin: 0;
                     font-size: var(--ha-card-header-font-size, 24px);
                     font-weight: var(--ha-font-weight-normal, 400);
-                    line-height: 1.2;
+                    line-height: 32px;
+                    overflow-wrap: anywhere;
                 }
 
                 .name {
                     font-size: 16px;
                     font-weight: var(--ha-font-weight-medium, 500);
-                    margin-bottom: 12px;
+                    line-height: 32px;
+                    overflow-wrap: anywhere;
+                }
+
+                /* The room a whole row leaves over, under the name or the title, or above the rows without a title. Padding,
+                   not a margin, which would collapse into its neighbour's. */
+                .spare {
+                    padding-bottom: var(--spare, 0px);
+                }
+
+                .spare-top {
+                    padding-top: var(--spare, 0px);
+                }
+
+                /* Held to a height, the texts above what scrolls keep to one line, so the card's least height holds. */
+                ha-card.held .card-title,
+                ha-card.held .name,
+                ha-card.held .grade-text,
+                ha-card.held .row-name,
+                ha-card.held .row-values {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .message {
+                    line-height: 32px;
                     color: var(--secondary-text-color);
                 }
 
@@ -1504,16 +1650,26 @@ var RoadConditionsCard = class extends i4 {
                     color: var(--road-good);
                 }
 
+                /*
+                 * One step, or two when a narrow card puts the grip on a line of its own. Centred, not on their baselines, as
+                 * aligning the baselines of two font sizes in lines of 32 px makes the line 34.
+                 */
                 .grade {
                     display: flex;
+                    flex-wrap: wrap;
                     justify-content: space-between;
-                    align-items: baseline;
-                    gap: 12px;
+                    align-items: center;
+                    column-gap: 12px;
                     width: 100%;
-                    margin-bottom: 10px;
+                    line-height: 32px;
+                }
+
+                ha-card.held .grade {
+                    flex-wrap: nowrap;
                 }
 
                 .grade-text {
+                    min-width: 0;
                     font-size: 20px;
                     font-weight: var(--ha-font-weight-medium, 500);
                 }
@@ -1565,28 +1721,49 @@ var RoadConditionsCard = class extends i4 {
                     border-radius: 0 4px 4px 0;
                 }
 
-                /* Equal side columns keep the middle label on the meter's middle gap, however long the outer ones are. */
+                /*
+                 * Equal side columns keep the middle label on the meter's middle gap, however long the outer ones are. The scale
+                 * and its labels are one step, so the labels keep to one line.
+                 */
                 .scale-labels {
                     display: grid;
-                    grid-template-columns: 1fr auto 1fr;
+                    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
                     gap: 8px;
-                    margin-top: 6px;
+                    margin: 6px 0 4px;
                     font-size: 11px;
+                    line-height: 14px;
                     color: var(--secondary-text-color);
+                }
+
+                .scale-labels span {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .scale-labels span:last-child {
                     text-align: right;
                 }
 
-                /* The values flow into three columns, so a value the station lacks leaves no gap. */
+                /* On a card narrower than about 284 px the middle label goes, so the ends have room for their whole words. */
+                @container (max-width: 249px) {
+                    .scale-labels {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+
+                    .scale-labels span:nth-child(2) {
+                        display: none;
+                    }
+                }
+
+                /* The values flow into three columns of a step a line, so a value the station lacks leaves no gap. */
                 .values {
                     display: grid;
                     grid-template-columns: repeat(3, minmax(0, 1fr));
-                    gap: 12px 8px;
+                    column-gap: 8px;
                 }
 
-                /* Two columns on a narrow card (half a section), every value on one row on a wide one (two sections). */
+                /* Two columns on a card narrower than about 334 px, every value on one row from about 834 px. */
                 @container (max-width: 299px) {
                     .values {
                         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1601,18 +1778,25 @@ var RoadConditionsCard = class extends i4 {
                     }
                 }
 
+                /* A line drawn over the values, not a border, which would take a pixel off the step. */
                 .values.divided {
-                    margin-top: 14px;
-                    padding-top: 12px;
-                    border-top: 1px solid var(--divider-color);
+                    background: linear-gradient(var(--divider-color), var(--divider-color)) top / 100% 1px no-repeat;
                 }
 
+                /*
+                 * A step tall on one line. A value that wraps keeps its lines together at 20 px, so it reads as one value, and
+                 * leaves the step: the card still ends on whole rows, as it measures where its content ends. The 4 px gap keeps a
+                 * temperature such as −12,5 °C on one line beside its icon on a held card of 214 px, 9 columns on a 320 px
+                 * phone with a section background.
+                 */
                 .value {
                     display: flex;
                     align-items: center;
-                    gap: 6px;
+                    gap: 4px;
                     min-width: 0;
+                    min-height: 32px;
                     font-size: 15px;
+                    line-height: 20px;
                 }
 
                 .icon {
@@ -1621,6 +1805,12 @@ var RoadConditionsCard = class extends i4 {
                     height: 20px;
                     --mdc-icon-size: 20px;
                     color: var(--state-icon-color, var(--secondary-text-color));
+                }
+
+                /* A flex box, as Home Assistant's icon inside it is inline and would sit in the 32 px line of the text beside it,
+                   drawn below its box. */
+                ha-icon.icon {
+                    display: flex;
                 }
 
                 /* Weather Icons leave a wide margin inside their canvas, so they are drawn larger to match. */
@@ -1635,7 +1825,6 @@ var RoadConditionsCard = class extends i4 {
                 .value span {
                     min-width: 0;
                     overflow-wrap: anywhere;
-                    line-height: 1.25;
                 }
 
                 /* Freezing or heavy precipitation matters at a glance. */
@@ -1644,13 +1833,14 @@ var RoadConditionsCard = class extends i4 {
                     color: var(--warning-color, #ffa600);
                 }
 
+                /* As a value: a step on one line, its lines kept together when it wraps. */
                 .warning {
                     display: flex;
                     align-items: center;
                     gap: 6px;
-                    margin-top: 12px;
+                    min-height: 32px;
                     font-size: 14px;
-                    line-height: 1.25;
+                    line-height: 20px;
                     color: var(--warning-color, #ffa600);
                 }
 
@@ -1678,8 +1868,8 @@ var RoadConditionsCard = class extends i4 {
 
                 /*
                  * It clips at its padding box, so it reaches 4 px out on every side, where the focus rings are drawn: over the
-                 * card's padding at the sides and the bottom, and at the top over the 12 px margin under the title or the
-                 * station's name, or over the card's padding, where nothing takes a tap.
+                 * card's padding at the sides and the bottom, and at the top over the room under the title's or the station's
+                 * name's text in its line, or over the card's padding, where nothing takes a tap.
                  */
                 ha-card.held > .station,
                 ha-card.held > .rows {
@@ -1691,6 +1881,11 @@ var RoadConditionsCard = class extends i4 {
                     scrollbar-width: thin;
                 }
 
+                /*
+                 * A row is two steps: its name in 24 px and its values in 20, between 10 px above and below. Each takes a line of
+                 * 32 px with negative margins, so a line more adds a step. The row-text is a flex column, as the negative margins
+                 * of block siblings collapse into one.
+                 */
                 .row {
                     display: flex;
                     justify-content: space-between;
@@ -1700,27 +1895,28 @@ var RoadConditionsCard = class extends i4 {
                     padding: 10px 0;
                 }
 
+                /* A line drawn between the rows, not a border, which would take a pixel off the step. */
                 .row + .row {
-                    border-top: 1px solid var(--divider-color);
+                    box-shadow: inset 0 1px var(--divider-color);
                 }
 
                 .row-text {
                     display: flex;
                     flex-direction: column;
-                    gap: 2px;
                     min-width: 0;
                 }
 
                 .row-name {
+                    margin: -4px 0;
                     font-size: 15px;
+                    line-height: 32px;
                     overflow-wrap: anywhere;
                 }
 
                 .row-values {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 2px 12px;
+                    margin: -6px 0;
                     font-size: 13px;
+                    line-height: 32px;
                     color: var(--secondary-text-color);
                 }
 
@@ -1728,8 +1924,14 @@ var RoadConditionsCard = class extends i4 {
                     display: inline-flex;
                     align-items: center;
                     gap: 4px;
-                    min-width: 0;
+                    max-width: 100%;
+                    margin-inline-end: 12px;
+                    vertical-align: top;
                     overflow-wrap: anywhere;
+                }
+
+                .row-value:last-child {
+                    margin-inline-end: 0;
                 }
 
                 .row-value .icon {
@@ -1751,24 +1953,31 @@ var RoadConditionsCard = class extends i4 {
                     gap: 4px;
                     flex: 0 0 auto;
                     font-size: 14px;
+                    line-height: 20px;
                     text-align: right;
                 }
 
+                /* Its own line height, as the smaller text on the grade's baseline would make the grade's line of 20 px 21. */
                 .row-grade .grip {
+                    line-height: 1;
                     font-size: 12px;
                     color: var(--secondary-text-color);
                 }
 
-                /* Beside a long grade a narrow card leaves the name and values no room, so the grade goes below them. */
+                /*
+                 * Beside a long grade a card narrower than about 374 px leaves the name and values no room, so the grade goes
+                 * below them, as a step of its own: its 20 px line, the scale and the room between them and above.
+                 */
                 @container (max-width: 339px) {
                     .row {
                         flex-direction: column;
                         align-items: stretch;
-                        gap: 6px;
+                        gap: 0;
                     }
 
                     .row-grade {
                         align-items: flex-start;
+                        margin-top: 4px;
                         text-align: left;
                     }
                 }
@@ -1786,6 +1995,12 @@ __decorateClass([
 __decorateClass([
   r5()
 ], RoadConditionsCard.prototype, "config", 2);
+__decorateClass([
+  r5()
+], RoadConditionsCard.prototype, "filled", 2);
+__decorateClass([
+  r5()
+], RoadConditionsCard.prototype, "spare", 2);
 if (!customElements.get("road-conditions-card")) {
   console.info(
     `%c  ROAD-CONDITIONS-CARD 

@@ -60,6 +60,17 @@ describe("road-conditions-card", () => {
         expect(() => element.setConfig(config({ height_mode: null, height: null, max_height: null }))).not.toThrow();
     });
 
+    it("refuses an unknown row step with an error about the rounding", () => {
+        const element = document.createElement("road-conditions-card");
+        const config = (row_step: unknown) => ({ type: "custom:road-conditions-card", stations: ["station-a"], row_step }) as never;
+        const error = translate(browserLanguage(), "common.invalid_row_step");
+        expect(error).toMatch(/^Invalid rounding\./);
+        expect(() => element.setConfig(config("quarter"))).toThrow(error);
+        for (const value of ["full", "half", null, undefined]) {
+            expect(() => element.setConfig(config(value))).not.toThrow();
+        }
+    });
+
     it.each<[string, string | undefined, Partial<RoadConditionsCardConfig>, string]>([
         ["its content", undefined, {}, ""],
         ["a fixed height", undefined, { height_mode: "fixed", height: 240, max_height: 300 }, "height: 240px"],
@@ -158,20 +169,24 @@ describe("road-conditions-card", () => {
         expect(element.getCardSize()).toBe(size);
     });
 
+    // The padding and border are 24 px, the title a step of 32, one station's name, grade, scale and first line of values four
+    // steps, and a row of several three, as narrow as the card's 9 columns can be.
     it.each<[string, Partial<RoadConditionsCardConfig>, number]>([
         ["one station", {}, 3],
-        ["one station and a title", { title: "Tiet" }, 4],
+        ["one station and a title", { title: "Tiet" }, 3],
         ["several stations", { stations: ["station-a", "station-b"] }, 2],
         ["several stations and a title", { stations: ["station-a", "station-b"], title: "Tiet" }, 3],
-    ])("keeps to its minimum height in a sections view with %s", (_name, extra, rows) => {
+    ])("keeps to its minimum height and 9 columns in a sections view with %s", (_name, extra, rows) => {
         const element = document.createElement("road-conditions-card");
         element.setConfig({ type: "custom:road-conditions-card", stations: ["station-a"], ...extra } as RoadConditionsCardConfig);
-        expect(element.getGridOptions().min_rows).toBe(rows);
+        expect(element.getGridOptions()).toMatchObject({ columns: 12, rows: "auto", min_columns: 9, min_rows: rows });
     });
 
     it.each<[string, Partial<RoadConditionsCardConfig>, string]>([
-        ["one station", { height: 100 }, "height: 173px"],
-        ["several stations", { stations: ["station-a", "station-b"], height: 50 }, "height: 96px"],
+        ["one station", { height: 100 }, "height: 152px"],
+        ["one station and a title", { title: "Tiet", height: 100 }, "height: 184px"],
+        ["several stations", { stations: ["station-a", "station-b"], height: 50 }, "height: 120px"],
+        ["several stations and a title", { stations: ["station-a", "station-b"], title: "Tiet", height: 50 }, "height: 152px"],
     ])("raises a fixed height below its minimum to the minimum, with %s", async (_name, extra, style) => {
         const element = await card(hass({ "station-a": DRY, "station-b": DRY }), extra);
         expect(element.shadowRoot!.querySelector("ha-card")!.getAttribute("style")).toBe(style);
@@ -420,7 +435,7 @@ describe("editor", () => {
         const [stations, height] = [...root.querySelectorAll<Form>("ha-form")];
         expect(stations.schema.map((entry) => entry.name)).toEqual(["title", "stations"]);
         expect(height.schema.map((entry) => entry.name)).toEqual(["height_mode", "max_height"]);
-        expect(height.data).toMatchObject({ height_mode: "max", max_height: 500 });
+        expect(height.data).toMatchObject({ height_mode: "max", max_height: 500, row_step: "full" });
 
         const configs: unknown[] = [];
         editor.addEventListener("config-changed", (event) => configs.push((event as CustomEvent<{ config: unknown }>).detail.config));
@@ -429,5 +444,34 @@ describe("editor", () => {
         );
         expect(configs).toEqual([{ type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], height: 300 }]);
         editor.remove();
+    });
+
+    it("offers the rounding under the height while the card fits its content, and saves only half rows", async () => {
+        const editor = document.createElement("road-conditions-card-editor");
+        editor.hass = { states: {}, entities: {}, devices: {}, locale: { language: "en" } } as unknown as HomeAssistant;
+        editor.setConfig({ type: "custom:road-conditions-card", stations: ["station-a"] });
+        document.body.append(editor);
+        await editor.updateComplete;
+        type Form = HTMLElement & { data: Record<string, unknown>; schema: Array<{ name: string }> };
+        const height = editor.shadowRoot!.querySelectorAll<Form>("ha-form")[1];
+        expect(height.schema.map((entry) => entry.name)).toEqual(["height_mode", "row_step"]);
+        expect(height.data).toMatchObject({ height_mode: "auto", row_step: "full" });
+
+        const configs: unknown[] = [];
+        editor.addEventListener("config-changed", (event) => configs.push((event as CustomEvent<{ config: unknown }>).detail.config));
+        for (const row_step of ["half", "full"]) {
+            height.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { ...height.data, row_step } } }));
+        }
+        expect(configs).toEqual([
+            { type: "custom:road-conditions-card", stations: ["station-a"], row_step: "half" },
+            { type: "custom:road-conditions-card", stations: ["station-a"] },
+        ]);
+        editor.remove();
+    });
+
+    it("drops the rounding of a card held to a height", () => {
+        expect(saved({ height_mode: "fixed", height: 300, row_step: "half" })).toEqual([
+            { type: "custom:road-conditions-card", stations: ["station-a"], height: 300 },
+        ]);
     });
 });
