@@ -358,15 +358,18 @@ its small meter, and freezing or heavy precipitation when there is some. The gri
 ### Sizes
 
 In a sections view the card takes a whole section by default and can be made as narrow as 9 columns. A card set to
-fewer is shown at 9. Its values follow the card's width. A narrow card has two to a row, a normal one three, and a
-wide card has them all on one row. A value too long for its column wraps rather than being cut. On a
-narrow card the rows of several stations put the grade below the values, and the meter shows only its end labels.
+fewer is shown at 9. A part goes to a line of its own only when it doesn't fit beside the rest. One station's values
+take the fewest columns that keep them whole on the fewest lines, all on one row when there is room, and a value wider
+than its column takes two. A value too long for the whole card wraps rather than being cut. A row of several stations
+keeps its grade beside its name and values while they fit there on one line, and puts it below them when they don't.
+The meter shows only its end labels when the three don't fit whole.
 
 On automatic rows in a sections view, the card ends on whole rows, or on half rows with `row_step: half`. Any room left
-over goes under the station's name, or under the title of several stations, or above them without a title.
+over goes under the station's name, or under the title of several stations, or above them without a title. As the
+values change, a longer one can take another line, and the card a row more.
 
-<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-light.png#gh-light-mode-only" width="250" alt="A very slippery station on a narrow card, its meter with only its end labels, its values two to a row and freezing rain wrapped onto two lines">
-<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-dark.png#gh-dark-mode-only" width="250" alt="A very slippery station on a narrow card, its meter with only its end labels, its values two to a row and freezing rain wrapped onto two lines">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-light.png#gh-light-mode-only" width="250" alt="A very slippery station on a narrow card, its meter with all three labels, its values two to a row and freezing rain across both columns">
+<img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-dark.png#gh-dark-mode-only" width="250" alt="A very slippery station on a narrow card, its meter with all three labels, its values two to a row and freezing rain across both columns">
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-stations-light.png#gh-light-mode-only" width="250" alt="Three stations on a narrow card, each with its grade and meter below its values">
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-stations-dark.png#gh-dark-mode-only" width="250" alt="Three stations on a narrow card, each with its grade and meter below its values">
 

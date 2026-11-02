@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "../src/road-conditions-card";
-import type { RoadConditionsCard } from "../src/road-conditions-card";
+import { valueColumns, type RoadConditionsCard } from "../src/road-conditions-card";
 import type { RoadConditionsCardConfig } from "../src/types";
-import { DRY, hass } from "./fixtures";
+import { DRY, hass, SPARSE, type Readings } from "./fixtures";
 
 async function card(config: Partial<RoadConditionsCardConfig> = {}, layout?: string): Promise<RoadConditionsCard> {
     const element = document.createElement("road-conditions-card");
@@ -188,5 +188,240 @@ describe("texts cut short when held", () => {
         const values = row.querySelector(".row-values")!.getAttribute("title")!;
         expect(row.getAttribute("aria-label")).toContain(values);
         expect(values.split(", ").length).toBe(row.querySelectorAll(".row-value").length);
+    });
+});
+
+describe("a part on a line of its own only when it doesn't fit", () => {
+    // happy-dom lays nothing out, so a row is drawn from 0 to WIDTH, and its parts, while the card measures, end where
+    // its width on one line says, and start where `starts` says, past its left side in a right-to-left language. The
+    // meter's labels are LABELS wide together, each at the width given, and the middle one takes nothing while hidden.
+    const WIDTH = 300;
+    const LABELS = 260;
+    const natural = new Map<Element, number>();
+    const starts = new Map<Element, number>();
+    let measuredSplit = false;
+    const own = (name: string) => Object.getOwnPropertyDescriptor(HTMLElement.prototype, name);
+    const saved = { clientWidth: own("clientWidth"), getBoundingClientRect: own("getBoundingClientRect") };
+    const measuring = (element: Element) => !!element.closest("ha-card")?.hasAttribute("data-measuring");
+    const isRow = (element: Element | null) => !!element?.matches(".rows > .row");
+    const rect = (width: number, left = 0) => ({ left, right: width, width: width - left, top: 0, bottom: 0, height: 0 }) as DOMRect;
+
+    beforeEach(() => {
+        natural.clear();
+        starts.clear();
+        measuredSplit = false;
+        Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+            configurable: true,
+            get: () => WIDTH,
+        });
+        Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+            configurable: true,
+            writable: true,
+            value(this: HTMLElement) {
+                const parent = this.parentElement;
+                if (isRow(this)) {
+                    return rect(WIDTH);
+                }
+                if (isRow(parent) && measuring(this)) {
+                    measuredSplit ||= parent!.classList.contains("split");
+                    return rect(natural.get(parent!) ?? WIDTH, starts.get(parent!) ?? 0);
+                }
+                if (this.classList.contains("values")) {
+                    return rect(WIDTH);
+                }
+                if (this.classList.contains("scale-labels")) {
+                    return rect(LABELS);
+                }
+                if (parent?.classList.contains("scale-labels")) {
+                    const hidden = parent.classList.contains("tight") && this === parent.children[1];
+                    return rect(hidden ? 0 : (natural.get(this) ?? 60));
+                }
+                return rect(0);
+            },
+        });
+    });
+
+    afterEach(() => {
+        for (const [name, descriptor] of Object.entries(saved)) {
+            if (descriptor) {
+                Object.defineProperty(HTMLElement.prototype, name, descriptor);
+            } else {
+                delete (HTMLElement.prototype as unknown as Record<string, unknown>)[name];
+            }
+        }
+    });
+
+    function split(element: RoadConditionsCard): void {
+        (element as unknown as { splitLines(): void }).splitLines();
+    }
+
+    it.each<[string, boolean[], string[]]>([
+        ["every row fits", [false, false, false], ["one line", "one line", "one line"]],
+        ["a row doesn't fit", [false, true, false], ["one line", "split", "one line"]],
+        ["no row fits", [true, true, true], ["split", "split", "split"]],
+    ])("keeps a row's grade beside its name and values while they fit, when %s", async (_name, over, expected) => {
+        const element = await card({ stations: ["station-a", "station-b", "station-c"] });
+        const rows = [...element.shadowRoot!.querySelectorAll<HTMLElement>(".rows > .row")];
+        const shown = () => rows.map((row) => (row.classList.contains("split") ? "split" : "one line"));
+        rows.forEach((row, index) => natural.set(row, WIDTH + (over[index] ? 0.4 : 0)));
+        split(element);
+        expect(shown()).toEqual(expected);
+        // A row already split is measured on one line again, so it goes back when it fits once more.
+        rows.forEach((row) => natural.set(row, WIDTH));
+        split(element);
+        expect(shown()).toEqual(["one line", "one line", "one line"]);
+        expect(measuredSplit).toBe(false);
+    });
+
+    // The values have 300 px and an 8 px gap between columns: n columns fit while n × widest + (n − 1) × 8 is at most 300,
+    // and of those, the fewest that keep the fewest lines win.
+    it.each([
+        [30, 6],
+        [40, 6],
+        [60, 3],
+        [92, 3],
+        [146, 2],
+        [147, 1],
+        [400, 1],
+    ])("gives one station's values, all %i px wide, %i columns", async (widest, columns) => {
+        const element = await card();
+        const values = one(element, ".values");
+        expect(values.children.length).toBe(6);
+        for (const value of values.children) {
+            (value as HTMLElement).getBoundingClientRect = () => ({ width: measuring(value) ? widest : 10 }) as DOMRect;
+        }
+        split(element);
+        expect(values.style.getPropertyValue("--value-columns")).toBe(String(columns));
+    });
+
+    // The values of a station on a card 250 px wide, 216 px for the values, Freezing rain far the widest.
+    const MIXED = [80, 70, 50, 75, 170, 75];
+    it.each<[string, number[], number, number, number[]]>([
+        ["all as wide, on the fewest lines, three and three rather than four and two", [60, 60, 60, 60, 60, 60], 300, 3, []],
+        ["one on two columns that starts the next line, which makes three columns no shorter than two", [60, 60, 150, 60, 60], 300, 2, [2]],
+        ["one far wider, on two columns rather than all in one", MIXED, 216, 2, [4]],
+        ["one far wider, with room for four columns", MIXED, 366, 4, [4]],
+        ["one wider than two columns can be, in one column", [80, 70, 50, 75, 250, 75], 216, 1, []],
+        ["every one narrow, all on one line", [40, 40, 40, 40, 40, 40], 300, 6, []],
+        ["a single value", [90], 300, 1, []],
+        // Three columns of 81.1 and their gaps: worked back out of the room, a column comes to a hair under 81.1, and only
+        // the hundredth of a pixel's slack keeps the values in one column each.
+        ["each exactly as wide as a column worked out in fractions", [81.1, 81.1, 81.1], 3 * 81.1 + 16, 3, []],
+        [
+            "one exactly as wide as two columns and their gap, worked out in fractions",
+            [2 * 81.1 + 8, 81.1, 81.1, 81.1, 81.1],
+            3 * 81.1 + 16,
+            3,
+            [0],
+        ],
+    ])("lays out values %s", (_name, widths, room, columns, wide) => {
+        const result = valueColumns(widths, room, 8);
+        expect(result.columns).toBe(columns);
+        expect(result.wide.flatMap((two, index) => (two ? [index] : []))).toEqual(wide);
+    });
+
+    it("works the columns out from the values' drawn width, not the whole pixels clientWidth rounds it to", async () => {
+        const element = await card();
+        const values = one(element, ".values");
+        // 205.6 px drawn leaves two columns of 98.8 px, too narrow for a value of 98.9, which 206 px would take for 99.
+        values.getBoundingClientRect = () => rect(205.6);
+        Object.defineProperty(values, "clientWidth", { configurable: true, value: 206 });
+        const cells = [...values.children] as HTMLElement[];
+        cells.forEach((value, index) => {
+            value.getBoundingClientRect = () => ({ width: measuring(value) ? (index === 1 ? 98.9 : 80) : 10 }) as DOMRect;
+        });
+        split(element);
+        expect(cells.map((value) => value.style.gridColumn)).toEqual(["", "span 2", "", "", "", ""]);
+    });
+
+    it("puts a value on two columns when it is too wide for one", async () => {
+        const element = await card();
+        const values = [...one(element, ".values").children] as HTMLElement[];
+        values.forEach((value, index) => {
+            value.getBoundingClientRect = () => ({ width: measuring(value) ? (index === 2 ? 200 : 80) : 10 }) as DOMRect;
+        });
+        split(element);
+        expect(one(element, ".values").style.getPropertyValue("--value-columns")).toBe("2");
+        expect(values.map((value) => value.style.gridColumn)).toEqual(["", "", "span 2", "", "", ""]);
+        values.forEach((value) => (value.getBoundingClientRect = () => ({ width: measuring(value) ? 80 : 10 }) as DOMRect));
+        split(element);
+        expect(values.map((value) => value.style.gridColumn)).toEqual(["", "", "", "", "", ""]);
+    });
+
+    // Each end label has half of what the middle one and the gaps beside it leave of the 260 px.
+    it.each([
+        ["shows the middle label while every label fits", [80, 60, 80], false],
+        ["drops the middle label when an end label doesn't fit", [101, 60, 80], true],
+        ["drops the middle label when it leaves the ends too little", [80, 110, 80], true],
+        ["drops the middle label when an end label fits only without the gaps beside it", [93, 60, 80], true],
+    ])("%s", async (_name, widths, tight) => {
+        // The meter's gap, which happy-dom doesn't read from the card's styles.
+        const real = window.getComputedStyle.bind(window);
+        vi.spyOn(window, "getComputedStyle").mockImplementation((element, pseudo) =>
+            element.classList.contains("scale-labels") ? ({ columnGap: "8px" } as CSSStyleDeclaration) : real(element, pseudo),
+        );
+        const element = await card();
+        const labels = one(element, ".scale-labels");
+        [...labels.children].forEach((label, index) => natural.set(label, widths[index]));
+        labels.classList.add("tight");
+        split(element);
+        expect(labels.classList.contains("tight")).toBe(tight);
+        vi.restoreAllMocks();
+    });
+
+    it("splits a row that runs past its left side, as one does in a right-to-left language", async () => {
+        const element = await card({ stations: ["station-a", "station-b"] });
+        const rows = [...element.shadowRoot!.querySelectorAll<HTMLElement>(".rows > .row")];
+        starts.set(rows[1], -0.4);
+        split(element);
+        expect(rows.map((row) => row.classList.contains("split"))).toEqual([false, true]);
+    });
+
+    it.each<[string, Partial<RoadConditionsCardConfig>, string, Readings | undefined, string[]]>([
+        ["the rows of several stations", { stations: ["station-a", "station-b"] }, ".rows > .row", undefined, ["96px", "64px"]],
+        ["one station's meter labels and values", {}, ".scale-labels, .values", undefined, ["96px", "64px"]],
+        ["the values of a station without a meter", {}, ".scale-labels, .values", SPARSE, ["96px"]],
+    ])(
+        "holds %s to their layout height while it measures, so nothing around the card moves",
+        async (_name, config, selector, readings, expected) => {
+            const element = await card(config);
+            if (readings) {
+                element.hass = hass({ "station-a": readings });
+                await element.updateComplete;
+            }
+            const parts = [...element.shadowRoot!.querySelectorAll<HTMLElement>(selector)];
+            expect(parts.length).toBe(expected.length);
+            const drawn = new Map(parts.map((part, index) => [part, ["96px", "64px"][index]]));
+            const real = window.getComputedStyle.bind(window);
+            vi.spyOn(window, "getComputedStyle").mockImplementation((target, pseudo) =>
+                drawn.has(target as HTMLElement)
+                    ? ({ height: drawn.get(target as HTMLElement), columnGap: "8px" } as CSSStyleDeclaration)
+                    : real(target, pseudo),
+            );
+            // What each part is held to when the card starts measuring.
+            const held: string[] = [];
+            const ha = one(element, "ha-card");
+            const toggle = ha.toggleAttribute.bind(ha);
+            ha.toggleAttribute = (name: string, force?: boolean) => {
+                if (name === "data-measuring" && force) {
+                    // Its least height too, as a row held by its height alone still shrinks in a held card's flex column.
+                    held.push(...parts.map((part) => (part.style.minHeight === part.style.height ? part.style.height : "not held")));
+                }
+                return toggle(name, force);
+            };
+            split(element);
+            vi.restoreAllMocks();
+            expect(held).toEqual(expected);
+            expect(parts.map((part) => part.style.height + part.style.minHeight)).toEqual(expected.map(() => ""));
+        },
+    );
+
+    it("measures nothing while the card has no width", async () => {
+        const element = await card({ stations: ["station-a", "station-b"] });
+        Object.defineProperty(one(element, "ha-card"), "clientWidth", { value: 0, configurable: true });
+        const rows = [...element.shadowRoot!.querySelectorAll<HTMLElement>(".rows > .row")];
+        rows.forEach((row) => natural.set(row, WIDTH + 40));
+        split(element);
+        expect(rows.map((row) => row.classList.contains("split"))).toEqual([false, false]);
     });
 });
