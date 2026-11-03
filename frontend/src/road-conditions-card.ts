@@ -17,7 +17,7 @@ import { ScrollFade, fadeStyles } from "./fade";
 import type { HassEntity, HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
 import { browserLanguage, translate } from "./localize/localize";
-import { filledHeight, validRowStep } from "./rows";
+import { fillLimit, filledHeight, filledStyle, validRowStep } from "./rows";
 import { precipitation, reading, scale, showGusts, stationDevices, stationName, stationSensors, stationsOf } from "./stations";
 import type { RoadConditionsCardConfig, StationConfig } from "./types";
 import { WEATHER_ICONS } from "./weather-icons";
@@ -294,7 +294,8 @@ export class RoadConditionsCard extends LitElement {
 
     /**
      * In a sections view whose rows are left automatic, the card takes the whole rows its content needs, or the half rows
-     * with `row_step: half`, so the cards under it stay on the rows. The room left over goes under one station's name,
+     * with `row_step: half`, so the cards under it stay on the rows, up to the limit of a card that grows up to one. The
+     * room left over goes under one station's name,
      * or under the title of several, or above them without one.
      */
     private fillRows(): void {
@@ -302,7 +303,8 @@ export class RoadConditionsCard extends LitElement {
         if (!card || !card.clientWidth) {
             return;
         }
-        if (this.layout !== "grid" || this.heightStyle()) {
+        const limit = fillLimit(this.config ?? {}, this.layout, this.minimumHeight());
+        if (!limit) {
             this.filled = 0;
             this.spare = 0;
             return;
@@ -327,18 +329,15 @@ export class RoadConditionsCard extends LitElement {
         const below = card.querySelector<HTMLElement>(".spare");
         const above = card.querySelector<HTMLElement>(".spare-top");
         content -= (below ? px(getComputedStyle(below).paddingBottom) : 0) + (above ? px(getComputedStyle(above).paddingTop) : 0);
-        const filled = filledHeight(Math.round(content), this.config ?? {});
+        const filled = filledHeight(Math.round(content), this.config ?? {}, limit);
         this.filled = filled;
         this.spare = Math.max(0, Math.floor(filled - content));
     }
 
-    /** The card's inline style: the height it is held to, or the rows it fills, with their spare room. */
+    /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. */
     private cardStyle(): string {
-        const held = this.heightStyle();
-        if (held || !this.filled) {
-            return held;
-        }
-        return `min-height: ${this.filled}px; --spare: ${this.spare}px`;
+        const style = filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled);
+        return this.filled ? `${style}; --spare: ${this.spare}px` : style;
     }
 
     /**

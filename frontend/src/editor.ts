@@ -1,11 +1,13 @@
-/** The card's visual editor: the title, the stations with the names the card gives them, the card's height and its rounding. */
+/**
+ * The card's visual editor: the title, the stations with the names the card gives them, and the height's rounding. The
+ * height mode is set in YAML only.
+ */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 
 import { PLATFORM } from "./const";
 import type { HomeAssistant } from "./hass";
-import { heightData, heightSchema, tidyHeight } from "./height";
 import { browserLanguage, translate } from "./localize/localize";
 import { rowStepData, rowStepSchema, tidyRowStep } from "./rows";
 import { stationsOf } from "./stations";
@@ -83,8 +85,8 @@ export class RoadConditionsCardEditor extends LitElement {
             <ha-form
                 class="height"
                 .hass=${this.hass}
-                .data=${rowStepData(heightData(this.config))}
-                .schema=${[...heightSchema(this.config, (key) => this.text(key)), ...rowStepSchema(this.config, (key) => this.text(key))]}
+                .data=${rowStepData(this.config)}
+                .schema=${rowStepSchema(this.config, (key) => this.text(key))}
                 .computeLabel=${(entry: SchemaEntry) => this.text(`editor.${entry.name}`)}
                 .computeHelper=${(entry: SchemaEntry) => this.helper(entry.name)}
                 @value-changed=${(event: CustomEvent<{ value: RoadConditionsCardConfig }>) =>
@@ -112,7 +114,7 @@ export class RoadConditionsCardEditor extends LitElement {
     }
 
     private changed(value: RoadConditionsCardConfig): void {
-        const config: RoadConditionsCardConfig = tidyRowStep(tidyHeight(value));
+        const config: RoadConditionsCardConfig = tidyRowStep(value);
         config.stations = compactStations((config.stations ?? []) as StationConfig[]);
         if (!config.title) {
             delete config.title;

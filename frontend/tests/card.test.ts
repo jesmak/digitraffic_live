@@ -76,7 +76,12 @@ describe("road-conditions-card", () => {
         ["a fixed height", undefined, { height_mode: "fixed", height: 240, max_height: 300 }, "height: 240px"],
         ["a maximum height", undefined, { max_height: 300 }, "max-height: 300px"],
         ["grid rows in a sections view, over its mode", "grid", { height: 240, grid_options: { rows: 6 } }, "height: 100%"],
-        ["its mode when the grid rows are automatic", "grid", { max_height: 300, grid_options: { rows: "auto" } }, "max-height: 300px"],
+        [
+            "its mode rounded down to the rows when the grid rows are automatic",
+            "grid",
+            { max_height: 300, grid_options: { rows: "auto" } },
+            "max-height: 248px",
+        ],
         ["a fixed height, with several stations", undefined, { stations: ["station-a", "station-b"], height: 240 }, "height: 240px"],
     ])("sizes itself by %s", async (_name, layout, extra, style) => {
         const element = await card(hass({ "station-a": DRY, "station-b": DRY }), extra, layout);
@@ -411,19 +416,15 @@ describe("editor", () => {
         return configs;
     }
 
+    // The height mode is set in YAML only, so the editor saves it as written.
     it.each([
-        ["the auto height mode it shows", { height_mode: "auto" }, {}],
-        ["a height mode its height already gives", { height_mode: "fixed", height: 300 }, { height: 300 }],
-    ])("leaves out of the configuration %s", (_name, height, kept) => {
-        expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], ...kept }]);
+        ["a fixed height", { height_mode: "fixed", height: 300 }],
+        ["a height up to a limit with a height left from another mode", { height_mode: "max", height: 300, max_height: 500 }],
+    ])("keeps %s set in YAML as it is", (_name, height) => {
+        expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], ...height }]);
     });
 
-    it("keeps only the height its mode uses, so one left from another mode can't come back", () => {
-        const height = { height_mode: "max", height: 300, max_height: 500 };
-        expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], max_height: 500 }]);
-    });
-
-    it("puts the height fields in a form of their own after the stations' help, and saves them into the configuration", async () => {
+    it("puts the rounding in a form of their own after the stations' help, and keeps a height set in YAML", async () => {
         const editor = document.createElement("road-conditions-card-editor");
         editor.hass = { states: {}, entities: {}, devices: {}, locale: { language: "en" } } as unknown as HomeAssistant;
         editor.setConfig({ type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], max_height: 500 });
@@ -434,19 +435,19 @@ describe("editor", () => {
         type Form = HTMLElement & { data: Record<string, unknown>; schema: Array<{ name: string }> };
         const [stations, height] = [...root.querySelectorAll<Form>("ha-form")];
         expect(stations.schema.map((entry) => entry.name)).toEqual(["title", "stations"]);
-        expect(height.schema.map((entry) => entry.name)).toEqual(["height_mode", "max_height"]);
-        expect(height.data).toMatchObject({ height_mode: "max", max_height: 500, row_step: "full" });
+        expect(height.schema.map((entry) => entry.name)).toEqual(["row_step"]);
+        expect(height.data).toMatchObject({ max_height: 500, row_step: "full" });
 
         const configs: unknown[] = [];
         editor.addEventListener("config-changed", (event) => configs.push((event as CustomEvent<{ config: unknown }>).detail.config));
-        height.dispatchEvent(
-            new CustomEvent("value-changed", { detail: { value: { ...height.data, height_mode: "fixed", height: 300 } } }),
-        );
-        expect(configs).toEqual([{ type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], height: 300 }]);
+        height.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { ...height.data, row_step: "half" } } }));
+        expect(configs).toEqual([
+            { type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], max_height: 500, row_step: "half" },
+        ]);
         editor.remove();
     });
 
-    it("offers the rounding under the height while the card fits its content, and saves only half rows", async () => {
+    it("offers the rounding while the card isn't held to a fixed height, and saves only half rows", async () => {
         const editor = document.createElement("road-conditions-card-editor");
         editor.hass = { states: {}, entities: {}, devices: {}, locale: { language: "en" } } as unknown as HomeAssistant;
         editor.setConfig({ type: "custom:road-conditions-card", stations: ["station-a"] });
@@ -454,8 +455,8 @@ describe("editor", () => {
         await editor.updateComplete;
         type Form = HTMLElement & { data: Record<string, unknown>; schema: Array<{ name: string }> };
         const height = editor.shadowRoot!.querySelectorAll<Form>("ha-form")[1];
-        expect(height.schema.map((entry) => entry.name)).toEqual(["height_mode", "row_step"]);
-        expect(height.data).toMatchObject({ height_mode: "auto", row_step: "full" });
+        expect(height.schema.map((entry) => entry.name)).toEqual(["row_step"]);
+        expect(height.data).toMatchObject({ row_step: "full" });
 
         const configs: unknown[] = [];
         editor.addEventListener("config-changed", (event) => configs.push((event as CustomEvent<{ config: unknown }>).detail.config));
@@ -471,7 +472,7 @@ describe("editor", () => {
 
     it("drops the rounding of a card held to a height", () => {
         expect(saved({ height_mode: "fixed", height: 300, row_step: "half" })).toEqual([
-            { type: "custom:road-conditions-card", stations: ["station-a"], height: 300 },
+            { type: "custom:road-conditions-card", stations: ["station-a"], height_mode: "fixed", height: 300 },
         ]);
     });
 });

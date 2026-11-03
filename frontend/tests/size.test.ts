@@ -82,10 +82,17 @@ describe("filling the rows of a sections view", () => {
 
     it.each([
         ["outside a sections view", {}, undefined, ""],
-        ["held up to a limit", { max_height: 500 }, "grid", "max-height: 500px"],
         ["on rows set in the layout tab", { grid_options: { rows: 5 } }, "grid", "height: 100%"],
     ])("leaves its rows alone %s", async (_name, config, layout, style) => {
         expect(await filled(await card(config as Partial<RoadConditionsCardConfig>, layout), 139)).toBe(style);
+    });
+
+    // 500 px rounded down to the rows is 440.
+    it.each([
+        ["under it, on the rows its content needs", 139, "max-height: 440px; min-height: 184px; --spare: 34px"],
+        ["over it, on the limit rounded down to the rows", 600, "max-height: 440px; min-height: 440px; --spare: 0px"],
+    ])("grows up to a limit on automatic rows %s", async (_name, end, style) => {
+        expect(await filled(await card({ max_height: 500 }, "grid"), end)).toBe(style);
     });
 
     // Each change takes the card off automatic rows, and changing back must not bring the old fill with it before the card
@@ -97,12 +104,6 @@ describe("filling the rows of a sections view", () => {
             "held to a fixed height",
             (element) => element.setConfig({ ...AUTO, height: 300 }),
             "height: 300px",
-            (element) => element.setConfig(AUTO),
-        ],
-        [
-            "held up to a limit",
-            (element) => element.setConfig({ ...AUTO, max_height: 500 }),
-            "max-height: 500px",
             (element) => element.setConfig(AUTO),
         ],
         [

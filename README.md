@@ -323,7 +323,7 @@ itself, and the log says which line to add, change or remove.
 | `height_mode` | string | How tall the card is. `auto` fits its content, `fixed` keeps it at `height`, `max` lets it grow up to `max_height`. In `fixed` and `max` the list of stations scrolls under the title, or one station's view under its name, and the texts above what scrolls keep to one line. The card never gets lower than the title and one station's row need, or for one station its name, its grade, its meter and its first line of values. A height in grid rows, set in the layout tab of a sections view, is used instead | `fixed` when `height` is set, `max` when only `max_height` is, otherwise `auto` |
 | `height`      | number | The card's height in pixels, for `fixed`                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |                                                                                 |
 | `max_height`  | number | The card's greatest height in pixels, for `max`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |                                                                                 |
-| `row_step`    | string | How the card rounds its height on automatic rows in a sections view, with `height_mode` `auto`. `full` rounds it up to whole rows, so the cards under it stay on the rows. `half` rounds it up to half rows, which saves space but can leave the cards under it half a row off the rows of the sections beside it                                                                                                                                                                                                     | `full`                                                                          |
+| `row_step`    | string | How the card rounds its height on automatic rows in a sections view, with `height_mode` `auto` or `max`. `full` rounds it up to whole rows, so the cards under it stay on the rows. `half` rounds it up to half rows, which saves space but can leave the cards under it half a row off the rows of the sections beside it                                                                                                                                                                                            | `full`                                                                          |
 
 Each item of `stations` is a device id, or an object with these keys:
 
@@ -332,7 +332,10 @@ Each item of `stations` is a device id, or an object with these keys:
 | `device` | string | The road weather station's device                                                                        |
 | `name`   | string | Replaces the station's own name, which is long, such as "Road 9 Hillside" for "Road 9 Example, Hillside" |
 
-Everything can be set in the card's visual editor, where the station picker offers only road weather stations.
+Everything can be set in the card's visual editor, where the station picker offers only road weather stations, except
+`height_mode`, `height` and `max_height`, which are set in YAML. In a sections view the layout tab sets the card's
+height. They are for where there is no layout tab, such as a masonry or panel view, or a stack or other card the card is
+inside, even in a sections view.
 
 ### What the card shows
 
@@ -366,7 +369,8 @@ The meter shows only its end labels when the three don't fit whole.
 
 On automatic rows in a sections view, the card ends on whole rows, or on half rows with `row_step: half`. Any room left
 over goes under the station's name, or under the title of several stations, or above them without a title. As the
-values change, a longer one can take another line, and the card a row more.
+values change, a longer one can take another line, and the card a row more. With `max_height`, it grows the same way up
+to that height rounded down to its rows, so it stays on the rows when it reaches it too.
 
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-light.png#gh-light-mode-only" width="250" alt="A very slippery station on a narrow card, its meter with all three labels, its values two to a row and freezing rain across both columns">
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/road-conditions-narrow-dark.png#gh-dark-mode-only" width="250" alt="A very slippery station on a narrow card, its meter with all three labels, its values two to a row and freezing rain across both columns">
