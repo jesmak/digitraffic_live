@@ -335,6 +335,8 @@ describe("road-conditions-card", () => {
             "Road 1 Example, station-b",
         ]);
         expect(text(rows[0].querySelector(".row-grade"))).toBe("good 0,82 µ");
+        // A held card cuts the grade short, so it carries its whole text
+        expect(rows[0].querySelector(".row-condition-text")?.getAttribute("title")).toBe("good");
         expect(rows[0].getAttribute("aria-label")).toBe("VT1, Tien lämpötila 5,3 °C, Tienpinta dry, Tuuli 3,1 m/s (7,3 m/s), good 0,82 µ");
         expect(rows[1].querySelectorAll(".row-grade .part.lit")).toHaveLength(3);
         expect(rows[2].querySelector(".row-grade")).toBeNull();

@@ -448,7 +448,10 @@ export class RoadConditionsCard extends LitElement {
             ${
                 condition
                     ? html`<span class="row-grade">
-                          <span>${this.format(condition)}${grip ? html` <span class="grip">${this.format(grip)}</span>` : nothing}</span>
+                          <span class="row-condition"
+                              ><span class="row-condition-text" title=${this.format(condition)}>${this.format(condition)}</span
+                              >${grip ? html` <span class="grip">${this.format(grip)}</span>` : nothing}</span
+                          >
                           ${this.scale(condition.state, "small")}
                       </span>`
                     : nothing
@@ -955,6 +958,23 @@ export class RoadConditionsCard extends LitElement {
                     text-align: end;
                 }
 
+                /* Held, the grade keeps to one line, its text cut short and the grip whole, so a row keeps its three steps. A flex
+                   box drops the space between them, so the gap stands in for it. */
+                ha-card.held .row-condition {
+                    display: flex;
+                    align-items: baseline;
+                    column-gap: 0.25em;
+                    max-width: 100%;
+                }
+                ha-card.held .row-condition-text {
+                    min-width: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                ha-card.held .row-condition .grip {
+                    flex: none;
+                }
                 /* Its own line height, as the smaller text on the grade's baseline would make the grade's line of 20 px 21. */
                 .row-grade .grip {
                     line-height: 1;
