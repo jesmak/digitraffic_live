@@ -1,6 +1,7 @@
 {
   "domain": "digitraffic_live",
   "name": "Digitraffic Live",
+  "categories": ["vehicles_transport"],
   "codeowners": ["@jesmak"],
   "config_flow": true,
   "dependencies": ["http", "lovelace"],
