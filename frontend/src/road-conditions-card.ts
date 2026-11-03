@@ -34,16 +34,13 @@ const px = (value: string) => parseFloat(value) || 0;
 const SLACK_PX = 0.01;
 
 /**
- * Whether a line laid out on one line runs past either side of it, as it starts on the right in a right-to-left
- * language. Read from the parts' own boxes, in fractions of a pixel, as scrollWidth and clientWidth are rounded to
- * whole pixels and miss a line less than half a pixel too wide. The rows have no padding or border at their sides.
+ * Whether a line laid out on one line runs past its right side. Read from the parts' own boxes, in fractions of a
+ * pixel, as scrollWidth and clientWidth are rounded to whole pixels and miss a line less than half a pixel too wide.
+ * The rows have no padding or border at their sides.
  */
 function overflows(line: HTMLElement): boolean {
-    const { left, right } = line.getBoundingClientRect();
-    return [...line.children].some((part) => {
-        const box = part.getBoundingClientRect();
-        return box.right > right + SLACK_PX || box.left < left - SLACK_PX;
-    });
+    const { right } = line.getBoundingClientRect();
+    return [...line.children].some((part) => part.getBoundingClientRect().right > right + SLACK_PX);
 }
 
 /**

@@ -193,12 +193,10 @@ describe("texts cut short when held", () => {
 
 describe("a part on a line of its own only when it doesn't fit", () => {
     // happy-dom lays nothing out, so a row is drawn from 0 to WIDTH, and its parts, while the card measures, end where
-    // its width on one line says, and start where `starts` says, past its left side in a right-to-left language. The
-    // meter's labels are LABELS wide together, each at the width given, and the middle one takes nothing while hidden.
+    // its width on one line says. The meter's labels are LABELS wide together, each at the width given, and the middle one takes nothing while hidden.
     const WIDTH = 300;
     const LABELS = 260;
     const natural = new Map<Element, number>();
-    const starts = new Map<Element, number>();
     let measuredSplit = false;
     const own = (name: string) => Object.getOwnPropertyDescriptor(HTMLElement.prototype, name);
     const saved = { clientWidth: own("clientWidth"), getBoundingClientRect: own("getBoundingClientRect") };
@@ -208,7 +206,6 @@ describe("a part on a line of its own only when it doesn't fit", () => {
 
     beforeEach(() => {
         natural.clear();
-        starts.clear();
         measuredSplit = false;
         Object.defineProperty(HTMLElement.prototype, "clientWidth", {
             configurable: true,
@@ -224,7 +221,7 @@ describe("a part on a line of its own only when it doesn't fit", () => {
                 }
                 if (isRow(parent) && measuring(this)) {
                     measuredSplit ||= parent!.classList.contains("split");
-                    return rect(natural.get(parent!) ?? WIDTH, starts.get(parent!) ?? 0);
+                    return rect(natural.get(parent!) ?? WIDTH);
                 }
                 if (this.classList.contains("values")) {
                     return rect(WIDTH);
@@ -367,14 +364,6 @@ describe("a part on a line of its own only when it doesn't fit", () => {
         split(element);
         expect(labels.classList.contains("tight")).toBe(tight);
         vi.restoreAllMocks();
-    });
-
-    it("splits a row that runs past its left side, as one does in a right-to-left language", async () => {
-        const element = await card({ stations: ["station-a", "station-b"] });
-        const rows = [...element.shadowRoot!.querySelectorAll<HTMLElement>(".rows > .row")];
-        starts.set(rows[1], -0.4);
-        split(element);
-        expect(rows.map((row) => row.classList.contains("split"))).toEqual([false, true]);
     });
 
     it.each<[string, Partial<RoadConditionsCardConfig>, string, Readings | undefined, string[]]>([

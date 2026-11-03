@@ -1220,11 +1220,8 @@ var FRAME_PX = 24;
 var px = (value) => parseFloat(value) || 0;
 var SLACK_PX = 0.01;
 function overflows(line) {
-  const { left, right } = line.getBoundingClientRect();
-  return [...line.children].some((part) => {
-    const box = part.getBoundingClientRect();
-    return box.right > right + SLACK_PX || box.left < left - SLACK_PX;
-  });
+  const { right } = line.getBoundingClientRect();
+  return [...line.children].some((part) => part.getBoundingClientRect().right > right + SLACK_PX);
 }
 function valueColumns(widths, room, gap) {
   let best = { columns: 1, wide: widths.map(() => false), lines: widths.length };
