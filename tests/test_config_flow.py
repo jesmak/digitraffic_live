@@ -357,7 +357,8 @@ async def test_adding_a_road_weather_station(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("road_api")
-async def test_adding_a_weather_camera(hass: HomeAssistant) -> None:
+async def test_adding_a_weather_camera(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to("2026-09-15T12:00:00+00:00")
     entry = await setup_entry(hass)
 
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "weather_camera"), context={"source": SOURCE_USER})

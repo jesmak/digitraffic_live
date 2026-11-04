@@ -7,6 +7,8 @@ Digitraffic reports that a new picture has been taken.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.components.image import ImageEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -17,6 +19,11 @@ from homeassistant.util import dt as dt_util
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import DigitrafficConfigEntry, WeatherCameraCoordinator
 from .weather_cameras import IMAGE_URL
+
+# Cameras take a picture about every ten minutes, and Digitraffic deletes pictures after a day and serves an
+# "Image not available" placeholder in their place. A view with no picture for a day has a broken camera, whatever the
+# camera's own state says.
+BROKEN_AFTER = timedelta(hours=24)
 
 
 async def async_setup_entry(
@@ -79,7 +86,8 @@ class CameraImage(CoordinatorEntity[WeatherCameraCoordinator], ImageEntity):
 
     @property
     def available(self) -> bool:
-        return super().available and self._view in self._picture_times()
+        taken = self._attr_image_last_updated
+        return super().available and taken is not None and dt_util.utcnow() - taken < BROKEN_AFTER
 
     @callback
     def _handle_coordinator_update(self) -> None:

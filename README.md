@@ -198,7 +198,8 @@ tells whether the road is dry or wet, and a wet road often still has good grip.
 Add with **Add weather camera** to get the pictures of one camera anywhere in Finland. The camera becomes a device with
 an image entity for each of its views, named after the direction it looks, such as _Imatralle_. Cameras take a new
 picture about every ten minutes, and the image entity updates when they do. New pictures are checked for every 600
-seconds, and **Change weather camera** changes the interval.
+seconds, and **Change weather camera** changes the interval. A view with no new picture for 24 hours is unavailable,
+as its camera is broken, and Digitraffic shows only an "Image not available" placeholder for it by then.
 
 ### Station departures
 

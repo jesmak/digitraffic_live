@@ -6,6 +6,7 @@ from dataclasses import replace
 from types import MappingProxyType
 
 import pytest
+from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry, ConfigSubentryData
 from homeassistant.const import MATCH_ALL, STATE_UNAVAILABLE
@@ -196,7 +197,8 @@ async def test_train_composition_action(hass: HomeAssistant, digitraffic_api: Ai
 
 
 @pytest.mark.usefixtures("road_api")
-async def test_road_feeds_create_sensors(hass: HomeAssistant) -> None:
+async def test_road_feeds_create_sensors(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to("2026-09-15T12:00:00+00:00")
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Digitraffic",
@@ -303,6 +305,16 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant) -> None:
     assert hass.states.get(view).state == "2026-09-15T11:57:33+00:00"
     assert image._cached_image is None, "a new picture replaces the cached one"
     assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_tienpinta").state == STATE_UNAVAILABLE
+
+    # A view with no new picture for a day has a broken camera.
+    freezer.move_to("2026-09-16T11:57:32+00:00")
+    camera.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(view).state == "2026-09-15T11:57:33+00:00"
+    freezer.move_to("2026-09-16T11:57:33+00:00")
+    camera.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(view).state == STATE_UNAVAILABLE
 
 
 STATION_KEYS_ADDED = {"air_temperature", "road_temperature", "wind_speed", "visibility", "road_surface", "grip", "grip_condition"}
