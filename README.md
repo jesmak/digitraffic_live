@@ -3,7 +3,7 @@
 Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds, road
 weather station sensors and railway station departures and arrivals.
 
-[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
+[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains coloured by their delay, road weather stations with their temperatures and a road works site, the list of them beside it with a late train's details open, the departures from Tampere station, and the road conditions at three road weather stations">
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains coloured by their delay, road weather stations with their temperatures and a road works site, the list of them beside it with a late train's details open, the departures from Tampere station, and the road conditions at three road weather stations">
@@ -41,11 +41,12 @@ for the same card.
 
 ## Installation
 
-### With HACS
+### With the Marketplace
 
-1. Search for Digitraffic Live in HACS and download it
-2. Restart Home Assistant
-3. Add the integration in Settings › Devices & services, then add feeds from its page
+1. Open Settings › Marketplace and search for Digitraffic Live
+2. Open it and choose Install
+3. Restart Home Assistant
+4. Add the integration in Settings › Devices & services, then add feeds from its page
 
 ### Manual
 
@@ -482,8 +483,8 @@ cards:
 ## Upgrading from the separate road conditions card
 
 The road conditions card used to be a repository of its own, Road conditions card. It now comes with the integration,
-and the separate repository has been removed. If you installed it, remove it in HACS, and check that its resource
-(`/hacsfiles/road-conditions-card/…`) is gone from Settings › Dashboards › Resources. Until it is, the log warns about
+and the separate repository has been removed. If you installed it, remove it in the Marketplace, and check that its resource
+(`/local/community/road-conditions-card/…`) is gone from Settings › Dashboards › Resources. Until it is, the log warns about
 it at every start. Your dashboards need no changes, as the card's type stays `custom:road-conditions-card`.
 
 ## Data
@@ -579,6 +580,6 @@ MIT, see [LICENSE](LICENSE). The road conditions card's weather icons are under 
 [releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/digitraffic_live?style=for-the-badge
 [releases]: https://github.com/jesmak/digitraffic_live/releases
-[hacs-shield]: https://img.shields.io/badge/HACS-Default-green.svg?style=for-the-badge
-[hacs]: https://my.home-assistant.io/redirect/hacs_repository/?owner=jesmak&repository=digitraffic_live&category=integration
+[marketplace-shield]: https://img.shields.io/badge/Marketplace-Default-green.svg?style=for-the-badge
+[marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=digitraffic_live&category=integration
 [license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge
