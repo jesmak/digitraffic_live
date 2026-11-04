@@ -427,10 +427,11 @@ def test_every_value_has_its_sensors() -> None:
     assert station_values(values) == STATION_KEYS
 
 
-def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
-    def values(**sensors: float) -> dict[str, dict[str, float]]:
-        return {name.replace("DST_ANT", "DST-ANT"): {"value": value} for name, value in sensors.items()}
+def values(**sensors: float) -> dict[str, dict[str, float]]:
+    return {name.replace("DST_ANT", "DST-ANT"): {"value": value} for name, value in sensors.items()}
 
+
+def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
     # Many stations lack sensor 1 and have only sensor 2, or only optical sensors.
     lane_two = station_readings(values(TIE_2=-0.6, KELI_1=0, KELI_2=7, VAROITUS_2=2, KITKA2=0.31))
     assert lane_two == {
@@ -453,10 +454,16 @@ def test_each_value_comes_from_the_first_sensor_that_has_one() -> None:
     assert optical["road_warning"] == "frost"
     assert optical["grip"] is None
     assert optical["grip_condition"] is None
+    assert station_readings(values(NÄKYVYYS_KM=12.0, NÄKYVYYS_M=850))["visibility"] == 12.0
+
+
+def test_precipitation_codes_and_visibility_in_metres_are_read() -> None:
     assert station_readings(values(SADE=5))["precipitation"] == "moderate_snow"
     assert station_readings(values(SATEEN_OLOMUOTO_PWDXX=19))["precipitation_type"] == "freezing_rain"
     assert station_readings(values(NÄKYVYYS_M=850))["visibility"] == 0.85
-    assert station_readings(values(NÄKYVYYS_KM=12.0, NÄKYVYYS_M=850))["visibility"] == 12.0
+
+
+def test_a_station_on_the_map_is_coloured_by_its_road_and_badged_with_its_value() -> None:
     assert station_color(values(TIE_2=-0.6, KELI_2=7)) == "#c62828"
 
     [feature] = build_weather_station_features(

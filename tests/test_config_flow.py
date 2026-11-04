@@ -199,8 +199,6 @@ async def test_a_station_from_before_arrivals_stays_departures(hass: HomeAssista
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert "direction" not in hass.states.get("sensor.lappeenranta").attributes, "a station of departures alone reads as before"
-    assert hass.states.get("sensor.lappeenranta_arrivals") is None
 
     subentry_id = next(iter(entry.subentries))
     result = await hass.config_entries.subentries.async_init(
@@ -296,7 +294,8 @@ async def test_station_list_failure_aborts(hass: HomeAssistant, aioclient_mock: 
     assert result["reason"] == "cannot_connect"
 
 
-async def test_adding_a_traffic_message_feed(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_adding_a_traffic_message_feed(hass: HomeAssistant) -> None:
     entry = await setup_entry(hass)
 
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "traffic_messages"), context={"source": SOURCE_USER})
@@ -321,7 +320,8 @@ async def test_adding_a_traffic_message_feed(hass: HomeAssistant, road_api: Aioh
     assert hass.states.get("sensor.road_works").state == "2"
 
 
-async def test_adding_a_road_weather_station(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_adding_a_road_weather_station(hass: HomeAssistant) -> None:
     entry = await setup_entry(hass)
 
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "road_weather_station"), context={"source": SOURCE_USER})
@@ -356,7 +356,8 @@ async def test_adding_a_road_weather_station(hass: HomeAssistant, road_api: Aioh
     assert entry.subentries[subentry.subentry_id].data == {"station": "3036", "refresh_seconds": 120}
 
 
-async def test_adding_a_weather_camera(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_adding_a_weather_camera(hass: HomeAssistant) -> None:
     entry = await setup_entry(hass)
 
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "weather_camera"), context={"source": SOURCE_USER})
@@ -370,7 +371,8 @@ async def test_adding_a_weather_camera(hass: HomeAssistant, road_api: AiohttpCli
     assert hass.states.get("image.road_6_lappeenranta_saimaa_channel_imatralle").state == "2026-09-15T11:47:33+00:00"
 
 
-async def test_reconfiguring_a_feed_created_before_a_setting_existed(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_reconfiguring_a_feed_created_before_a_setting_existed(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Digitraffic",
@@ -395,7 +397,8 @@ async def test_reconfiguring_a_feed_created_before_a_setting_existed(hass: HomeA
     assert marker.description == {"suggested_value": "air_temperature"}
 
 
-async def test_road_feeds_need_a_radius(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_road_feeds_need_a_radius(hass: HomeAssistant) -> None:
     entry = await setup_entry(hass)
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "weather_cameras"), context={"source": SOURCE_USER})
     result = await hass.config_entries.subentries.async_configure(

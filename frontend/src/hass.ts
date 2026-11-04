@@ -8,14 +8,14 @@ export interface HassEntity {
 }
 
 /** An entity's registry entry as the frontend has it: enough to find a device's sensors by what they are. */
-export interface EntityRegistryEntry {
+interface EntityRegistryEntry {
     entity_id: string;
     device_id?: string | null;
     platform?: string;
     translation_key?: string | null;
 }
 
-export interface DeviceRegistryEntry {
+interface DeviceRegistryEntry {
     id: string;
     name?: string | null;
     name_by_user?: string | null;

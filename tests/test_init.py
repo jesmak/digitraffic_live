@@ -195,7 +195,8 @@ async def test_train_composition_action(hass: HomeAssistant, digitraffic_api: Ai
     assert response == {"details": []}
 
 
-async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpClientMocker) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_road_feeds_create_sensors(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Digitraffic",
@@ -307,9 +308,8 @@ async def test_road_feeds_create_sensors(hass: HomeAssistant, road_api: AiohttpC
 STATION_KEYS_ADDED = {"air_temperature", "road_temperature", "wind_speed", "visibility", "road_surface", "grip", "grip_condition"}
 
 
-async def test_a_station_gets_sensors_only_for_what_it_reports(
-    hass: HomeAssistant, road_api: AiohttpClientMocker, monkeypatch: pytest.MonkeyPatch
-) -> None:
+@pytest.mark.usefixtures("road_api")
+async def test_a_station_gets_sensors_only_for_what_it_reports(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
     # Station 5007's first fetch fails, so it starts with nothing. Its sensors appear as it reports them, each one
     # created once, and a reload starts over.
     entry = MockConfigEntry(

@@ -5,7 +5,7 @@
  */
 export type HeightMode = "auto" | "fixed" | "max";
 
-export const HEIGHT_MODES: HeightMode[] = ["auto", "fixed", "max"];
+const HEIGHT_MODES: HeightMode[] = ["auto", "fixed", "max"];
 
 export interface HeightConfig {
     height_mode?: HeightMode;

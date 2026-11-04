@@ -393,7 +393,7 @@
           "data_description": {
             "name": "Myös sensorin nimi.",
             "direction": "Molemmat luo kaksi sensoria, toisen lähtevistä ja toisen saapuvista junista. Ei muutettavissa lisäämisen jälkeen.",
-            "stops_at": "Vain junat, jotka pysähtyvät myöhemmin tällä asemalla, esim. Helsingistä vain Lappeenrantaan kulkevat. Rajaa vain lähteviä junia. Jätä tyhjäksi, niin kaikki kohdeasemalla pysähtyvät junat näytetään.",
+            "stops_at": "Vain junat, jotka pysähtyvät myöhemmin tällä asemalla, esim. Helsingistä vain Lappeenrantaan kulkevat. Rajaa vain lähteviä junia. Jätä tyhjäksi, niin mukana ovat kaikki.",
             "departures": "Kuinka monta seuraavaa junaa kukin sensori listaa, 1–20. Perutut vuorot niiden välissä näkyvät lisäksi, ja saapuvissa näytetään enintään kaksi viimeisintä saapunutta tai peruttua."
           }
         },
@@ -551,12 +551,12 @@
         "crack_filling": "Päällysteiden juotostyöt",
         "ditching": "Ojitus",
         "dust_binding_of_gravel_road_surface": "Sorateiden pölynsidonta",
-        "dust_binding_of_paved_road_surface": "Paallystetyn tien polynsidonta",
+        "dust_binding_of_paved_road_surface": "Päällystetyn tien pölynsidonta",
         "ensuring_traffic_in_rasputitsa": "Liikenteen varmistaminen kelirikkokohteessa",
         "filling_of_gravel_road_shoulders": "Sorapientareen täyttö",
         "filling_of_road_shoulders": "Päällystetyn tien sorapientareen täyttö",
         "garbage_ollection": "Roskien keruu",
-        "group_replacement_of_lamps": "Valaisimien ryhmavaihto",
+        "group_replacement_of_lamps": "Valaisimien ryhmävaihto",
         "heating": "Kuumennus",
         "levelling_gravel_road_surface": "Sorateiden tasaus",
         "levelling_of_road_shoulders": "Palteen poisto",

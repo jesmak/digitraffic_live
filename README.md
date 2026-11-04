@@ -486,13 +486,6 @@ and the separate repository has been removed. If you installed it, remove it in 
 (`/hacsfiles/road-conditions-card/…`) is gone from Settings › Dashboards › Resources. Until it is, the log warns about
 it at every start. Your dashboards need no changes, as the card's type stays `custom:road-conditions-card`.
 
-## Upgrading from 1.0
-
-Nothing is required. Road weather stations get the new sensors (grip condition, wind, precipitation and visibility) for
-the values the station reports, from the next restart on, and entity IDs and attributes carry over. Swedish is no longer
-one of the integration's languages. An integration set to Swedish is switched to English when it starts, and can be set
-to Finnish in its settings.
-
 ## Data
 
 Traffic data: [Fintraffic / digitraffic.fi](https://www.digitraffic.fi/), licensed under
@@ -554,6 +547,7 @@ commit whose built card doesn't match `frontend/`, run `git config core.hooksPat
 | `sensor.py`                                                                                                | The feed sensors and road weather station sensors                           |
 | `image.py`                                                                                                 | Weather camera image entities                                               |
 | `ships.py`, `trains.py`                                                                                    | Interpreting Digitraffic data and building feed items                       |
+| `station_departures.py`                                                                                    | Railway station departures and arrivals in the departures format            |
 | `traffic_messages.py`, `maintenance.py`, `road_conditions.py`, `weather_stations.py`, `weather_cameras.py` | The same for road data                                                      |
 | `geo.py`                                                                                                   | Areas, geometry tests and line simplification                               |
 | `cache.py`                                                                                                 | Caching station details                                                     |

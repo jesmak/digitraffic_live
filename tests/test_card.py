@@ -12,8 +12,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.digitraffic_live.const import CONF_LANGUAGE, DOMAIN
 
-pytestmark = pytest.mark.asyncio
-
 CARD = "/digitraffic_live/road-conditions-card.js"
 OLD = f"{CARD}?v=1.3.0"
 OLDER = f"{CARD}?v=1.2.0"

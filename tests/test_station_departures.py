@@ -126,6 +126,14 @@ def test_a_trains_own_passenger_notice_comes_before_its_cause() -> None:
     assert departure["notice"] == "Passengers are directed to train S 103."
 
 
+@pytest.mark.parametrize(("station", "expected"), [("LR", None), ("JNS", "Replaced by bus.")])
+def test_a_trains_own_notice_is_on_its_arrival_only_where_it_ends(station: str, expected: str | None) -> None:
+    config = StationDeparturesConfig.from_data({"station": station, "direction": "arrivals"})
+    notices = {"1|2026-10-04": ["Replaced by bus."]}
+    [found] = build_arrivals([through(1, "2026-10-04T15:20:00.000Z")], config, NAMES, notices, load_texts("en"), ARRIVALS_NOW)
+    assert found.get("notice") == expected
+
+
 def test_station_notices_count_only_within_their_validity() -> None:
     def message(stations: list[str], start: str, end: str, text: str) -> dict:
         return {"stations": stations, "startValidity": start, "endValidity": end, "video": {"text": {"fi": text}}}

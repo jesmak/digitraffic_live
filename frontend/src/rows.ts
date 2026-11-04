@@ -9,13 +9,13 @@
 import { heightMode, heightStyle } from "./height";
 import type { HeightConfig } from "./height";
 
-export type RowStep = "full" | "half";
+type RowStep = "full" | "half";
 
-export const ROW_STEPS: RowStep[] = ["full", "half"];
+const ROW_STEPS: RowStep[] = ["full", "half"];
 
 /** A row of a sections view with the gap under it, and the gap alone. */
-export const ROW_PX = 64;
-export const ROW_GAP_PX = 8;
+const ROW_PX = 64;
+const ROW_GAP_PX = 8;
 
 export interface RowStepConfig extends HeightConfig {
     row_step?: RowStep | null;

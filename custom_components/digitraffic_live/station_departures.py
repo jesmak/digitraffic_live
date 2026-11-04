@@ -215,7 +215,8 @@ def build_arrival(
         "platform": track or None,
         "cancelled": cancelled or None,
         "arrived": (actual is not None and not cancelled) or None,
-        "notice": departure_notice(train, rows, index, cancelled, delay, train_notices, texts),
+        # A train's own notice is on its departure, so a train that goes on from here has it there.
+        "notice": departure_notice(train, rows, index, cancelled, delay, train_notices if index == len(rows) - 1 else {}, texts),
     }
     return {key: value for key, value in arrival.items() if value is not None}
 
