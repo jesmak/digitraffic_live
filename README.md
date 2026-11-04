@@ -43,10 +43,9 @@ for the same card.
 
 ### With HACS
 
-1. Add this repository to HACS custom repositories with type **Integration**
-2. Search for Digitraffic Live in HACS and download it
-3. Restart Home Assistant
-4. Add the integration in Settings › Devices & services, then add feeds from its page
+1. Search for Digitraffic Live in HACS and download it
+2. Restart Home Assistant
+3. Add the integration in Settings › Devices & services, then add feeds from its page
 
 ### Manual
 
@@ -580,6 +579,6 @@ MIT, see [LICENSE](LICENSE). The road conditions card's weather icons are under 
 [releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/digitraffic_live?style=for-the-badge
 [releases]: https://github.com/jesmak/digitraffic_live/releases
-[hacs-shield]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[hacs]: https://hacs.xyz/docs/faq/custom_repositories/
+[hacs-shield]: https://img.shields.io/badge/HACS-Default-green.svg?style=for-the-badge
+[hacs]: https://my.home-assistant.io/redirect/hacs_repository/?owner=jesmak&repository=digitraffic_live&category=integration
 [license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge
