@@ -17,7 +17,7 @@ import { ScrollFade, fadeStyles } from "./fade";
 import type { HassEntity, HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
 import { browserLanguage, translate } from "./localize/localize";
-import { fillLimit, filledHeight, filledStyle, validRowStep } from "./rows";
+import { drawnScale, fillLimit, filledHeight, filledStyle, spareRoom, validRowStep } from "./rows";
 import { precipitation, reading, scale, showGusts, stationDevices, stationName, stationSensors, stationsOf } from "./stations";
 import type { RoadConditionsCardConfig, StationConfig } from "./types";
 import { WEATHER_ICONS } from "./weather-icons";
@@ -272,19 +272,20 @@ export class RoadConditionsCard extends LitElement {
         labels?.classList.remove("tight");
         card.toggleAttribute("data-measuring", true);
         const over = rows.map(overflows);
+        // Drawn widths unscaled, as the gaps they are compared with are the layout's.
+        const scale = drawnScale(card);
+        const drawnWidth = (element: Element) => element.getBoundingClientRect().width / scale;
         const cells = [...(values?.children ?? [])] as HTMLElement[];
-        const widths = cells.map((value) => value.getBoundingClientRect().width);
+        const widths = cells.map(drawnWidth);
         // Each end label has half of what the middle one and the gaps beside it leave.
-        const [start, middle, end] = [...(labels?.children ?? [])].map((label) => label.getBoundingClientRect().width);
-        const tight =
-            !!labels &&
-            Math.max(start, end) > (labels.getBoundingClientRect().width - middle - 2 * px(getComputedStyle(labels).columnGap)) / 2;
+        const [start, middle, end] = [...(labels?.children ?? [])].map(drawnWidth);
+        const tight = !!labels && Math.max(start, end) > (drawnWidth(labels) - middle - 2 * px(getComputedStyle(labels).columnGap)) / 2;
         card.toggleAttribute("data-measuring", false);
         rows.forEach((row, index) => row.classList.toggle("split", over[index]));
         labels?.classList.toggle("tight", tight);
         if (values && cells.length) {
             // Its drawn width in fractions of a pixel, as clientWidth's whole pixels can promise a column more than it has.
-            const room = values.getBoundingClientRect().width;
+            const room = drawnWidth(values);
             const { columns, wide } = valueColumns(widths, room, px(getComputedStyle(values).columnGap));
             values.style.setProperty("--value-columns", String(columns));
             cells.forEach((value, index) => (value.style.gridColumn = wide[index] ? "span 2" : ""));
@@ -319,19 +320,19 @@ export class RoadConditionsCard extends LitElement {
             return;
         }
         const style = getComputedStyle(card);
+        // The drawn distance unscaled, as the margin, padding and border added to it are the layout's.
         let content =
-            last.getBoundingClientRect().bottom +
-            px(getComputedStyle(last).marginBottom) -
-            card.getBoundingClientRect().top +
+            (last.getBoundingClientRect().bottom - card.getBoundingClientRect().top) / drawnScale(card) +
+            px(getComputedStyle(last).marginBottom) +
             px(style.paddingBottom) +
             px(style.borderBottomWidth);
         // The spare room as drawn now.
         const below = card.querySelector<HTMLElement>(".spare");
         const above = card.querySelector<HTMLElement>(".spare-top");
         content -= (below ? px(getComputedStyle(below).paddingBottom) : 0) + (above ? px(getComputedStyle(above).paddingTop) : 0);
-        const filled = filledHeight(Math.round(content), this.config ?? {}, limit);
+        const filled = filledHeight(content, this.config ?? {}, limit);
         this.filled = filled;
-        this.spare = Math.max(0, Math.floor(filled - content));
+        this.spare = spareRoom(filled, content);
     }
 
     /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. */

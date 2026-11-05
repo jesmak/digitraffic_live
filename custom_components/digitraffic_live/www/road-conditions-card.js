@@ -851,8 +851,17 @@ function validRowStep(config) {
   return config.row_step === void 0 || config.row_step === null || ROW_STEPS.includes(config.row_step);
 }
 var step = (config) => config.row_step === "half" ? ROW_PX / 2 : ROW_PX;
+var SLACK_PX = 0.01;
+function drawnScale(card) {
+  const layout = Number.parseFloat(getComputedStyle(card).width) || 0;
+  const drawn = card.getBoundingClientRect().width;
+  return layout > 0 && drawn > 0 ? drawn / layout : 1;
+}
 function filledHeight(content, config, limit = Infinity) {
-  return Math.min(Math.max(1, Math.ceil((content + ROW_GAP_PX) / step(config))) * step(config) - ROW_GAP_PX, limit);
+  return Math.min(Math.max(1, Math.ceil((content - SLACK_PX + ROW_GAP_PX) / step(config))) * step(config) - ROW_GAP_PX, limit);
+}
+function spareRoom(filled, content) {
+  return Math.max(0, Math.floor(filled - content + SLACK_PX));
 }
 function fillLimit(config, layout, minimum = 0) {
   const rows = config.grid_options ? config.grid_options.rows : config.layout_options?.grid_rows;
@@ -1189,19 +1198,19 @@ var WEATHER_ICONS = {
 var STEP_PX = 32;
 var FRAME_PX = 24;
 var px = (value) => parseFloat(value) || 0;
-var SLACK_PX = 0.01;
+var SLACK_PX2 = 0.01;
 function overflows(line) {
   const { right } = line.getBoundingClientRect();
-  return [...line.children].some((part) => part.getBoundingClientRect().right > right + SLACK_PX);
+  return [...line.children].some((part) => part.getBoundingClientRect().right > right + SLACK_PX2);
 }
 function valueColumns(widths, room, gap) {
   let best = { columns: 1, wide: widths.map(() => false), lines: widths.length };
   for (let columns = 2; columns <= widths.length; columns++) {
     const column = (room - (columns - 1) * gap) / columns;
-    if (widths.some((width) => width > 2 * column + gap + SLACK_PX)) {
+    if (widths.some((width) => width > 2 * column + gap + SLACK_PX2)) {
       continue;
     }
-    const wide = widths.map((width) => width > column + SLACK_PX);
+    const wide = widths.map((width) => width > column + SLACK_PX2);
     let lines = 1;
     let used = 0;
     for (const span of wide.map((two) => two ? 2 : 1)) {
@@ -1353,15 +1362,17 @@ var RoadConditionsCard = class extends i4 {
     labels?.classList.remove("tight");
     card.toggleAttribute("data-measuring", true);
     const over = rows.map(overflows);
+    const scale2 = drawnScale(card);
+    const drawnWidth = (element) => element.getBoundingClientRect().width / scale2;
     const cells = [...values?.children ?? []];
-    const widths = cells.map((value) => value.getBoundingClientRect().width);
-    const [start, middle, end] = [...labels?.children ?? []].map((label) => label.getBoundingClientRect().width);
-    const tight = !!labels && Math.max(start, end) > (labels.getBoundingClientRect().width - middle - 2 * px(getComputedStyle(labels).columnGap)) / 2;
+    const widths = cells.map(drawnWidth);
+    const [start, middle, end] = [...labels?.children ?? []].map(drawnWidth);
+    const tight = !!labels && Math.max(start, end) > (drawnWidth(labels) - middle - 2 * px(getComputedStyle(labels).columnGap)) / 2;
     card.toggleAttribute("data-measuring", false);
     rows.forEach((row, index) => row.classList.toggle("split", over[index]));
     labels?.classList.toggle("tight", tight);
     if (values && cells.length) {
-      const room = values.getBoundingClientRect().width;
+      const room = drawnWidth(values);
       const { columns, wide } = valueColumns(widths, room, px(getComputedStyle(values).columnGap));
       values.style.setProperty("--value-columns", String(columns));
       cells.forEach((value, index) => value.style.gridColumn = wide[index] ? "span 2" : "");
@@ -1393,13 +1404,13 @@ var RoadConditionsCard = class extends i4 {
       return;
     }
     const style = getComputedStyle(card);
-    let content = last.getBoundingClientRect().bottom + px(getComputedStyle(last).marginBottom) - card.getBoundingClientRect().top + px(style.paddingBottom) + px(style.borderBottomWidth);
+    let content = (last.getBoundingClientRect().bottom - card.getBoundingClientRect().top) / drawnScale(card) + px(getComputedStyle(last).marginBottom) + px(style.paddingBottom) + px(style.borderBottomWidth);
     const below = card.querySelector(".spare");
     const above = card.querySelector(".spare-top");
     content -= (below ? px(getComputedStyle(below).paddingBottom) : 0) + (above ? px(getComputedStyle(above).paddingTop) : 0);
-    const filled = filledHeight(Math.round(content), this.config ?? {}, limit);
+    const filled = filledHeight(content, this.config ?? {}, limit);
     this.filled = filled;
-    this.spare = Math.max(0, Math.floor(filled - content));
+    this.spare = spareRoom(filled, content);
   }
   /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. */
   cardStyle() {

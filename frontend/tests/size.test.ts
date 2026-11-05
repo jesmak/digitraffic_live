@@ -19,28 +19,36 @@ function one(element: Element, selector: string): HTMLElement {
     return element.shadowRoot!.querySelector<HTMLElement>(selector)!;
 }
 
-// happy-dom lays nothing out, so each part is given the box it would have, measured from the card's top.
-function box(target: Element, top: number, bottom: number): void {
-    target.getBoundingClientRect = () => ({ top, bottom, height: bottom - top, width: 300 }) as DOMRect;
+// happy-dom lays nothing out, so each part is given the box it would have, measured from the card's top, drawn at `scale`.
+function box(target: Element, top: number, bottom: number, scale = 1): void {
+    target.getBoundingClientRect = () =>
+        ({ top: top * scale, bottom: bottom * scale, height: (bottom - top) * scale, width: 300 * scale }) as DOMRect;
 }
 
-/** Gives the card a width and its last part a box ending at `end`. */
-function laidOut(element: RoadConditionsCard, end: number): void {
+/** Gives the card a width and its last part a box ending at `end`, drawn at `scale` as a dialog opening draws the card. */
+function laidOut(element: RoadConditionsCard, end: number, scale = 1): void {
     const haCard = one(element, "ha-card");
     Object.defineProperty(haCard, "clientWidth", { value: 300, configurable: true });
-    box(haCard, 0, 56);
+    box(haCard, 0, 56, scale);
     const parts = haCard.querySelectorAll(":scope > .card-title, :scope > .name, :scope > .station > *, :scope > .rows > .row");
-    box(parts[parts.length - 1], end - 32, end);
+    box(parts[parts.length - 1], end - 32, end, scale);
 }
 
 function style(element: RoadConditionsCard): string {
     return one(element, "ha-card").getAttribute("style") ?? "";
 }
 
-/** Lays the card out with its last part ending at `end`, fills its rows and returns its style. */
-async function filled(element: RoadConditionsCard, end: number): Promise<string> {
-    laidOut(element, end);
+/** Lays the card out with its last part ending at `end`, drawn at `scale`, fills its rows and returns its style. */
+async function filled(element: RoadConditionsCard, end: number, scale = 1): Promise<string> {
+    laidOut(element, end, scale);
+    // The width it is laid out at, which a scale doesn't change.
+    const haCard = one(element, "ha-card");
+    const computed = window.getComputedStyle;
+    vi.spyOn(window, "getComputedStyle").mockImplementation((target, pseudo) =>
+        target === haCard ? ({ ...computed(target, pseudo), width: "300px" } as CSSStyleDeclaration) : computed(target, pseudo),
+    );
     (element as unknown as { fillRows(): void }).fillRows();
+    vi.restoreAllMocks();
     await element.updateComplete;
     return style(element);
 }
@@ -56,6 +64,19 @@ describe("filling the rows of a sections view", () => {
         ["half rows", { row_step: "half" as const }, "min-height: 152px; --spare: 2px"],
     ])("on automatic rows, ends on %s", async (_name, config, style) => {
         expect(await filled(await card(config, "grid"), 139)).toBe(style);
+    });
+
+    // The content is 120.4 px, a fraction over two rows, and then 216 px drawn at 0.8.
+    it.each([
+        ["takes the next row for a content a fraction of a pixel over one", 109.4, 1, "min-height: 184px; --spare: 63px"],
+        [
+            "measures a card drawn scaled, as a dialog opening draws it, in the layout's pixels",
+            205,
+            0.8,
+            "min-height: 248px; --spare: 32px",
+        ],
+    ])("%s", async (_name, end, scale, style) => {
+        expect(await filled(await card({}, "grid"), end, scale)).toBe(style);
     });
 
     it.each<[string, Partial<RoadConditionsCardConfig>, string, string]>([
@@ -330,6 +351,29 @@ describe("a part on a line of its own only when it doesn't fit", () => {
         });
         split(element);
         expect(cells.map((value) => value.style.gridColumn)).toEqual(["", "span 2", "", "", "", ""]);
+    });
+
+    it("works the columns out in the layout's pixels when drawn scaled, as a dialog opening draws the card", async () => {
+        const element = await card();
+        const haCard = one(element, "ha-card");
+        const values = one(element, ".values");
+        // At 0.8: values of 146 px in 300 px fit two columns with the 8 px gap, which their drawn 116.8 px in 240 would not.
+        haCard.getBoundingClientRect = () => rect(300 * 0.8);
+        values.getBoundingClientRect = () => rect(300 * 0.8);
+        for (const value of values.children) {
+            (value as HTMLElement).getBoundingClientRect = () => ({ width: measuring(value) ? 146 * 0.8 : 10 }) as DOMRect;
+        }
+        const real = window.getComputedStyle.bind(window);
+        vi.spyOn(window, "getComputedStyle").mockImplementation((target, pseudo) =>
+            target === haCard
+                ? ({ ...real(target, pseudo), width: "300px" } as CSSStyleDeclaration)
+                : target === values
+                  ? ({ ...real(target, pseudo), columnGap: "8px" } as CSSStyleDeclaration)
+                  : real(target, pseudo),
+        );
+        split(element);
+        vi.restoreAllMocks();
+        expect(values.style.getPropertyValue("--value-columns")).toBe("2");
     });
 
     it("puts a value on two columns when it is too wide for one", async () => {
