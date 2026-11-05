@@ -3,7 +3,7 @@
 Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds, road
 weather station sensors and railway station departures and arrivals.
 
-[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
+[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Downloads][downloads-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains coloured by their delay, road weather stations with their temperatures and a road works site, the list of them beside it with a late train's details open, the departures from Tampere station, and the road conditions at three road weather stations">
 <img src="https://raw.githubusercontent.com/jesmak/digitraffic_live/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1280" alt="A dashboard around Tampere, with a map of trains coloured by their delay, road weather stations with their temperatures and a road works site, the list of them beside it with a late train's details open, the departures from Tampere station, and the road conditions at three road weather stations">
@@ -580,6 +580,7 @@ MIT, see [LICENSE](LICENSE). The road conditions card's weather icons are under 
 [releases-shield]: https://img.shields.io/github/release/jesmak/digitraffic_live.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/digitraffic_live?style=for-the-badge
 [releases]: https://github.com/jesmak/digitraffic_live/releases
+[downloads-shield]: https://img.shields.io/github/downloads/jesmak/digitraffic_live/total.svg?style=for-the-badge
 [marketplace-shield]: https://img.shields.io/badge/Marketplace-Default-green.svg?style=for-the-badge
 [marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=digitraffic_live&category=integration
 [license-shield]: https://img.shields.io/github/license/jesmak/digitraffic_live.svg?style=for-the-badge

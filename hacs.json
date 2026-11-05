@@ -1,6 +1,8 @@
 {
   "name": "Digitraffic Live",
   "render_readme": true,
+  "zip_release": true,
+  "filename": "digitraffic_live.zip",
   "country": "FI",
   "homeassistant": "2026.9.3"
 }
