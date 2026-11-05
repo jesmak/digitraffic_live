@@ -578,6 +578,8 @@ export class RoadConditionsCard extends LitElement {
                  * adds a step a line, while a value or the warning that wraps keeps its lines together instead.
                  */
                 ha-card {
+                    /* ha-card's own transition covers every property, so a change in the rows filled would animate. */
+                    transition: none;
                     padding: 11px 16px;
                     font-variant-numeric: tabular-nums;
                     --road-very-slippery: var(--road-conditions-very-slippery-color, var(--error-color, #db4437));

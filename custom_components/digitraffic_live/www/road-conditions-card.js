@@ -1,4 +1,4 @@
-/*! road-conditions-card 1.5.1 | MIT License | Includes Weather Icons by Erik Flowers, SIL OFL 1.1, see https://github.com/jesmak/digitraffic_live/blob/main/LICENSE-weather-icons */
+/*! road-conditions-card 1.5.2 | MIT License | Includes Weather Icons by Erik Flowers, SIL OFL 1.1, see https://github.com/jesmak/digitraffic_live/blob/main/LICENSE-weather-icons */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -597,7 +597,7 @@ function r5(r6) {
 }
 
 // src/const.ts
-var CARD_VERSION = "1.5.1";
+var CARD_VERSION = "1.5.2";
 var PLATFORM = "digitraffic_live";
 var SENSORS = [
   "road_temperature",
@@ -1607,6 +1607,8 @@ var RoadConditionsCard = class extends i4 {
                  * adds a step a line, while a value or the warning that wraps keeps its lines together instead.
                  */
                 ha-card {
+                    /* ha-card's own transition covers every property, so a change in the rows filled would animate. */
+                    transition: none;
                     padding: 11px 16px;
                     font-variant-numeric: tabular-nums;
                     --road-very-slippery: var(--road-conditions-very-slippery-color, var(--error-color, #db4437));
