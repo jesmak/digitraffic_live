@@ -55,6 +55,7 @@ from .const import (
     CONF_MESSAGE_TYPES,
     CONF_ONLY_POOR,
     CONF_REFRESH_SECONDS,
+    CONF_RESTRICTION_TYPES,
     CONF_ROUTE,
     CONF_ROUTE_HOURS,
     CONF_SHIP_TYPES,
@@ -74,6 +75,7 @@ from .const import (
     DEFAULT_TRAFFIC_MESSAGE_REFRESH_SECONDS,
     DEFAULT_TRAIN_MAX_AGE_MINUTES,
     DEFAULT_UPCOMING_DAYS,
+    DEFAULT_WATER_RESTRICTION_REFRESH_SECONDS,
     DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
     DEFAULT_WEATHER_STATION_REFRESH_SECONDS,
     DIRECTION_DEPARTURES,
@@ -90,6 +92,7 @@ from .const import (
     SUBENTRY_STATION_DEPARTURES,
     SUBENTRY_TRAFFIC_MESSAGES,
     SUBENTRY_TRAINS,
+    SUBENTRY_WATER_RESTRICTIONS,
     SUBENTRY_WEATHER_CAMERA,
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
@@ -99,6 +102,7 @@ from .road_conditions import FORECAST_TIMES
 from .ships import SHIP_TYPES
 from .traffic_messages import MESSAGE_TYPES
 from .trains import TRAIN_CATEGORIES, station_name
+from .water_restrictions import RESTRICTION_TYPES
 from .weather_cameras import camera_options
 from .weather_stations import DEFAULT_MARKER_VALUE, MARKER_VALUES, station_options
 
@@ -107,6 +111,7 @@ DEFAULT_TRAIN_RADIUS_M = 30_000
 DEFAULT_ROAD_RADIUS_M = 30_000
 DEFAULT_ROAD_CONDITION_RADIUS_M = 50_000
 DEFAULT_NAUTICAL_WARNING_RADIUS_M = 50_000
+DEFAULT_WATER_RESTRICTION_RADIUS_M = 30_000
 
 MAX_AGE_SELECTOR = NumberSelector(NumberSelectorConfig(min=1, max=240, step=1, unit_of_measurement="min", mode=NumberSelectorMode.BOX))
 REFRESH_SELECTOR = NumberSelector(
@@ -155,6 +160,7 @@ class DigitrafficLiveConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_WEATHER_STATIONS: WeatherStationFeedFlow,
             SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedFlow,
             SUBENTRY_NAUTICAL_WARNINGS: NauticalWarningFeedFlow,
+            SUBENTRY_WATER_RESTRICTIONS: WaterRestrictionFeedFlow,
             SUBENTRY_STATION_DEPARTURES: StationDeparturesFlow,
             SUBENTRY_ROAD_WEATHER_STATION: RoadWeatherStationFlow,
             SUBENTRY_WEATHER_CAMERA: WeatherCameraFlow,
@@ -532,6 +538,26 @@ class NauticalWarningFeedFlow(AreaFeedFlow):
         return {
             CONF_AREA: self.home_area(DEFAULT_NAUTICAL_WARNING_RADIUS_M),
             CONF_REFRESH_SECONDS: DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS,
+        }
+
+
+class WaterRestrictionFeedFlow(AreaFeedFlow):
+    async def async_schema(self) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Required(CONF_NAME): TextSelector(),
+                vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:speedometer-slow")),
+                vol.Optional(CONF_RESTRICTION_TYPES): SelectSelector(
+                    SelectSelectorConfig(options=list(RESTRICTION_TYPES), multiple=True, translation_key=CONF_RESTRICTION_TYPES)
+                ),
+                vol.Required(CONF_REFRESH_SECONDS): REFRESH_SELECTOR,
+            }
+        )
+
+    def defaults(self) -> dict[str, Any]:
+        return {
+            CONF_AREA: self.home_area(DEFAULT_WATER_RESTRICTION_RADIUS_M),
+            CONF_REFRESH_SECONDS: DEFAULT_WATER_RESTRICTION_REFRESH_SECONDS,
         }
 
 

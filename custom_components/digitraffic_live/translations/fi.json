@@ -412,6 +412,50 @@
         "reconfigure_successful": "Syöte tallennettu."
       }
     },
+    "water_restrictions": {
+      "entry_type": "Vesiliikenteen rajoitussyöte",
+      "initiate_flow": {
+        "user": "Lisää vesiliikenteen rajoitussyöte",
+        "reconfigure": "Muokkaa vesiliikenteen rajoitussyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Vesiliikenteen rajoitussyöte",
+          "description": "Väyläviraston pysyvät vesiliikenteen rajoitusalueet, jotka osuvat alueelle, kuten nopeusrajoitukset, aallokon aiheuttamisen kiellot ja moottorilla kulkemisen kiellot, merellä ja sisävesillä. Niiden lisätiedot ja poikkeukset julkaistaan suomeksi.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "restriction_types": "Rajoitustyypit",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "restriction_types": "Jätä tyhjäksi, niin mukana ovat kaikki tyypit. Alue, jolla on useita rajoituksia, on mukana, kun yksi niistä on valittu."
+          }
+        },
+        "reconfigure": {
+          "title": "Vesiliikenteen rajoitussyöte",
+          "description": "Väyläviraston pysyvät vesiliikenteen rajoitusalueet, jotka osuvat alueelle, kuten nopeusrajoitukset, aallokon aiheuttamisen kiellot ja moottorilla kulkemisen kiellot, merellä ja sisävesillä. Niiden lisätiedot ja poikkeukset julkaistaan suomeksi.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "restriction_types": "Rajoitustyypit",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi.",
+            "restriction_types": "Jätä tyhjäksi, niin mukana ovat kaikki tyypit. Alue, jolla on useita rajoituksia, on mukana, kun yksi niistä on valittu."
+          }
+        }
+      },
+      "error": {
+        "name_required": "Nimi ei voi olla tyhjä.",
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
     "station_departures": {
       "entry_type": "Aseman lähdöt",
       "initiate_flow": {
@@ -634,6 +678,20 @@
       "options": {
         "air_temperature": "Ilman lämpötila",
         "road_temperature": "Tien lämpötila"
+      }
+    },
+    "restriction_types": {
+      "options": {
+        "speed_limit": "Nopeusrajoitukset",
+        "no_wake": "Aallokon aiheuttamisen kiellot",
+        "no_motor_vessels": "Moottorilla kulkemisen kiellot",
+        "power_limit": "Tehorajoitukset",
+        "no_jet_skis": "Vesiskootterikiellot",
+        "no_water_skiing": "Vesihiihtokiellot",
+        "no_windsurfing": "Purjelautailukiellot",
+        "no_anchoring": "Ankkurin käyttökiellot",
+        "no_berthing": "Pysäköimiskiellot",
+        "other": "Muut rajoitukset"
       }
     },
     "direction": {

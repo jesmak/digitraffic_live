@@ -8,6 +8,8 @@ DOMAIN: Final = "digitraffic_live"
 ATTRIBUTION: Final = "Fintraffic / digitraffic.fi, CC BY 4.0"
 # The nautical warnings are Traficom's, under the same licence.
 TRAFICOM_ATTRIBUTION: Final = "Traficom, CC BY 4.0"
+# The water restriction areas are the Finnish Transport Infrastructure Agency's, under the same licence.
+VAYLAVIRASTO_ATTRIBUTION: Final = "Väylävirasto, CC BY 4.0"
 
 # Version of the Map Feed format the sensors write (docs/map-feed-format.md in map-feed-card).
 MAP_FEED_VERSION: Final = 1
@@ -30,6 +32,7 @@ SUBENTRY_ROAD_CONDITIONS: Final = "road_conditions"
 SUBENTRY_WEATHER_STATIONS: Final = "weather_stations"
 SUBENTRY_WEATHER_CAMERAS: Final = "weather_cameras"
 SUBENTRY_NAUTICAL_WARNINGS: Final = "nautical_warnings"
+SUBENTRY_WATER_RESTRICTIONS: Final = "water_restrictions"
 # The next departures from one railway station, as a departures sensor rather than a map feed
 SUBENTRY_STATION_DEPARTURES: Final = "station_departures"
 # A single road weather station or camera, which becomes a device with its own entities
@@ -54,6 +57,7 @@ CONF_ROUTE_HOURS: Final = "route_hours"
 CONF_FORECAST: Final = "forecast"
 CONF_ONLY_POOR: Final = "only_poor"
 CONF_MARKER_VALUE: Final = "marker_value"
+CONF_RESTRICTION_TYPES: Final = "restriction_types"
 
 # Road weather station and camera settings (config subentry data)
 CONF_STATION: Final = "station"
@@ -88,6 +92,8 @@ DEFAULT_ROAD_CONDITION_REFRESH_SECONDS: Final = 600
 DEFAULT_WEATHER_STATION_REFRESH_SECONDS: Final = 300
 DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS: Final = 600
 DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS: Final = 600
+# The restriction areas are standing decisions that rarely change.
+DEFAULT_WATER_RESTRICTION_REFRESH_SECONDS: Final = 3600
 
 DEFAULT_DEPARTURES: Final = 5
 MAX_DEPARTURES: Final = 20

@@ -42,6 +42,7 @@ from .const import (
     SUBENTRY_STATION_DEPARTURES,
     SUBENTRY_TRAFFIC_MESSAGES,
     SUBENTRY_TRAINS,
+    SUBENTRY_WATER_RESTRICTIONS,
     SUBENTRY_WEATHER_CAMERA,
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
@@ -62,6 +63,7 @@ from .station_departures import (
 from .texts import Texts
 from .traffic_messages import TrafficMessageFeedConfig, build_traffic_message_features, fetch_traffic_messages
 from .trains import PassengerNotices, TrainFeedConfig, build_train_features, build_train_query
+from .water_restrictions import WaterRestrictionFeedConfig, build_water_restriction_features
 from .weather_cameras import (
     WeatherCameraFeedConfig,
     build_weather_camera_features,
@@ -354,6 +356,27 @@ class NauticalWarningFeedCoordinator(FeedCoordinator):
         return build_nautical_warning_features(warnings, self.runtime.texts)
 
 
+class WaterRestrictionFeedCoordinator(FeedCoordinator):
+    def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
+        super().__init__(hass, entry, subentry)
+        self.feed_config = WaterRestrictionFeedConfig.from_data(subentry.data)
+
+    @property
+    def area(self) -> Area | None:
+        return self.feed_config.area
+
+    async def _async_fetch_features(self) -> list[dict[str, Any]]:
+        response = await self.runtime.client.water_restrictions(self.feed_config.area.bbox())
+        # A large area has hundreds of shoreline polygons to test and simplify.
+        return await self.hass.async_add_executor_job(
+            build_water_restriction_features, response, self.feed_config, self.runtime.texts, dt_util.now().date()
+        )
+
+    def count(self, features: list[dict[str, Any]]) -> int | None:
+        # The areas are outlines without a point of their own.
+        return len(features)
+
+
 @dataclass(frozen=True)
 class StationDepartures:
     station: str
@@ -470,6 +493,7 @@ COORDINATORS: dict[str, type[SubentryCoordinator[Any]]] = {
     SUBENTRY_WEATHER_STATIONS: WeatherStationFeedCoordinator,
     SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedCoordinator,
     SUBENTRY_NAUTICAL_WARNINGS: NauticalWarningFeedCoordinator,
+    SUBENTRY_WATER_RESTRICTIONS: WaterRestrictionFeedCoordinator,
     SUBENTRY_STATION_DEPARTURES: StationDeparturesCoordinator,
     SUBENTRY_ROAD_WEATHER_STATION: WeatherStationCoordinator,
     SUBENTRY_WEATHER_CAMERA: WeatherCameraCoordinator,

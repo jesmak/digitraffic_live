@@ -412,6 +412,50 @@
         "reconfigure_successful": "Feed saved."
       }
     },
+    "water_restrictions": {
+      "entry_type": "Water restriction feed",
+      "initiate_flow": {
+        "user": "Add water restriction feed",
+        "reconfigure": "Change water restriction feed"
+      },
+      "step": {
+        "user": {
+          "title": "Water restriction feed",
+          "description": "Väylävirasto's standing restriction areas on the water that touch the area, such as speed limits, wake bans and motor vessel bans, on the sea and the inland waters. Their notes and exceptions are published in Finnish.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "restriction_types": "Restriction types",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "restriction_types": "Leave empty for all types. An area with several restrictions is included when one of them is chosen."
+          }
+        },
+        "reconfigure": {
+          "title": "Water restriction feed",
+          "description": "Väylävirasto's standing restriction areas on the water that touch the area, such as speed limits, wake bans and motor vessel bans, on the sea and the inland waters. Their notes and exceptions are published in Finnish.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "restriction_types": "Restriction types",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor.",
+            "restriction_types": "Leave empty for all types. An area with several restrictions is included when one of them is chosen."
+          }
+        }
+      },
+      "error": {
+        "name_required": "The name can't be empty.",
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
     "station_departures": {
       "entry_type": "Station departures",
       "initiate_flow": {
@@ -634,6 +678,20 @@
       "options": {
         "air_temperature": "Air temperature",
         "road_temperature": "Road temperature"
+      }
+    },
+    "restriction_types": {
+      "options": {
+        "speed_limit": "Speed limits",
+        "no_wake": "Wake bans",
+        "no_motor_vessels": "Motor vessel bans",
+        "power_limit": "Engine power limits",
+        "no_jet_skis": "Jet ski bans",
+        "no_water_skiing": "Water-skiing bans",
+        "no_windsurfing": "Windsurfing bans",
+        "no_anchoring": "Anchoring bans",
+        "no_berthing": "Berthing bans",
+        "other": "Other restrictions"
       }
     },
     "direction": {

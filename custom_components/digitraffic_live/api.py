@@ -1,10 +1,12 @@
-"""HTTP client for the Digitraffic marine, railway and road APIs, and for Traficom's nautical warnings.
+"""HTTP client for the Digitraffic marine, railway and road APIs, Traficom's nautical warnings and Väylävirasto's
+water restriction areas.
 
 API documentation:
   marine:  https://meri.digitraffic.fi/swagger/
   railway: https://rata.digitraffic.fi/swagger/ and https://rata.digitraffic.fi/api/v2/graphql/graphiql
   road:    https://tie.digitraffic.fi/swagger/
   nautical warnings: the capabilities document of Traficom's open WFS (request=GetCapabilities)
+  water restriction areas: the same of Väylävirasto's open WFS
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ MARINE_API = "https://meri.digitraffic.fi/api"
 RAILWAY_API = "https://rata.digitraffic.fi/api"
 ROAD_API = "https://tie.digitraffic.fi/api"
 TRAFICOM_WFS = "https://julkinen.traficom.fi/inspirepalvelu/avoin/wfs"
+VAYLAVIRASTO_WFS = "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs"
 
 # Traffic message types and their paths in the road API.
 TRAFFIC_MESSAGE_PATHS = {
@@ -208,6 +211,24 @@ class DigitrafficClient:
             "srsName": "EPSG:4326",
         }
         return await self._request("GET", TRAFICOM_WFS, params=params)
+
+    # ---------------- Väylävirasto ----------------
+
+    async def water_restrictions(self, bbox: BoundingBox) -> dict[str, Any]:
+        """The water restriction areas that touch a bounding box, as GeoJSON in WGS84.
+
+        The whole country is 18 megabytes, so the layer is always asked by area.
+        """
+        params = {
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typeNames": "vesivaylatiedot:rajoitusalue_a_uusi",
+            "outputFormat": "application/json",
+            "srsName": "EPSG:4326",
+            "bbox": ",".join(str(value) for value in bbox) + ",EPSG:4326",
+        }
+        return await self._request("GET", VAYLAVIRASTO_WFS, params=params)
 
     # ---------------- plumbing ----------------
 

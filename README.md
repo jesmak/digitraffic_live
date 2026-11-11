@@ -1,7 +1,8 @@
 # Digitraffic Live for Home Assistant
 
-Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data and Traficom's nautical
-warnings into map feeds, road weather station sensors and railway station departures and arrivals.
+Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data, Traficom's nautical
+warnings and Väylävirasto's water restriction areas into map feeds, road weather station sensors and railway station
+departures and arrivals.
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Downloads][downloads-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
@@ -33,6 +34,8 @@ for the same card.
 - **Weather camera feeds:** the latest picture from each view of Fintraffic's road cameras.
 - **Nautical warning feeds:** Traficom's warnings in force for boats and ships, such as faults in aids to navigation,
   dredging and firing exercises, on the sea and the inland waters, with the area or line each one covers.
+- **Water restriction feeds:** Väylävirasto's standing restriction areas on the water, such as speed limits, wake
+  bans and motor vessel bans, as dashed outlines with their restrictions, dates and exceptions.
 - **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
   surface, grip and its grade, road weather warnings, wind, precipitation and visibility, and an image entity for
   each camera view. The [road conditions card](#road-conditions-card) that comes with the integration shows the
@@ -164,6 +167,26 @@ shown as they are.
 
 A warning has no end time. It is in the feed for as long as Traficom publishes it.
 
+### Water restriction feed
+
+Add with **Add water restriction feed**. The restriction areas in force that touch the feed's area are included, on
+the sea and on the inland waters. Each is a dashed outline on the map, under the feed's other items, and a tap inside
+it shows its place, its restrictions with the speed of a speed limit, the fairway it is on, when it came into force,
+and its notes and exceptions. The notes and exceptions come from Väylävirasto in Finnish and are shown as they are.
+
+| Name              | Type    | Description                                                                  | Default     |
+| ----------------- | ------- | ---------------------------------------------------------------------------- | ----------- |
+| Name              | string  | Name of the feed and its sensor                                              |             |
+| Area              | circle  | Centre and radius, picked on a map                                           | home, 30 km |
+| Restriction types | list    | Areas with one of these restrictions are included. Leave empty for all types | all         |
+| Update interval   | seconds | How often the feed is fetched, at least 30                                   | 3600        |
+
+The restriction types are speed limits, wake bans, motor vessel bans, engine power limits, jet ski bans, water-skiing
+bans, windsurfing bans, anchoring bans, berthing bans and other restrictions. An area whose restriction has an end
+date is left out once the date has passed.
+
+The areas are not for navigation, as Väylävirasto says of its data. Follow the signs on the water.
+
 ### Road weather station
 
 Add with **Add road weather station** to get sensors for one station anywhere in Finland, for example to show on a
@@ -239,7 +262,7 @@ direction is chosen when the station is added, and can't be changed after. Cargo
 ## Sensors
 
 Every feed has one sensor, whose state is the number of items in the feed, which are ships, trains, traffic
-messages, maintenance vehicles, weather stations, cameras or nautical warnings. For road condition feeds it is the number of road sections with
+messages, maintenance vehicles, weather stations, cameras, nautical warnings or water restriction areas. For road condition feeds it is the number of road sections with
 poor or extremely poor conditions, which is handy in automations. The attributes follow the
 [Map Feed format](https://github.com/jesmak/map-feed-card/blob/main/docs/map-feed-format.md):
 
@@ -513,6 +536,10 @@ Nautical warnings: [Traficom](https://www.traficom.fi/)'s open WFS service, lice
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Each fetch asks for the whole country's warnings, a few
 tens of kilobytes, and keeps those that touch the feed's area.
 
+The water restriction areas come from [Väylävirasto](https://vayla.fi/)'s open WFS service, licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Each fetch asks for the areas around the feed's area.
+The areas are standing decisions that rarely change, so an hourly fetch is plenty.
+
 Requests carry a `Digitraffic-User` header with the integration's name and version, as Digitraffic asks. It
 contains no personal information. AIS only shows vessels that transmit it, which leaves out most small leisure
 boats.
@@ -575,7 +602,8 @@ commit whose built card doesn't match `frontend/`, run `git config core.hooksPat
 | `cache.py`                                                                                                 | Caching station details                                                     |
 | `feed.py`                                                                                                  | Map Feed format building blocks                                             |
 | `nautical_warnings.py`                                                                                     | The same for Traficom's nautical warnings                                   |
-| `api.py`                                                                                                   | HTTP client for Digitraffic and Traficom's WFS                              |
+| `water_restrictions.py`                                                                                    | The same for Väylävirasto's water restriction areas                         |
+| `api.py`                                                                                                   | HTTP client for Digitraffic and for Traficom's and Väylävirasto's WFS       |
 | `services.py`                                                                                              | The composition action                                                      |
 | `texts.py`, `texts/<language>.json`                                                                        | Texts written into feeds                                                    |
 | `translations/<language>.json`                                                                             | Home Assistant UI texts                                                     |
