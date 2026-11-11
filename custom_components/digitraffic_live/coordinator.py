@@ -34,6 +34,7 @@ from .const import (
     DIRECTION_DEPARTURES,
     DOMAIN,
     MIN_REFRESH_SECONDS,
+    SUBENTRY_NAUTICAL_WARNINGS,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_ROAD_WEATHER_STATION,
@@ -47,6 +48,7 @@ from .const import (
 )
 from .geo import Area
 from .maintenance import MaintenanceFeedConfig, build_maintenance_features, fetch_maintenance, stable_vehicle_ids, task_names
+from .nautical_warnings import NauticalWarningFeedConfig, build_nautical_warning_features, fetch_nautical_warnings
 from .road_conditions import RoadConditionFeedConfig, build_road_condition_features, count_poor, section_index
 from .ships import ShipFeedConfig, VesselRegister, build_ship_features, fetch_ship_positions
 from .station_departures import (
@@ -338,6 +340,20 @@ class WeatherCameraFeedCoordinator(FeedCoordinator):
         return build_weather_camera_features(cameras, runtime.camera_details, times, runtime.texts.language)
 
 
+class NauticalWarningFeedCoordinator(FeedCoordinator):
+    def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
+        super().__init__(hass, entry, subentry)
+        self.feed_config = NauticalWarningFeedConfig.from_data(subentry.data)
+
+    @property
+    def area(self) -> Area | None:
+        return self.feed_config.area
+
+    async def _async_fetch_features(self) -> list[dict[str, Any]]:
+        warnings = await fetch_nautical_warnings(self.runtime.client, self.feed_config)
+        return build_nautical_warning_features(warnings, self.runtime.texts)
+
+
 @dataclass(frozen=True)
 class StationDepartures:
     station: str
@@ -453,6 +469,7 @@ COORDINATORS: dict[str, type[SubentryCoordinator[Any]]] = {
     SUBENTRY_ROAD_CONDITIONS: RoadConditionFeedCoordinator,
     SUBENTRY_WEATHER_STATIONS: WeatherStationFeedCoordinator,
     SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedCoordinator,
+    SUBENTRY_NAUTICAL_WARNINGS: NauticalWarningFeedCoordinator,
     SUBENTRY_STATION_DEPARTURES: StationDeparturesCoordinator,
     SUBENTRY_ROAD_WEATHER_STATION: WeatherStationCoordinator,
     SUBENTRY_WEATHER_CAMERA: WeatherCameraCoordinator,

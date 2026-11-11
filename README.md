@@ -1,7 +1,7 @@
 # Digitraffic Live for Home Assistant
 
-Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data into map feeds, road
-weather station sensors and railway station departures and arrivals.
+Home Assistant integration that turns Fintraffic's live ships, trains and road traffic data and Traficom's nautical
+warnings into map feeds, road weather station sensors and railway station departures and arrivals.
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Downloads][downloads-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
@@ -31,6 +31,8 @@ for the same card.
   ahead.
 - **Road weather station feeds:** road and air temperature, road surface, grip, wind and precipitation.
 - **Weather camera feeds:** the latest picture from each view of Fintraffic's road cameras.
+- **Nautical warning feeds:** Traficom's warnings in force for boats and ships, such as faults in aids to navigation,
+  dredging and firing exercises, on the sea and the inland waters, with the area or line each one covers.
 - **Road weather stations and weather cameras** as devices of their own: sensors for road and air temperature, road
   surface, grip and its grade, road weather warnings, wind, precipitation and visibility, and an image entity for
   each camera view. The [road conditions card](#road-conditions-card) that comes with the integration shows the
@@ -147,6 +149,21 @@ gives any warning, its road is frosty, snowy or slushy, or its grip is that of a
 [Grip condition](#grip-condition)). They turn red when the road is icy, the station raises an alarm or its grip is
 very slippery.
 
+### Nautical warning feed
+
+Add with **Add nautical warning feed**. The warnings in force whose point, line or area touches the feed's area are
+included, on the sea and on the inland waters. Each is a warning sign on the map, with its type, place and text in
+the popup, and its area or line drawn with it. The warning text and place come from Traficom in capitals and are
+shown as they are.
+
+| Name            | Type    | Description                                | Default     |
+| --------------- | ------- | ------------------------------------------ | ----------- |
+| Name            | string  | Name of the feed and its sensor            |             |
+| Area            | circle  | Centre and radius, picked on a map         | home, 50 km |
+| Update interval | seconds | How often the feed is fetched, at least 30 | 600         |
+
+A warning has no end time. It is in the feed for as long as Traficom publishes it.
+
 ### Road weather station
 
 Add with **Add road weather station** to get sensors for one station anywhere in Finland, for example to show on a
@@ -221,20 +238,20 @@ direction is chosen when the station is added, and can't be changed after. Cargo
 
 ## Sensors
 
-Every feed has one sensor, whose state is the number of items in the feed: ships, trains, traffic messages,
-maintenance vehicles, weather stations or cameras. For road condition feeds it is the number of road sections with
+Every feed has one sensor, whose state is the number of items in the feed, which are ships, trains, traffic
+messages, maintenance vehicles, weather stations, cameras or nautical warnings. For road condition feeds it is the number of road sections with
 poor or extremely poor conditions, which is handy in automations. The attributes follow the
 [Map Feed format](https://github.com/jesmak/map-feed-card/blob/main/docs/map-feed-format.md):
 
-| Name               | Description                                       |
-| ------------------ | ------------------------------------------------- |
-| `map_feed_version` | Always `1`                                        |
-| `geojson`          | The feed's items as a GeoJSON FeatureCollection   |
-| `area`             | The feed's area, if it has one                    |
-| `updated`          | When the feed was last fetched                    |
-| `attribution`      | Data credit                                       |
-| `feed_type`        | `ship`, `train` or `road`, what the feed is about |
-| `list`             | For trains, the orders the card's list offers     |
+| Name               | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| `map_feed_version` | Always `1`                                               |
+| `geojson`          | The feed's items as a GeoJSON FeatureCollection          |
+| `area`             | The feed's area, if it has one                           |
+| `updated`          | When the feed was last fetched                           |
+| `attribution`      | Data credit                                              |
+| `feed_type`        | `ship`, `train`, `road` or `sea`, what the feed is about |
+| `list`             | For trains, the orders the card's list offers            |
 
 None of the attributes are stored in the recorder, only the count. A feed that can't be fetched becomes
 unavailable until the next successful update.
@@ -492,6 +509,10 @@ it at every start. Your dashboards need no changes, as the card's type stays `cu
 Traffic data: [Fintraffic / digitraffic.fi](https://www.digitraffic.fi/), licensed under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
+Nautical warnings: [Traficom](https://www.traficom.fi/)'s open WFS service, licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Each fetch asks for the whole country's warnings, a few
+tens of kilobytes, and keeps those that touch the feed's area.
+
 Requests carry a `Digitraffic-User` header with the integration's name and version, as Digitraffic asks. It
 contains no personal information. AIS only shows vessels that transmit it, which leaves out most small leisure
 boats.
@@ -553,7 +574,8 @@ commit whose built card doesn't match `frontend/`, run `git config core.hooksPat
 | `geo.py`                                                                                                   | Areas, geometry tests and line simplification                               |
 | `cache.py`                                                                                                 | Caching station details                                                     |
 | `feed.py`                                                                                                  | Map Feed format building blocks                                             |
-| `api.py`                                                                                                   | Digitraffic HTTP client                                                     |
+| `nautical_warnings.py`                                                                                     | The same for Traficom's nautical warnings                                   |
+| `api.py`                                                                                                   | HTTP client for Digitraffic and Traficom's WFS                              |
 | `services.py`                                                                                              | The composition action                                                      |
 | `texts.py`, `texts/<language>.json`                                                                        | Texts written into feeds                                                    |
 | `translations/<language>.json`                                                                             | Home Assistant UI texts                                                     |

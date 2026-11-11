@@ -59,6 +59,8 @@
   "weekday_sunday": "su",
   "maintenance_vehicle": "Kunnossapitoajoneuvo",
   "tasks": "Tehtävät",
+  "nautical_warning": "Merivaroitus",
+  "warning_area": "Alue",
   "source": "Lähde",
   "worked": "Työskennellyt",
   "observed_at": "Havainto {time}",

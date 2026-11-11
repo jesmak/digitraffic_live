@@ -32,6 +32,7 @@ from .const import (
     DIRECTION_BOTH,
     DOMAIN,
     MAP_FEED_VERSION,
+    SUBENTRY_NAUTICAL_WARNINGS,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_SHIPS,
@@ -39,6 +40,7 @@ from .const import (
     SUBENTRY_TRAINS,
     SUBENTRY_WEATHER_CAMERAS,
     SUBENTRY_WEATHER_STATIONS,
+    TRAFICOM_ATTRIBUTION,
 )
 from .coordinator import (
     DigitrafficConfigEntry,
@@ -65,6 +67,7 @@ ICONS = {
     SUBENTRY_ROAD_CONDITIONS: "mdi:road-variant",
     SUBENTRY_WEATHER_STATIONS: "mdi:thermometer",
     SUBENTRY_WEATHER_CAMERAS: "mdi:cctv",
+    SUBENTRY_NAUTICAL_WARNINGS: "mdi:lighthouse",
 }
 
 
@@ -77,6 +80,7 @@ FEED_TYPES = {
     SUBENTRY_ROAD_CONDITIONS: "road",
     SUBENTRY_WEATHER_STATIONS: "road",
     SUBENTRY_WEATHER_CAMERAS: "road",
+    SUBENTRY_NAUTICAL_WARNINGS: "sea",
 }
 
 
@@ -229,12 +233,16 @@ class MapFeedSensor(CoordinatorEntity[FeedCoordinator], SensorEntity):
     def __init__(self, coordinator: FeedCoordinator) -> None:
         super().__init__(coordinator)
         subentry = coordinator.subentry
+        # The nautical warnings are the one feed that isn't Fintraffic's.
+        traficom = subentry.subentry_type == SUBENTRY_NAUTICAL_WARNINGS
         self._attr_unique_id = subentry.subentry_id
         self._attr_icon = ICONS.get(subentry.subentry_type)
+        if traficom:
+            self._attr_attribution = TRAFICOM_ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
-            manufacturer="Fintraffic",
+            manufacturer="Traficom" if traficom else "Fintraffic",
             entry_type=DeviceEntryType.SERVICE,
         )
 

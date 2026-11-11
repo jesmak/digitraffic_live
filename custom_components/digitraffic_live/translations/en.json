@@ -372,6 +372,46 @@
         "reconfigure_successful": "Feed saved."
       }
     },
+    "nautical_warnings": {
+      "entry_type": "Nautical warning feed",
+      "initiate_flow": {
+        "user": "Add nautical warning feed",
+        "reconfigure": "Change nautical warning feed"
+      },
+      "step": {
+        "user": {
+          "title": "Nautical warning feed",
+          "description": "Traficom's nautical warnings in force that touch the area, such as faults in aids to navigation, dredging and firing exercises. Inland waters are included.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor."
+          }
+        },
+        "reconfigure": {
+          "title": "Nautical warning feed",
+          "description": "Traficom's nautical warnings in force that touch the area, such as faults in aids to navigation, dredging and firing exercises. Inland waters are included.",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "refresh_seconds": "Update interval"
+          },
+          "data_description": {
+            "name": "Also the name of the feed's sensor."
+          }
+        }
+      },
+      "error": {
+        "name_required": "The name can't be empty.",
+        "area_radius": "Drag the circle's edge on the map to set a radius."
+      },
+      "abort": {
+        "reconfigure_successful": "Feed saved."
+      }
+    },
     "station_departures": {
       "entry_type": "Station departures",
       "initiate_flow": {

@@ -372,6 +372,46 @@
         "reconfigure_successful": "Syöte tallennettu."
       }
     },
+    "nautical_warnings": {
+      "entry_type": "Merivaroitussyöte",
+      "initiate_flow": {
+        "user": "Lisää merivaroitussyöte",
+        "reconfigure": "Muokkaa merivaroitussyötettä"
+      },
+      "step": {
+        "user": {
+          "title": "Merivaroitussyöte",
+          "description": "Traficomin voimassa olevat merivaroitukset, jotka osuvat alueelle, kuten turvalaitteiden viat, ruoppaukset ja ampumaharjoitukset. Mukana ovat myös sisävedet.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi."
+          }
+        },
+        "reconfigure": {
+          "title": "Merivaroitussyöte",
+          "description": "Traficomin voimassa olevat merivaroitukset, jotka osuvat alueelle, kuten turvalaitteiden viat, ruoppaukset ja ampumaharjoitukset. Mukana ovat myös sisävedet.",
+          "data": {
+            "name": "Nimi",
+            "area": "Alue",
+            "refresh_seconds": "Päivitysväli"
+          },
+          "data_description": {
+            "name": "Myös syötteen sensorin nimi."
+          }
+        }
+      },
+      "error": {
+        "name_required": "Nimi ei voi olla tyhjä.",
+        "area_radius": "Aseta säde vetämällä ympyrän reunaa kartalla."
+      },
+      "abort": {
+        "reconfigure_successful": "Syöte tallennettu."
+      }
+    },
     "station_departures": {
       "entry_type": "Aseman lähdöt",
       "initiate_flow": {

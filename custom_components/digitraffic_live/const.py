@@ -6,6 +6,8 @@ DOMAIN: Final = "digitraffic_live"
 
 # Shown on the map and required by the CC BY 4.0 licence.
 ATTRIBUTION: Final = "Fintraffic / digitraffic.fi, CC BY 4.0"
+# The nautical warnings are Traficom's, under the same licence.
+TRAFICOM_ATTRIBUTION: Final = "Traficom, CC BY 4.0"
 
 # Version of the Map Feed format the sensors write (docs/map-feed-format.md in map-feed-card).
 MAP_FEED_VERSION: Final = 1
@@ -27,6 +29,7 @@ SUBENTRY_ROAD_MAINTENANCE: Final = "road_maintenance"
 SUBENTRY_ROAD_CONDITIONS: Final = "road_conditions"
 SUBENTRY_WEATHER_STATIONS: Final = "weather_stations"
 SUBENTRY_WEATHER_CAMERAS: Final = "weather_cameras"
+SUBENTRY_NAUTICAL_WARNINGS: Final = "nautical_warnings"
 # The next departures from one railway station, as a departures sensor rather than a map feed
 SUBENTRY_STATION_DEPARTURES: Final = "station_departures"
 # A single road weather station or camera, which becomes a device with its own entities
@@ -84,6 +87,7 @@ DEFAULT_TRAFFIC_MESSAGE_REFRESH_SECONDS: Final = 300
 DEFAULT_ROAD_CONDITION_REFRESH_SECONDS: Final = 600
 DEFAULT_WEATHER_STATION_REFRESH_SECONDS: Final = 300
 DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS: Final = 600
+DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS: Final = 600
 
 DEFAULT_DEPARTURES: Final = 5
 MAX_DEPARTURES: Final = 20

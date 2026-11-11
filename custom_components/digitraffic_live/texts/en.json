@@ -59,6 +59,8 @@
   "weekday_sunday": "Sun",
   "maintenance_vehicle": "Maintenance vehicle",
   "tasks": "Tasks",
+  "nautical_warning": "Nautical warning",
+  "warning_area": "Area",
   "source": "Source",
   "worked": "Worked",
   "observed_at": "Observed {time}",

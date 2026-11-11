@@ -2,7 +2,7 @@
 
 The config entry holds only the language. Each feed is a config subentry
 (ships, trains, traffic messages, road maintenance, road conditions, weather
-stations or weather cameras), added and changed from the integration page, and so
+stations, weather cameras or nautical warnings), added and changed from the integration page, and so
 is each railway station's departures.
 """
 
@@ -66,6 +66,7 @@ from .const import (
     CONF_USE_AREA,
     DEFAULT_DEPARTURES,
     DEFAULT_MAINTENANCE_MAX_AGE_MINUTES,
+    DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS,
     DEFAULT_REFRESH_SECONDS,
     DEFAULT_ROAD_CONDITION_REFRESH_SECONDS,
     DEFAULT_ROUTE_HOURS,
@@ -81,6 +82,7 @@ from .const import (
     LANGUAGES,
     MAX_DEPARTURES,
     MIN_REFRESH_SECONDS,
+    SUBENTRY_NAUTICAL_WARNINGS,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_ROAD_WEATHER_STATION,
@@ -104,6 +106,7 @@ DEFAULT_SHIP_RADIUS_M = 15_000
 DEFAULT_TRAIN_RADIUS_M = 30_000
 DEFAULT_ROAD_RADIUS_M = 30_000
 DEFAULT_ROAD_CONDITION_RADIUS_M = 50_000
+DEFAULT_NAUTICAL_WARNING_RADIUS_M = 50_000
 
 MAX_AGE_SELECTOR = NumberSelector(NumberSelectorConfig(min=1, max=240, step=1, unit_of_measurement="min", mode=NumberSelectorMode.BOX))
 REFRESH_SELECTOR = NumberSelector(
@@ -151,6 +154,7 @@ class DigitrafficLiveConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_ROAD_CONDITIONS: RoadConditionFeedFlow,
             SUBENTRY_WEATHER_STATIONS: WeatherStationFeedFlow,
             SUBENTRY_WEATHER_CAMERAS: WeatherCameraFeedFlow,
+            SUBENTRY_NAUTICAL_WARNINGS: NauticalWarningFeedFlow,
             SUBENTRY_STATION_DEPARTURES: StationDeparturesFlow,
             SUBENTRY_ROAD_WEATHER_STATION: RoadWeatherStationFlow,
             SUBENTRY_WEATHER_CAMERA: WeatherCameraFlow,
@@ -511,6 +515,23 @@ class WeatherCameraFeedFlow(AreaFeedFlow):
         return {
             CONF_AREA: self.home_area(DEFAULT_ROAD_RADIUS_M),
             CONF_REFRESH_SECONDS: DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
+        }
+
+
+class NauticalWarningFeedFlow(AreaFeedFlow):
+    async def async_schema(self) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Required(CONF_NAME): TextSelector(),
+                vol.Required(CONF_AREA): LocationSelector(LocationSelectorConfig(radius=True, icon="mdi:lighthouse")),
+                vol.Required(CONF_REFRESH_SECONDS): REFRESH_SELECTOR,
+            }
+        )
+
+    def defaults(self) -> dict[str, Any]:
+        return {
+            CONF_AREA: self.home_area(DEFAULT_NAUTICAL_WARNING_RADIUS_M),
+            CONF_REFRESH_SECONDS: DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS,
         }
 
 

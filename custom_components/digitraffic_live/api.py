@@ -1,9 +1,10 @@
-"""HTTP client for the Digitraffic marine, railway and road APIs.
+"""HTTP client for the Digitraffic marine, railway and road APIs, and for Traficom's nautical warnings.
 
 API documentation:
   marine:  https://meri.digitraffic.fi/swagger/
   railway: https://rata.digitraffic.fi/swagger/ and https://rata.digitraffic.fi/api/v2/graphql/graphiql
   road:    https://tie.digitraffic.fi/swagger/
+  nautical warnings: the capabilities document of Traficom's open WFS (request=GetCapabilities)
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import aiohttp
 MARINE_API = "https://meri.digitraffic.fi/api"
 RAILWAY_API = "https://rata.digitraffic.fi/api"
 ROAD_API = "https://tie.digitraffic.fi/api"
+TRAFICOM_WFS = "https://julkinen.traficom.fi/inspirepalvelu/avoin/wfs"
 
 # Traffic message types and their paths in the road API.
 TRAFFIC_MESSAGE_PATHS = {
@@ -25,6 +27,9 @@ TRAFFIC_MESSAGE_PATHS = {
     "weight_restrictions": "weight-restrictions",
     "exempted_transports": "exempted-transports",
 }
+
+# The layers of Traficom's WFS that hold the nautical warnings in force: areas, lines and points.
+NAUTICAL_WARNING_LAYERS = ("navigational_warnings_a", "navigational_warnings_l", "navigational_warnings_p")
 
 type BoundingBox = tuple[float, float, float, float]  # west, south, east, north
 
@@ -189,6 +194,20 @@ class DigitrafficClient:
     async def weathercam_stations_data(self) -> dict[str, Any]:
         """When each view of every camera was last photographed."""
         return await self._request("GET", f"{ROAD_API}/weathercam/v1/stations/data")
+
+    # ---------------- Traficom ----------------
+
+    async def nautical_warnings(self, layer: str) -> dict[str, Any]:
+        """The nautical warnings in force in one layer (see NAUTICAL_WARNING_LAYERS), as GeoJSON in WGS84."""
+        params = {
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typeNames": f"avoin:{layer}",
+            "outputFormat": "application/json",
+            "srsName": "EPSG:4326",
+        }
+        return await self._request("GET", TRAFICOM_WFS, params=params)
 
     # ---------------- plumbing ----------------
 
