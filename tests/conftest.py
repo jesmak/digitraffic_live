@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.digitraffic_live.api import MARINE_API, RAILWAY_API, ROAD_API, TRAFFIC_MESSAGE_PATHS
 
@@ -21,11 +21,6 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def road_fixture(name: str) -> Any:
     """A trimmed real road API response from tests/fixtures."""
     return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))
-
-
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
-    """Lets Home Assistant load integrations from custom_components/."""
 
 
 def now_ms() -> int:
