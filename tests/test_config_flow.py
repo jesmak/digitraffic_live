@@ -177,6 +177,7 @@ async def test_a_station_both_ways_has_two_sensors_and_keeps_its_direction(
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], reconfigured | {"stops_at": "HKI"})
     assert result["errors"] == {"stops_at": "stops_at_departures_only"}, "the kept direction counts"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], reconfigured | {"departures": 3})
+    await hass.async_block_till_done()
     assert result["reason"] == "reconfigure_successful"
     assert result.get("translation_domain") is None, "the integration's own text"
     assert entry.subentries[subentry_id].data["direction"] == "both"
@@ -207,6 +208,7 @@ async def test_a_station_from_before_arrivals_stays_departures(hass: HomeAssista
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"name": "Lappeenranta", "station": "LR", "stops_at": "HKI", "departures": 5, "refresh_seconds": 60}
     )
+    await hass.async_block_till_done()
     assert result["reason"] == "reconfigure_successful", "stops at is fine for departures"
     assert result.get("translation_domain") is None, "the integration's own text"
     assert entry.subentries[subentry_id].data == {"station": "LR", "stops_at": "HKI", "departures": 5, "refresh_seconds": 60}
