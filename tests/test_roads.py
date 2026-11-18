@@ -3,6 +3,7 @@ weather station and weather camera feeds from sample Digitraffic responses."""
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any
 
@@ -15,7 +16,9 @@ from custom_components.digitraffic_live.geo import Area, representative_position
 from custom_components.digitraffic_live.maintenance import (
     MaintenanceFeedConfig,
     build_maintenance_features,
+    build_maintenance_feed,
     fetch_maintenance,
+    maintenance_in_area,
     merge_routes,
     stable_vehicle_ids,
     task_names,
@@ -83,7 +86,7 @@ class FakeRoadClient:
 
     async def maintenance_routes(self, bbox: Any, end_from: str, tasks: Any) -> Any:
         self.calls.append(("maintenance_routes", (end_from, tuple(tasks))))
-        return fixture("maintenance_routes")
+        return json.dumps(fixture("maintenance_routes")).encode()
 
     async def weather_station(self, station_id: str) -> Any:
         if station_id != "3036":
@@ -197,7 +200,7 @@ def test_working_hours_group_days_with_the_same_hours() -> None:
 async def test_hidden_routes_are_requested_only_over_the_vehicles_window() -> None:
     client = FakeRoadClient()
     hidden = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "show_routes": False, "max_age_minutes": 30})
-    vehicles, routes = await fetch_maintenance(client, hidden, NOW)
+    vehicles, routes = maintenance_in_area(*await fetch_maintenance(client, hidden, NOW), hidden)
     assert client.calls == [
         ("maintenance_latest", ("2026-09-15T11:30:00Z", ())),
         ("maintenance_routes", ("2026-09-15T11:30:00Z", ())),
@@ -210,6 +213,9 @@ async def test_hidden_routes_are_requested_only_over_the_vehicles_window() -> No
     await fetch_maintenance(client, shown, NOW)
     # Digitraffic refuses a request from a full 24 hours back.
     assert client.calls[1] == ("maintenance_routes", ("2026-09-14T12:01:00Z", ("SALTING",)))
+
+    with pytest.raises(DigitrafficError, match="couldn't be read"):
+        maintenance_in_area({}, b"<html>", hidden)
 
 
 def test_a_vehicle_keeps_its_id_while_its_route_pieces_chain() -> None:
@@ -227,6 +233,27 @@ def test_a_vehicle_keeps_its_id_while_its_route_pieces_chain() -> None:
         [{**piece(12), "geometry": {"type": "Point", "coordinates": [28.1, 61.0]}}], [], {}, TEXTS, second
     )
     assert features[0]["id"] == "maintenance:10"
+
+
+def test_hidden_routes_still_keep_a_vehicles_id() -> None:
+    def piece(piece_id: int, previous: int, longitude: float) -> dict[str, Any]:
+        return {
+            "geometry": {"type": "LineString", "coordinates": [[longitude, 60.9], [longitude + 0.01, 60.9]]},
+            "properties": {"id": piece_id, "previousId": previous, "tasks": ["SALTING"], "startTime": f"2026-09-15T11:{piece_id}:00Z"},
+        }
+
+    latest = {"features": [{"geometry": {"type": "Point", "coordinates": [27.62, 60.9]}, "properties": {"id": 12}}]}
+    routes = json.dumps({"features": [piece(11, 10, 27.6), piece(12, 11, 27.61)]}).encode()
+
+    hidden = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "show_routes": False})
+    features, vehicle_ids = build_maintenance_feed(latest, routes, hidden, {}, TEXTS, {10: 10})
+    assert vehicle_ids == {12: 10}
+    assert [feature["id"] for feature in features] == ["maintenance:10"]
+
+    shown = MaintenanceFeedConfig.from_data({"area": ROAD_AREA})
+    features, vehicle_ids = build_maintenance_feed(latest, routes, shown, {}, TEXTS, {10: 10})
+    assert vehicle_ids == {12: 10}
+    assert [feature["id"] for feature in features] == ["maintenance:10", "maintenance_route:11"]
 
 
 def test_route_pieces_of_the_same_work_are_joined() -> None:

@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
-from .api import DigitrafficClient
+from homeassistant.util.json import json_loads
+
+from .api import DigitrafficClient, DigitrafficError
 from .const import (
     CONF_AREA,
     CONF_MAX_AGE_MINUTES,
@@ -107,10 +109,8 @@ class MaintenanceFeedConfig:
         )
 
 
-async def fetch_maintenance(
-    client: DigitrafficClient, config: MaintenanceFeedConfig, now: datetime
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Latest vehicle positions and route pieces inside the area.
+async def fetch_maintenance(client: DigitrafficClient, config: MaintenanceFeedConfig, now: datetime) -> tuple[Any, bytes]:
+    """The latest vehicle positions around the area, and the route pieces there as unparsed JSON.
 
     The route pieces are fetched even when routes aren't shown, over the vehicles' own
     window then: a vehicle is followed from one update to the next through them (see
@@ -119,10 +119,24 @@ async def fetch_maintenance(
     bbox = config.area.bbox()
     vehicles_from = utc_iso(now - timedelta(minutes=config.max_age_minutes))
     routes_from = utc_iso(now - min(timedelta(hours=config.route_hours), MAX_ROUTE_AGE)) if config.show_routes else vehicles_from
-    responses = await asyncio.gather(
+    latest, routes = await asyncio.gather(
         client.maintenance_latest(bbox, vehicles_from, config.tasks),
         client.maintenance_routes(bbox, routes_from, config.tasks),
     )
+    return latest, routes
+
+
+def maintenance_in_area(
+    latest: Any, routes_body: bytes, config: MaintenanceFeedConfig
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """The vehicles and route pieces inside the area, of what fetch_maintenance returned. Raises DigitrafficError."""
+    # The parse holds the interpreter lock from start to end, so the event loop waits for it even from an executor,
+    # which frees the loop only during the filtering and simplifying that follow. Home Assistant's parser takes half
+    # the time of json's: a tenth of a second for 25 megabytes.
+    try:
+        routes = json_loads(routes_body)
+    except ValueError as err:
+        raise DigitrafficError(f"Digitraffic's maintenance routes couldn't be read: {err!r}") from err
 
     def inside(response: Any, geometry_types: set[str]) -> list[dict[str, Any]]:
         return [
@@ -131,7 +145,26 @@ async def fetch_maintenance(
             if (feature.get("geometry") or {}).get("type") in geometry_types and config.area.touches(feature.get("geometry"))
         ]
 
-    return inside(responses[0], {"Point"}), inside(responses[1], {"LineString"})
+    return inside(latest, {"Point"}), inside(routes, {"LineString"})
+
+
+def build_maintenance_feed(
+    latest: Any,
+    routes_body: bytes,
+    config: MaintenanceFeedConfig,
+    names: Mapping[str, str],
+    texts: Texts,
+    known_ids: Mapping[Any, Any],
+) -> tuple[list[dict[str, Any]], dict[Any, Any]]:
+    """The feed's features and its vehicles' ids (see stable_vehicle_ids), of what fetch_maintenance returned.
+
+    Parsing, filtering and simplifying a wide area's routes takes seconds, so this is run in an executor.
+    Raises DigitrafficError.
+    """
+    vehicles, routes = maintenance_in_area(latest, routes_body, config)
+    vehicle_ids = stable_vehicle_ids(vehicles, routes, known_ids)
+    shown = routes if config.show_routes else []
+    return build_maintenance_features(vehicles, shown, names, texts, vehicle_ids), vehicle_ids
 
 
 def stable_vehicle_ids(

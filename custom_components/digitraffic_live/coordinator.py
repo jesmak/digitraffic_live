@@ -48,7 +48,7 @@ from .const import (
     SUBENTRY_WEATHER_STATIONS,
 )
 from .geo import Area
-from .maintenance import MaintenanceFeedConfig, build_maintenance_features, fetch_maintenance, stable_vehicle_ids, task_names
+from .maintenance import MaintenanceFeedConfig, build_maintenance_feed, fetch_maintenance, task_names
 from .nautical_warnings import NauticalWarningFeedConfig, build_nautical_warning_features, fetch_nautical_warnings
 from .road_conditions import RoadConditionFeedConfig, build_road_condition_features, count_poor, section_index
 from .ships import ShipFeedConfig, VesselRegister, build_ship_features, fetch_ship_positions
@@ -277,12 +277,13 @@ class RoadMaintenanceFeedCoordinator(FeedCoordinator):
 
     async def _async_fetch_features(self) -> list[dict[str, Any]]:
         runtime = self.runtime
-        vehicles, routes = await fetch_maintenance(runtime.client, self.feed_config, dt_util.utcnow())
-        self._vehicle_ids = stable_vehicle_ids(vehicles, routes, self._vehicle_ids)
+        latest, routes_body = await fetch_maintenance(runtime.client, self.feed_config, dt_util.utcnow())
         # Task names are only labels: without them, the task ids are shown.
         names = task_names(await runtime.maintenance_tasks.get(), runtime.texts.language)
-        shown = routes if self.feed_config.show_routes else []
-        return build_maintenance_features(vehicles, shown, names, runtime.texts, self._vehicle_ids)
+        features, self._vehicle_ids = await self.hass.async_add_executor_job(
+            build_maintenance_feed, latest, routes_body, self.feed_config, names, runtime.texts, self._vehicle_ids
+        )
+        return features
 
 
 class RoadConditionFeedCoordinator(FeedCoordinator):

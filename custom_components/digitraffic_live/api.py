@@ -149,10 +149,13 @@ class DigitrafficClient:
         params = [*bbox_params(bbox), ("endFrom", end_from), *(("taskId", task) for task in tasks)]
         return await self._request("GET", f"{ROAD_API}/maintenance/v1/tracking/routes/latest", params=params)
 
-    async def maintenance_routes(self, bbox: BoundingBox, end_from: str, tasks: Iterable[str]) -> dict[str, Any]:
-        """Where maintenance vehicles have worked since `end_from` (at most 24 hours ago)."""
+    async def maintenance_routes(self, bbox: BoundingBox, end_from: str, tasks: Iterable[str]) -> bytes:
+        """Where maintenance vehicles have worked since `end_from` (less than 24 hours ago), as unparsed JSON.
+
+        A day of a wide area's routes is tens of megabytes, so the caller parses it off the event loop.
+        """
         params = [*bbox_params(bbox), ("endFrom", end_from), *(("taskId", task) for task in tasks)]
-        return await self._request("GET", f"{ROAD_API}/maintenance/v1/tracking/routes", params=params)
+        return await self._request("GET", f"{ROAD_API}/maintenance/v1/tracking/routes", params=params, raw=True)
 
     async def maintenance_tasks(self) -> list[dict[str, Any]]:
         """Maintenance task ids with their names in Finnish, Swedish and English."""
@@ -239,7 +242,9 @@ class DigitrafficClient:
         *,
         params: Mapping[str, str] | Sequence[tuple[str, str]] | None = None,
         body: dict[str, Any] | None = None,
+        raw: bool = False,
     ) -> Any:
+        """The response's JSON, or with `raw` its body as bytes."""
         headers = {"Digitraffic-User": self._user, "Accept-Encoding": "gzip"}
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT_SECONDS):
@@ -248,7 +253,7 @@ class DigitrafficClient:
                         raise DigitrafficNotFound(f"No data at {url}")
                     if response.status != 200:
                         raise DigitrafficError(f"HTTP {response.status} from {url}")
-                    return await response.json(content_type=None)
+                    return await response.read() if raw else await response.json(content_type=None)
         except (aiohttp.ClientError, TimeoutError, ValueError) as err:
             raise DigitrafficError(f"Request to {url} failed: {err!r}") from err
 
