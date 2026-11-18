@@ -208,7 +208,8 @@ async def test_hidden_routes_are_requested_only_over_the_vehicles_window() -> No
     shown = MaintenanceFeedConfig.from_data({"area": ROAD_AREA, "tasks": ["salting"], "route_hours": 99})
     assert shown.route_hours == 24
     await fetch_maintenance(client, shown, NOW)
-    assert client.calls[1] == ("maintenance_routes", ("2026-09-14T12:00:00Z", ("SALTING",)))
+    # Digitraffic refuses a request from a full 24 hours back.
+    assert client.calls[1] == ("maintenance_routes", ("2026-09-14T12:01:00Z", ("SALTING",)))
 
 
 def test_a_vehicle_keeps_its_id_while_its_route_pieces_chain() -> None:

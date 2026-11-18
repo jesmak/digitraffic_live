@@ -80,6 +80,8 @@ MAINTENANCE_TASKS = (
 
 # Digitraffic keeps routes for 24 hours.
 MAX_ROUTE_HOURS = 24
+# It refuses a request for routes from 24 hours back or more, so the longest one asked for is a minute short of that.
+MAX_ROUTE_AGE = timedelta(hours=MAX_ROUTE_HOURS, minutes=-1)
 # Consecutive route pieces further apart than this are drawn as separate lines.
 ROUTE_GAP_KM = 0.5
 SIMPLIFY_TOLERANCE_KM = 0.01
@@ -116,7 +118,7 @@ async def fetch_maintenance(
     """
     bbox = config.area.bbox()
     vehicles_from = utc_iso(now - timedelta(minutes=config.max_age_minutes))
-    routes_from = utc_iso(now - timedelta(hours=config.route_hours)) if config.show_routes else vehicles_from
+    routes_from = utc_iso(now - min(timedelta(hours=config.route_hours), MAX_ROUTE_AGE)) if config.show_routes else vehicles_from
     responses = await asyncio.gather(
         client.maintenance_latest(bbox, vehicles_from, config.tasks),
         client.maintenance_routes(bbox, routes_from, config.tasks),
