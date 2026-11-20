@@ -1,5 +1,5 @@
-"""Digitraffic Live: live ships, trains and road traffic data from Fintraffic's Digitraffic, as map feeds, and the next
-departures from railway stations.
+"""Digitraffic Live: live ships, trains and road traffic data from Fintraffic's Digitraffic, as map feeds, the next
+departures from railway stations, and ports' winter navigation restrictions and ships.
 
 Each feed is a config subentry with its own coordinator and sensor. The sensor
 writes the Map Feed format, which map-feed-card draws.
@@ -19,21 +19,23 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
-from .api import DigitrafficClient
+from .api import DigitrafficClient, DigitrafficError
 from .cache import DetailCache
 from .card import async_add_card_resource, async_remove_card_resource, async_serve_card
 from .const import CONF_LANGUAGE, DOMAIN, LANGUAGES
 from .coordinator import COORDINATORS, DigitrafficConfigEntry, DigitrafficRuntimeData, PeriodicValue
+from .ports import PortIndex, WinterLocation, port_index, winter_locations
 from .services import async_setup_services
 from .ships import VesselRegister, icebreaker_mmsis
 from .station_departures import station_name_index
 from .texts import async_load_texts
 from .trains import PassengerNotices, passenger_notices
 
-PLATFORMS = [Platform.SENSOR, Platform.IMAGE]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.IMAGE]
 
-# Icebreaker assignments and passenger notices change slowly, and every feed shares them.
+# Icebreaker assignments, winter navigation's restrictions and passenger notices change slowly, and every feed shares them.
 ICEBREAKER_REFRESH_SECONDS = 600
+WINTER_LOCATION_REFRESH_SECONDS = 600
 PASSENGER_NOTICES_REFRESH_SECONDS = 300
 # Road station lists and road sections change rarely. They're fetched only when a feed needs them.
 STATION_LIST_REFRESH_SECONDS = 3600
@@ -78,6 +80,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
     async def fetch_station_names() -> dict[str, str]:
         return station_name_index(await client.stations())
 
+    async def fetch_winter_locations() -> dict[str, WinterLocation]:
+        return winter_locations(await client.winter_navigation_locations())
+
+    async def fetch_port_index() -> PortIndex:
+        raw = await client.ports()
+        try:
+            return await hass.async_add_executor_job(port_index, raw)
+        except ValueError as err:
+            raise DigitrafficError(f"The port list couldn't be read: {err}") from err
+
     entry.runtime_data = DigitrafficRuntimeData(
         client=client,
         texts=await async_load_texts(hass, language),
@@ -91,6 +103,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
         camera_list=PeriodicValue("weather cameras", STATION_LIST_REFRESH_SECONDS, client.weathercam_stations, {}),
         camera_details=DetailCache("weather camera", client.weathercam_station),
         station_names=PeriodicValue("railway stations", DAILY_REFRESH_SECONDS, fetch_station_names, {}),
+        winter_locations=PeriodicValue("winter navigation", WINTER_LOCATION_REFRESH_SECONDS, fetch_winter_locations, {}),
+        port_index=PeriodicValue("ports", DAILY_REFRESH_SECONDS, fetch_port_index, PortIndex({}, frozenset())),
     )
 
     remove_stale_devices(hass, entry)

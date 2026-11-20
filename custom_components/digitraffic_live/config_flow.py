@@ -3,7 +3,7 @@
 The config entry holds only the language. Each feed is a config subentry
 (ships, trains, traffic messages, road maintenance, road conditions, weather
 stations, weather cameras or nautical warnings), added and changed from the integration page, and so
-is each railway station's departures.
+is each railway station's departures and each port.
 """
 
 from __future__ import annotations
@@ -54,6 +54,8 @@ from .const import (
     CONF_MAX_AGE_MINUTES,
     CONF_MESSAGE_TYPES,
     CONF_ONLY_POOR,
+    CONF_PORT,
+    CONF_PORT_CALLS,
     CONF_REFRESH_SECONDS,
     CONF_RESTRICTION_TYPES,
     CONF_ROUTE,
@@ -65,6 +67,7 @@ from .const import (
     CONF_TASKS,
     CONF_UPCOMING_DAYS,
     CONF_USE_AREA,
+    CONF_WINTER_LOCATION,
     DEFAULT_DEPARTURES,
     DEFAULT_MAINTENANCE_MAX_AGE_MINUTES,
     DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS,
@@ -85,6 +88,7 @@ from .const import (
     MAX_DEPARTURES,
     MIN_REFRESH_SECONDS,
     SUBENTRY_NAUTICAL_WARNINGS,
+    SUBENTRY_PORT,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_ROAD_WEATHER_STATION,
@@ -162,6 +166,7 @@ class DigitrafficLiveConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_NAUTICAL_WARNINGS: NauticalWarningFeedFlow,
             SUBENTRY_WATER_RESTRICTIONS: WaterRestrictionFeedFlow,
             SUBENTRY_STATION_DEPARTURES: StationDeparturesFlow,
+            SUBENTRY_PORT: PortFlow,
             SUBENTRY_ROAD_WEATHER_STATION: RoadWeatherStationFlow,
             SUBENTRY_WEATHER_CAMERA: WeatherCameraFlow,
         }
@@ -395,6 +400,131 @@ async def passenger_stations(flow: ConfigSubentryFlow) -> list[SelectOptionDict]
         ),
         key=lambda option: option["label"],
     )
+
+
+class PortFlow(ConfigSubentryFlow):
+    """One port, chosen from winter navigation's ports and the Finnish ports that have calls.
+
+    A Finnish port has a second form for where its restrictions and its calls are read from, as the two can differ:
+    Hamina's restrictions are under its own UN/LOCODE and its calls under Kotka's. A foreign port has no calls in
+    Digitraffic, so it is added straight away. The subentry's unique id is the port's UN/LOCODE.
+    """
+
+    _ports: dict[str, str] | None = None  # every port's name by UN/LOCODE
+    _winter: list[str] = []  # the ports in winter navigation
+    _calls: list[str] = []  # the ports with calls
+    _port: str = ""
+
+    async def _async_load(self) -> SubentryFlowResult | None:
+        """Loads the ports, or returns an abort when they can't be had."""
+        if self._ports is not None:
+            return None
+        entry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        runtime = entry.runtime_data
+        locations = await runtime.winter_locations.get()
+        index = await runtime.port_index.get()
+        if not runtime.winter_locations.loaded or not runtime.port_index.loaded:
+            return self.async_abort(reason="cannot_connect")
+        self._winter = sorted(locations)
+        self._calls = sorted(index.call_ports)
+        self._ports = {
+            locode: (index.names.get(locode) or locations[locode].name.title()) if locode in locations else index.names.get(locode, locode)
+            for locode in {*locations, *index.call_ports}
+        }
+        return None
+
+    def _options(self, locodes: list[str]) -> list[SelectOptionDict]:
+        ports = self._ports or {}
+        options = [SelectOptionDict(value=locode, label=f"{ports.get(locode, locode)} ({locode})") for locode in locodes]
+        return sorted(options, key=lambda option: option["label"])
+
+    def _schema(self, port: str) -> vol.Schema:
+        fields: dict[vol.Marker, Any] = {
+            vol.Optional(CONF_WINTER_LOCATION): SelectSelector(
+                SelectSelectorConfig(options=self._options(self._winter), mode=SelectSelectorMode.DROPDOWN, sort=False)
+            ),
+        }
+        if finnish(port):
+            fields[vol.Optional(CONF_PORT_CALLS)] = SelectSelector(
+                SelectSelectorConfig(options=self._options(self._calls), mode=SelectSelectorMode.DROPDOWN, sort=False)
+            )
+            fields[vol.Required(CONF_DEPARTURES)] = NumberSelector(
+                NumberSelectorConfig(min=1, max=MAX_DEPARTURES, step=1, mode=NumberSelectorMode.BOX)
+            )
+        return vol.Schema(fields)
+
+    def _data(self, port: str, user_input: dict[str, Any]) -> dict[str, Any]:
+        data: dict[str, Any] = {CONF_PORT: port}
+        for key in (CONF_WINTER_LOCATION, CONF_PORT_CALLS):
+            if user_input.get(key):
+                data[key] = user_input[key]
+        if CONF_PORT_CALLS in data:
+            data[CONF_DEPARTURES] = int(user_input[CONF_DEPARTURES])
+        return data
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        if abort := await self._async_load():
+            return abort
+        if user_input is not None:
+            port = str(user_input[CONF_PORT])
+            if any(
+                subentry.subentry_type == SUBENTRY_PORT and subentry.unique_id == port for subentry in self._get_entry().subentries.values()
+            ):
+                return self.async_abort(reason="already_configured")
+            self._port = port
+            if finnish(port):
+                return await self.async_step_port()
+            return self.async_create_entry(
+                title=(self._ports or {})[port], data={CONF_PORT: port, CONF_WINTER_LOCATION: port}, unique_id=port
+            )
+        ports = self._options(sorted(self._ports or {}))
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_PORT): SelectSelector(SelectSelectorConfig(options=ports, mode=SelectSelectorMode.DROPDOWN, sort=False))}
+            ),
+        )
+
+    async def async_step_port(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        port = self._port
+        if user_input is not None:
+            if not user_input.get(CONF_WINTER_LOCATION) and not user_input.get(CONF_PORT_CALLS):
+                return self._show("port", port, user_input, {"base": "nothing_followed"})
+            return self.async_create_entry(title=(self._ports or {})[port], data=self._data(port, user_input), unique_id=port)
+        defaults = {CONF_DEPARTURES: DEFAULT_DEPARTURES}
+        if port in self._winter:
+            defaults[CONF_WINTER_LOCATION] = port
+        if port in self._calls:
+            defaults[CONF_PORT_CALLS] = port
+        return self._show("port", port, defaults, {})
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        if abort := await self._async_load():
+            return abort
+        subentry = self._get_reconfigure_subentry()
+        port = str(subentry.data[CONF_PORT])
+        if user_input is not None:
+            if not user_input.get(CONF_WINTER_LOCATION) and not user_input.get(CONF_PORT_CALLS):
+                return self._show("reconfigure", port, user_input, {"base": "nothing_followed"})
+            return self.async_update_and_abort(
+                self._get_entry(), subentry, data=self._data(port, user_input), reason="reconfigure_successful"
+            )
+        return self._show("reconfigure", port, {CONF_DEPARTURES: DEFAULT_DEPARTURES, **subentry.data}, {})
+
+    def _show(self, step_id: str, port: str, values: dict[str, Any], errors: dict[str, str]) -> SubentryFlowResult:
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(self._schema(port), values),
+            errors=errors,
+            description_placeholders={"port": (self._ports or {}).get(port, port)},
+        )
+
+
+def finnish(port: str) -> bool:
+    """Only Finnish ports have calls in Digitraffic."""
+    return port.startswith("FI")
 
 
 class AreaFeedFlow(FeedFlow):

@@ -89,6 +89,21 @@ class DigitrafficClient:
         """Icebreakers and the vessels they assist."""
         return await self._request("GET", f"{MARINE_API}/winter-navigation/v2/vessels")
 
+    async def winter_navigation_locations(self) -> dict[str, Any]:
+        """Every port and fairway in winter navigation, with its restrictions and suspensions, as GeoJSON."""
+        return await self._request("GET", f"{MARINE_API}/winter-navigation/v2/locations")
+
+    async def ports(self) -> bytes:
+        """The port call service's locations, port areas and berths, as unparsed JSON. It is about five megabytes, so the
+        caller parses it off the event loop."""
+        return await self._request("GET", f"{MARINE_API}/port-call/v1/ports", raw=True)
+
+    async def port_calls(self, locode: str, time: str, start: str, end: str) -> bytes:
+        """The calls at a port whose `time` (eta or etd) is between `start` and `end` (ISO 8601), as unparsed JSON, as a
+        busy port's are hundreds of kilobytes."""
+        params = {"locode": locode, f"{time}From": start, f"{time}To": end}
+        return await self._request("GET", f"{MARINE_API}/port-call/v1/port-calls", params=params, raw=True)
+
     # ---------------- railway ----------------
 
     async def running_trains(self, query: str) -> list[dict[str, Any]]:

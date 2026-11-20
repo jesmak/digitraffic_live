@@ -4,7 +4,8 @@ A feed sensor's state is the number of items; the items are in the `geojson`
 attribute, in the Map Feed format (docs/map-feed-format.md in map-feed-card).
 A station departure sensor's state is the time of the next train that isn't cancelled;
 the departures are in the `departures` attribute, in the departures format
-(docs/departures-format.md in departures-card).
+(docs/departures-format.md in departures-card). A port's arrivals and departures are the same.
+A port's restriction sensor says whether winter navigation restricts it now.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ from .const import (
     DEPARTURES_VERSION,
     DIRECTION_ARRIVALS,
     DIRECTION_BOTH,
+    DIRECTION_DEPARTURES,
     DOMAIN,
     MAP_FEED_VERSION,
     SUBENTRY_NAUTICAL_WARNINGS,
@@ -47,10 +49,12 @@ from .const import (
 from .coordinator import (
     DigitrafficConfigEntry,
     FeedCoordinator,
+    PortCoordinator,
     StationDeparturesCoordinator,
     WeatherStationCoordinator,
 )
 from .feed import feature_collection
+from .ports import in_force
 from .weather_stations import (
     GRIP_CONDITIONS,
     PRECIPITATION_STATES,
@@ -205,6 +209,12 @@ async def async_setup_entry(
                 [StationDeparturesSensor(coordinator, direction) for direction in coordinator.departures_config.directions],
                 config_subentry_id=subentry_id,
             )
+        elif isinstance(coordinator, PortCoordinator):
+            config = coordinator.port_config
+            sensors: list[SensorEntity] = [PortRestrictionSensor(coordinator)] if config.winter_location else []
+            if config.port_calls:
+                sensors += [PortCallsSensor(coordinator, direction) for direction in (DIRECTION_DEPARTURES, DIRECTION_ARRIVALS)]
+            async_add_entities(sensors, config_subentry_id=subentry_id)
         elif isinstance(coordinator, WeatherStationCoordinator):
             add_station_sensors(entry, coordinator, async_add_entities, subentry_id)
 
@@ -342,6 +352,87 @@ class StationDeparturesSensor(CoordinatorEntity[StationDeparturesCoordinator], S
             attributes["notices"] = data.notices
         attributes["departures"] = data.trains.get(self.direction, [])
         return attributes
+
+
+def port_device_info(coordinator: PortCoordinator) -> DeviceInfo:
+    subentry = coordinator.subentry
+    return DeviceInfo(
+        identifiers={(DOMAIN, subentry.subentry_id)},
+        name=subentry.title,
+        manufacturer="Fintraffic",
+        model_id=coordinator.port_config.port,
+        entry_type=DeviceEntryType.SERVICE,
+    )
+
+
+class PortRestrictionSensor(CoordinatorEntity[PortCoordinator], SensorEntity):
+    """Whether winter navigation restricts the port now: which ships get icebreaker assistance, by ice class and size."""
+
+    # The winter's periods; the restriction in force is history enough.
+    _unrecorded_attributes = frozenset({"restrictions"})
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["none", "restricted"]
+    _attr_has_entity_name = True
+    _attr_translation_key = "port_restriction"
+    _attr_icon = "mdi:snowflake-alert"
+
+    def __init__(self, coordinator: PortCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.subentry.subentry_id}_restriction"
+        self._attr_device_info = port_device_info(coordinator)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.data.winter is not None
+
+    # Home Assistant reads the state and the attributes only while the entity is available, so they have winter data.
+
+    @property
+    def native_value(self) -> str:
+        return "restricted" if in_force(self.coordinator.data.winter.restrictions, dt_util.utcnow()) else "none"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        winter = self.coordinator.data.winter
+        current = in_force(winter.restrictions, dt_util.utcnow())
+        return {
+            "restriction": current.text if current else None,
+            "restrictions": [period.as_attribute("restriction") for period in winter.restrictions],
+        }
+
+
+class PortCallsSensor(CoordinatorEntity[PortCoordinator], SensorEntity):
+    """The time of the port's next ship to leave, or to arrive that hasn't come in, as announced or as it happened."""
+
+    _unrecorded_attributes = frozenset({"departures"})
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: PortCoordinator, direction: str) -> None:
+        super().__init__(coordinator)
+        self.direction = direction
+        self._attr_unique_id = f"{coordinator.subentry.subentry_id}_{direction}"
+        self._attr_translation_key = f"port_{direction}"
+        self._attr_icon = "mdi:ferry"
+        self._attr_device_info = port_device_info(coordinator)
+
+    @property
+    def native_value(self) -> datetime | None:
+        call = self.coordinator.data.next_call(self.direction)
+        return dt_util.parse_datetime(call["estimated"]) if call else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.data
+        return {
+            "departures_version": DEPARTURES_VERSION,
+            "stop_id": self.coordinator.port_config.port_calls,
+            "stop_name": self.coordinator.subentry.title,
+            "direction": self.direction,
+            "departures": data.calls.get(self.direction, []),
+        }
 
 
 class StationSensor(CoordinatorEntity[WeatherStationCoordinator], SensorEntity):

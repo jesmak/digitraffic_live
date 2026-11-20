@@ -43,6 +43,8 @@ for the same card.
 - **Station departures:** the next passenger trains to leave or reach a railway station, the departures optionally only
   those that stop at another station later, with live estimates, delays, tracks, cancellations and their reasons.
   Shown by [departures-card](https://github.com/jesmak/departures-card).
+- **Ports** as devices of their own: whether winter navigation restricts or suspends the port, with the periods to
+  come, and for a Finnish port the ships arriving and leaving, with their berths, also shown by departures-card.
 
 ## Installation
 
@@ -259,6 +261,22 @@ direction is chosen when the station is added, and can't be changed after. Cargo
 | Number of trains | number  | How many of the next trains not cancelled each sensor lists, 1–20, with the cancelled ones among them   | 5          |
 | Update interval  | seconds | How often the trains are fetched, at least 30                                                           | 60         |
 
+### Port
+
+Add with **Add port**, and pick the port from winter navigation's ports in Finland and its neighbours and the Finnish
+ports that have ship calls. A foreign port is added straight away, with its restrictions and suspensions. A Finnish
+port asks where its restrictions and its ships are read from, both the port itself by default. The two can differ:
+Hamina's restrictions are under its own code, FIHMN, while its harbours' ships are listed under Kotka's, FIKTK. A
+port can be added once.
+
+| Name              | Type   | Description                                                                         | Default  |
+| ----------------- | ------ | ----------------------------------------------------------------------------------- | -------- |
+| Winter navigation | port   | Whose restrictions and suspensions the port has. Empty follows none                 | the port |
+| Ships from        | port   | Whose arriving and leaving ships the port lists, Finnish ports only. Empty for none | the port |
+| Number of ships   | number | How many of the next ships each of the two sensors lists, 1–20                      | 5        |
+
+A port is updated every ten minutes.
+
 ## Sensors
 
 Every feed has one sensor, whose state is the number of items in the feed, which are ships, trains, traffic
@@ -317,6 +335,33 @@ besides them. "Stops at" limits departures only, so it can't be set for arrivals
 with buses replacing trains, in the integration's language when Digitraffic has it, otherwise in Finnish. The
 departures and the notices aren't stored in the recorder, only the next departure time and the station's other,
 small attributes.
+
+### Ports
+
+A port followed for winter navigation has two entities:
+
+- **Traffic restriction**, `none` or `restricted`: whether winter navigation restricts the port now, that is, which
+  ships get icebreaker assistance there, by their ice class and size. `restriction` is the restriction in force, as
+  winter navigation writes it, such as `II 2000` or `IA 4000 (2000 t)`. `restrictions` lists every period
+  winter navigation keeps for the port, the past ones too, so it shows when the ice season began and ended, each in
+  order with its `start`, `end` (none when open-ended) and `restriction`.
+- **Suspension**, on while the port is suspended. `reason` is `bad_weather`, `crew_change` or another reason as
+  winter navigation writes it, `port_closed` whether the port is closed to every operation, and `suspensions` lists
+  every suspension winter navigation keeps for the port, each with its `start`, `end`, `reason` and `port_closed`.
+
+Both change at the next update after a period starts or ends, within ten minutes.
+
+A port followed for ships has a departures and an arrivals sensor in the
+[departures format](https://github.com/jesmak/departures-card/blob/main/docs/departures-format.md), as a station's
+are, whose state is the time of the next ship to leave, or to arrive that hasn't come in. Each ship has its name and
+the port it goes to or comes from as its `headsign`, such as `Example Star · Hamburg`, its berth as its `platform` and
+its harbour as `harbour`. A passenger ship or ferry is a `ferry`, every other a `ship`. Its time is the one its agent
+or the port announced, often weeks ahead, so it isn't marked live. Once the ship has come in or left, its actual time
+takes over, and an arrival is marked `arrived`. A departure is listed until a minute past its time, and an arrival half
+an hour past it, with the latest two that have come in listed besides the count. A ship more than half an hour past
+its announced arrival with no word of it is no longer listed. Ships are found from half a day back to a week ahead.
+
+The periods and the ships aren't stored in the recorder.
 
 ## Actions
 
@@ -497,6 +542,18 @@ entities:
   - sensor.trains_tampere_arrivals
 ```
 
+### A port
+
+A port's ships both ways as one list:
+
+```yaml
+type: custom:departures-card
+combine: true
+entities:
+  - sensor.kotka_departures
+  - sensor.kotka_arrivals
+```
+
 ### Weather cameras
 
 Each picture is a `picture-entity` card. In a sections view, `columns: 6` puts two cards side by side:
@@ -539,6 +596,11 @@ tens of kilobytes, and keeps those that touch the feed's area.
 The water restriction areas come from [Väylävirasto](https://vayla.fi/)'s open WFS service, licensed under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Each fetch asks for the areas around the feed's area.
 The areas are standing decisions that rarely change, so an hourly fetch is plenty.
+
+A port's restrictions and suspensions come from winter navigation, one request for every port. Its ships come from
+the port call service, two requests per update, which are a few hundred kilobytes for a busy port such as Helsinki.
+The ports' names are looked up once a day from the port call service's list of locations, which is about five
+megabytes. The names are as that list spells them, some in two languages, such as "Mariehamn (Maarianhamina)".
 
 Requests carry a `Digitraffic-User` header with the integration's name and version, as Digitraffic asks. It
 contains no personal information. AIS only shows vessels that transmit it, which leaves out most small leisure

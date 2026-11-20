@@ -509,6 +509,59 @@
         "reconfigure_successful": "Syöte tallennettu."
       }
     },
+    "port": {
+      "entry_type": "Satama",
+      "initiate_flow": {
+        "user": "Lisää satama",
+        "reconfigure": "Muokkaa satamaa"
+      },
+      "step": {
+        "user": {
+          "title": "Satama",
+          "description": "Sataman talvimerenkulun liikennerajoitukset ja keskeytykset, ja suomalaisen sataman saapuvat ja lähtevät alukset.",
+          "data": {
+            "port": "Satama"
+          }
+        },
+        "port": {
+          "title": "{port}",
+          "description": "Mistä sataman rajoitukset ja alukset luetaan. Yleensä satamasta itsestään, mutta sataman alukset voivat olla myös naapurisataman alla, kuten Haminan tapauksessa jossa alukset löytyvät Kotkan alta.",
+          "data": {
+            "winter_location": "Talvimerenkulku",
+            "port_calls": "Alukset satamasta",
+            "departures": "Alusten määrä"
+          },
+          "data_description": {
+            "winter_location": "Sen rajoitukset ja keskeytykset. Jätä tyhjäksi, jos et halua seurata niitä.",
+            "port_calls": "Sen saapuvat ja lähtevät alukset. Jätä tyhjäksi, jos et halua seurata niitä.",
+            "departures": "Kuinka monta seuraavaa alusta kukin sensori listaa, 1–20. Saapuvissa näytetään lisäksi enintään kaksi viimeksi saapunutta."
+          }
+        },
+        "reconfigure": {
+          "title": "{port}",
+          "description": "Mistä sataman rajoitukset ja alukset luetaan.",
+          "data": {
+            "winter_location": "Talvimerenkulku",
+            "port_calls": "Alukset satamasta",
+            "departures": "Alusten määrä"
+          },
+          "data_description": {
+            "winter_location": "Sen rajoitukset ja keskeytykset. Jätä tyhjäksi, jos et halua seurata niitä.",
+            "port_calls": "Sen saapuvat ja lähtevät alukset. Jätä tyhjäksi, jos et halua seurata niitä.",
+            "departures": "Kuinka monta seuraavaa alusta kukin sensori listaa, 1–20. Saapuvissa näytetään lisäksi enintään kaksi viimeksi saapunutta."
+          }
+        }
+      },
+      "error": {
+        "nothing_followed": "Valitse talvimerenkulku, alukset tai molemmat."
+      },
+      "abort": {
+        "already_configured": "Tämä satama on jo lisätty.",
+        "cannot_connect": "Satamaluetteloa ei saatu ladattua Digitrafficista. Yritä hetken päästä uudelleen.",
+        "entry_not_loaded": "Digitraffic Live ei ole käynnissä. Ota se käyttöön ja lisää satama sitten.",
+        "reconfigure_successful": "Satama tallennettu."
+      }
+    },
     "road_weather_station": {
       "entry_type": "Tiesääasema",
       "initiate_flow": {
@@ -816,6 +869,32 @@
       },
       "station_arrivals": {
         "name": "saapuvat"
+      },
+      "port_restriction": {
+        "name": "liikennerajoitus",
+        "state": {
+          "none": "Ei rajoitusta",
+          "restricted": "Rajoitus voimassa"
+        }
+      },
+      "port_departures": {
+        "name": "lähtevät"
+      },
+      "port_arrivals": {
+        "name": "saapuvat"
+      }
+    },
+    "binary_sensor": {
+      "port_suspension": {
+        "name": "keskeytys",
+        "state_attributes": {
+          "reason": {
+            "state": {
+              "bad_weather": "Huono sää",
+              "crew_change": "Miehistönvaihto"
+            }
+          }
+        }
       }
     }
   }

@@ -509,6 +509,59 @@
         "reconfigure_successful": "Feed saved."
       }
     },
+    "port": {
+      "entry_type": "Port",
+      "initiate_flow": {
+        "user": "Add port",
+        "reconfigure": "Change port"
+      },
+      "step": {
+        "user": {
+          "title": "Port",
+          "description": "A port's winter navigation restrictions and suspensions, and for a Finnish port the ships arriving and leaving.",
+          "data": {
+            "port": "Port"
+          }
+        },
+        "port": {
+          "title": "{port}",
+          "description": "Where the port's restrictions and ships are read from. Usually the port itself, but a port's ships can also be listed under a neighbouring port, as with Hamina, whose ships are found under Kotka.",
+          "data": {
+            "winter_location": "Winter navigation",
+            "port_calls": "Ships from",
+            "departures": "Number of ships"
+          },
+          "data_description": {
+            "winter_location": "Its restrictions and suspensions. Leave empty to follow none.",
+            "port_calls": "Its arriving and leaving ships. Leave empty to follow none.",
+            "departures": "How many of the next ships each sensor lists, 1–20. Arrivals also show at most the two that came in last."
+          }
+        },
+        "reconfigure": {
+          "title": "{port}",
+          "description": "Where the port's restrictions and ships are read from.",
+          "data": {
+            "winter_location": "Winter navigation",
+            "port_calls": "Ships from",
+            "departures": "Number of ships"
+          },
+          "data_description": {
+            "winter_location": "Its restrictions and suspensions. Leave empty to follow none.",
+            "port_calls": "Its arriving and leaving ships. Leave empty to follow none.",
+            "departures": "How many of the next ships each sensor lists, 1–20. Arrivals also show at most the two that came in last."
+          }
+        }
+      },
+      "error": {
+        "nothing_followed": "Choose winter navigation, ships or both."
+      },
+      "abort": {
+        "already_configured": "This port has already been added.",
+        "cannot_connect": "The port list couldn't be loaded from Digitraffic. Try again in a moment.",
+        "entry_not_loaded": "Digitraffic Live isn't running. Enable it, then add the port.",
+        "reconfigure_successful": "Port saved."
+      }
+    },
     "road_weather_station": {
       "entry_type": "Road weather station",
       "initiate_flow": {
@@ -816,6 +869,32 @@
       },
       "station_arrivals": {
         "name": "arrivals"
+      },
+      "port_restriction": {
+        "name": "traffic restriction",
+        "state": {
+          "none": "No restriction",
+          "restricted": "Restriction in force"
+        }
+      },
+      "port_departures": {
+        "name": "departures"
+      },
+      "port_arrivals": {
+        "name": "arrivals"
+      }
+    },
+    "binary_sensor": {
+      "port_suspension": {
+        "name": "suspension",
+        "state_attributes": {
+          "reason": {
+            "state": {
+              "bad_weather": "Bad weather",
+              "crew_change": "Crew change"
+            }
+          }
+        }
       }
     }
   }

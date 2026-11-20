@@ -1,9 +1,9 @@
 """Update coordinators: one per config subentry.
 
-A subentry is a map feed, a railway station's departures, a road weather station or a road weather camera.
+A subentry is a map feed, a railway station's departures, a port, a road weather station or a road weather camera.
 
 Data that several feeds need (vessel register, icebreakers, passenger notices,
-road station lists and details) lives in DigitrafficRuntimeData and is shared.
+winter navigation, the port list, road station lists and details) lives in DigitrafficRuntimeData and is shared.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from .const import (
     CONF_CAMERA,
     CONF_REFRESH_SECONDS,
     CONF_STATION,
+    DEFAULT_PORT_REFRESH_SECONDS,
     DEFAULT_REFRESH_SECONDS,
     DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS,
     DEFAULT_WEATHER_STATION_REFRESH_SECONDS,
@@ -35,6 +36,7 @@ from .const import (
     DOMAIN,
     MIN_REFRESH_SECONDS,
     SUBENTRY_NAUTICAL_WARNINGS,
+    SUBENTRY_PORT,
     SUBENTRY_ROAD_CONDITIONS,
     SUBENTRY_ROAD_MAINTENANCE,
     SUBENTRY_ROAD_WEATHER_STATION,
@@ -50,6 +52,7 @@ from .const import (
 from .geo import Area
 from .maintenance import MaintenanceFeedConfig, build_maintenance_feed, fetch_maintenance, task_names
 from .nautical_warnings import NauticalWarningFeedConfig, build_nautical_warning_features, fetch_nautical_warnings
+from .ports import CALLS_AHEAD, CALLS_BEHIND, PortConfig, PortIndex, WinterLocation, build_port_calls
 from .road_conditions import RoadConditionFeedConfig, build_road_condition_features, count_poor, section_index
 from .ships import ShipFeedConfig, VesselRegister, build_ship_features, fetch_ship_positions
 from .station_departures import (
@@ -148,6 +151,10 @@ class DigitrafficRuntimeData:
     camera_details: DetailCache[str]
     # Railway station names by short code, for where each departing train is heading.
     station_names: PeriodicValue[dict[str, str]]
+    # Winter navigation's ports by UN/LOCODE, with their restrictions and suspensions.
+    winter_locations: PeriodicValue[dict[str, WinterLocation]]
+    # Every port's name, for where each ship comes from or goes to.
+    port_index: PeriodicValue[PortIndex]
     coordinators: dict[str, SubentryCoordinator[Any]] = field(default_factory=dict)
 
 
@@ -437,6 +444,56 @@ class StationDeparturesCoordinator(SubentryCoordinator[StationDepartures]):
         )
 
 
+@dataclass(frozen=True)
+class PortData:
+    # None when the port follows no winter navigation location, or winter navigation hasn't been loaded yet.
+    winter: WinterLocation | None
+    # "departures" and "arrivals", when the port has calls.
+    calls: dict[str, list[dict[str, Any]]]
+
+    def next_call(self, direction: str) -> dict[str, Any] | None:
+        """The next ship to leave, or to arrive that hasn't come in."""
+        return next((call for call in self.calls.get(direction, []) if not call.get("arrived")), None)
+
+
+class PortCoordinator(SubentryCoordinator[PortData]):
+    """A port's winter navigation restrictions and suspensions, and its ships' arrivals and departures."""
+
+    default_refresh_seconds = DEFAULT_PORT_REFRESH_SECONDS
+
+    def __init__(self, hass: HomeAssistant, entry: DigitrafficConfigEntry, subentry: ConfigSubentry) -> None:
+        super().__init__(hass, entry, subentry)
+        self.port_config = PortConfig.from_data(subentry.data)
+
+    async def _async_update_data(self) -> PortData:
+        runtime = self.runtime
+        config = self.port_config
+        winter = None
+        if config.winter_location:
+            locations = await runtime.winter_locations.get()
+            winter = locations.get(config.winter_location)
+        calls: dict[str, list[dict[str, Any]]] = {}
+        if config.port_calls:
+            # Without the names a ship's port is its UN/LOCODE, which is still worth showing.
+            names = (await runtime.port_index.get()).names
+            now = dt_util.utcnow()
+            start, end = ((now + offset).strftime("%Y-%m-%dT%H:%M:%SZ") for offset in (-CALLS_BEHIND, CALLS_AHEAD))
+            try:
+                arriving, departing = await asyncio.gather(
+                    runtime.client.port_calls(config.port_calls, "eta", start, end),
+                    runtime.client.port_calls(config.port_calls, "etd", start, end),
+                )
+                # A busy port's week is a few hundred calls.
+                for direction, raw in ((DIRECTION_ARRIVALS, arriving), (DIRECTION_DEPARTURES, departing)):
+                    calls[direction] = await self.hass.async_add_executor_job(
+                        build_port_calls, raw, config, names, direction == DIRECTION_ARRIVALS, now
+                    )
+            # build_port_calls raises ValueError for an answer that isn't a list of calls.
+            except (DigitrafficError, ValueError) as err:
+                raise UpdateFailed(str(err)) from err
+        return PortData(winter, calls)
+
+
 class WeatherStationCoordinator(SubentryCoordinator[dict[str, Mapping[str, Any]]]):
     """The latest sensor values of one road weather station, by sensor name."""
 
@@ -496,6 +553,7 @@ COORDINATORS: dict[str, type[SubentryCoordinator[Any]]] = {
     SUBENTRY_NAUTICAL_WARNINGS: NauticalWarningFeedCoordinator,
     SUBENTRY_WATER_RESTRICTIONS: WaterRestrictionFeedCoordinator,
     SUBENTRY_STATION_DEPARTURES: StationDeparturesCoordinator,
+    SUBENTRY_PORT: PortCoordinator,
     SUBENTRY_ROAD_WEATHER_STATION: WeatherStationCoordinator,
     SUBENTRY_WEATHER_CAMERA: WeatherCameraCoordinator,
 }

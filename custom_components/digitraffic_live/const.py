@@ -38,6 +38,8 @@ SUBENTRY_STATION_DEPARTURES: Final = "station_departures"
 # A single road weather station or camera, which becomes a device with its own entities
 SUBENTRY_ROAD_WEATHER_STATION: Final = "road_weather_station"
 SUBENTRY_WEATHER_CAMERA: Final = "weather_camera"
+# One port's winter navigation restrictions and suspensions, and the ships calling at it, as a device
+SUBENTRY_PORT: Final = "port"
 
 # Feed settings (config subentry data)
 CONF_AREA: Final = "area"
@@ -76,6 +78,11 @@ DIRECTION_SENSORS: Final[dict[str, list[str]]] = {
     DIRECTION_BOTH: [DIRECTION_DEPARTURES, DIRECTION_ARRIVALS],
 }
 CONF_CAMERA: Final = "camera"
+# Port settings: the port chosen, the winter navigation location and the port call locode, each a UN/LOCODE. The two
+# usually match the port, but Hamina's restrictions are under FIHMN and its calls under FIKTK.
+CONF_PORT: Final = "port"
+CONF_WINTER_LOCATION: Final = "winter_location"
+CONF_PORT_CALLS: Final = "port_calls"
 
 # Digitraffic caches most responses for about a minute, so polling faster only repeats the same data.
 MIN_REFRESH_SECONDS: Final = 30
@@ -92,6 +99,8 @@ DEFAULT_ROAD_CONDITION_REFRESH_SECONDS: Final = 600
 DEFAULT_WEATHER_STATION_REFRESH_SECONDS: Final = 300
 DEFAULT_WEATHER_CAMERA_REFRESH_SECONDS: Final = 600
 DEFAULT_NAUTICAL_WARNING_REFRESH_SECONDS: Final = 600
+# Restrictions change by the day, and ships' calls are announced days ahead.
+DEFAULT_PORT_REFRESH_SECONDS: Final = 600
 # The restriction areas are standing decisions that rarely change.
 DEFAULT_WATER_RESTRICTION_REFRESH_SECONDS: Final = 3600
 
