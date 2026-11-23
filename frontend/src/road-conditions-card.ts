@@ -17,7 +17,7 @@ import { ScrollFade, fadeStyles } from "./fade";
 import type { HassEntity, HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
 import { browserLanguage, translate } from "./localize/localize";
-import { drawnScale, fillLimit, filledHeight, filledStyle, spareRoom, validRowStep } from "./rows";
+import { drawnScale, fillLimit, filledHeight, filledStyle, heldSpare, spareRoom, validRowStep } from "./rows";
 import { precipitation, reading, scale, showGusts, stationDevices, stationName, stationSensors, stationsOf } from "./stations";
 import type { RoadConditionsCardConfig, StationConfig } from "./types";
 import { WEATHER_ICONS } from "./weather-icons";
@@ -215,8 +215,8 @@ export class RoadConditionsCard extends LitElement {
         }
         const stations = stationsOf(this.config.stations);
         const title = this.config.title;
-        // The room a whole row leaves over goes under one station's name, or under the title of several, or above them
-        // without one.
+        // The room a whole row leaves over goes under one station's name, or under the title of several, or without one
+        // its upper half goes above them, as they are centred.
         const several = stations.length > 1;
         return html`
             <ha-card class=${this.heightStyle() ? "held" : ""} style=${this.cardStyle()}>
@@ -305,13 +305,14 @@ export class RoadConditionsCard extends LitElement {
             return;
         }
         const limit = fillLimit(this.config ?? {}, this.layout, this.minimumHeight());
-        if (!limit) {
+        const held = !limit && Boolean(this.heightStyle());
+        if (!limit && !held) {
             this.filled = 0;
             this.spare = 0;
             return;
         }
         // From the card's top to the end of its own last part, never its own height, which is the min-height set here, and
-        // never an element a theme adds to it.
+        // never an element a theme adds to it, however far a held card's rows are scrolled.
         const parts = card.querySelectorAll<HTMLElement>(
             ":scope > .card-title, :scope > .name, :scope > .station > *, :scope > .rows > .row",
         );
@@ -321,8 +322,10 @@ export class RoadConditionsCard extends LitElement {
         }
         const style = getComputedStyle(card);
         // The drawn distance unscaled, as the margin, padding and border added to it are the layout's.
+        const scale = drawnScale(card);
         let content =
-            (last.getBoundingClientRect().bottom - card.getBoundingClientRect().top) / drawnScale(card) +
+            (last.getBoundingClientRect().bottom - card.getBoundingClientRect().top) / scale +
+            (card.querySelector<HTMLElement>(":scope > .rows")?.scrollTop ?? 0) +
             px(getComputedStyle(last).marginBottom) +
             px(style.paddingBottom) +
             px(style.borderBottomWidth);
@@ -330,15 +333,26 @@ export class RoadConditionsCard extends LitElement {
         const below = card.querySelector<HTMLElement>(".spare");
         const above = card.querySelector<HTMLElement>(".spare-top");
         content -= (below ? px(getComputedStyle(below).paddingBottom) : 0) + (above ? px(getComputedStyle(above).paddingTop) : 0);
+        // Held to a height, less than a row to spare goes where it does on filled rows, and more under the rows.
+        if (held) {
+            this.filled = 0;
+            this.spare = heldSpare(card.getBoundingClientRect().height / scale, content);
+            return;
+        }
         const filled = filledHeight(content, this.config ?? {}, limit);
         this.filled = filled;
         this.spare = spareRoom(filled, content);
     }
 
-    /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. */
+    /**
+     * The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. Above
+     * several stations with no title over them only the upper half of it goes, as the rows are centred.
+     */
     private cardStyle(): string {
         const style = filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled);
-        return this.filled ? `${style}; --spare: ${this.spare}px` : style;
+        const centred = !this.config?.title && stationsOf(this.config?.stations ?? []).length > 1;
+        const spare = centred ? Math.floor(this.spare / 2) : this.spare;
+        return spare ? [style, `--spare: ${spare}px`].filter(Boolean).join("; ") : style;
     }
 
     /**
@@ -617,7 +631,7 @@ export class RoadConditionsCard extends LitElement {
                     overflow-wrap: anywhere;
                 }
 
-                /* The room a whole row leaves over, under the name or the title, or above the rows without a title. Padding,
+                /* The room left over, under the name or the title, or its upper half above the rows without a title. Padding,
                    not a margin, which would collapse into its neighbour's. */
                 .spare {
                     padding-bottom: var(--spare, 0px);

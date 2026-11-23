@@ -79,18 +79,39 @@ describe("filling the rows of a sections view", () => {
         expect(await filled(await card({}, "grid"), end, scale)).toBe(style);
     });
 
-    it.each<[string, Partial<RoadConditionsCardConfig>, string, string]>([
-        ["under one station's name", { title: "Tiet" }, ".name", "padding-bottom"],
-        ["under one station's name without a title", {}, ".name", "padding-bottom"],
-        ["under the title of several stations", { title: "Tiet", stations: ["station-a", "station-b"] }, ".card-title", "padding-bottom"],
-        ["above several stations without a title", { stations: ["station-a", "station-b"] }, ".rows", "padding-top"],
-    ])("puts the spare room %s, and doesn't count it again once drawn", async (_name, config, holder, side) => {
+    // Held to 300 px, with the content ending 11 px of padding under its last part: 271 px leaves 29, which goes under the
+    // title as on filled rows, and 211 px leaves 89, a row or more, which goes under the rows.
+    it.each([
+        ["less than a row to spare under the title", 260, "height: 300px; --spare: 29px"],
+        ["a row or more to spare under the rows", 200, "height: 300px"],
+    ])("held to a height, puts %s", async (_name, end, expected) => {
+        const element = await card({ title: "Tiet", stations: ["station-a", "station-b"], height: 300 }, "grid");
+        laidOut(element, end);
+        box(one(element, "ha-card"), 0, 300);
+        (element as unknown as { fillRows(): void }).fillRows();
+        await element.updateComplete;
+        expect(style(element)).toBe(expected);
+    });
+
+    // Several stations without a title are centred, so only the upper half of the room, 17 of 34 px, goes above them.
+    it.each<[string, Partial<RoadConditionsCardConfig>, string, string, number]>([
+        ["under one station's name", { title: "Tiet" }, ".name", "padding-bottom", 34],
+        ["under one station's name without a title", {}, ".name", "padding-bottom", 34],
+        [
+            "under the title of several stations",
+            { title: "Tiet", stations: ["station-a", "station-b"] },
+            ".card-title",
+            "padding-bottom",
+            34,
+        ],
+        ["half of it above several stations without a title", { stations: ["station-a", "station-b"] }, ".rows", "padding-top", 17],
+    ])("puts the spare room %s, and doesn't count it again once drawn", async (_name, config, holder, side, drawn) => {
         const element = await card(config, "grid");
         const holders = element.shadowRoot!.querySelectorAll(".spare, .spare-top");
         expect([...holders]).toEqual([one(element, holder)]);
-        expect(await filled(element, 139)).toBe("min-height: 184px; --spare: 34px");
-        one(element, holder).style.setProperty(side, "34px");
-        expect(await filled(element, 173)).toBe("min-height: 184px; --spare: 34px");
+        expect(await filled(element, 139)).toBe(`min-height: 184px; --spare: ${drawn}px`);
+        one(element, holder).style.setProperty(side, `${drawn}px`);
+        expect(await filled(element, 139 + drawn)).toBe(`min-height: 184px; --spare: ${drawn}px`);
     });
 
     it("measures to its last part's end, never an element a theme adds after it", async () => {
@@ -111,7 +132,7 @@ describe("filling the rows of a sections view", () => {
     // 500 px rounded down to the rows is 440.
     it.each([
         ["under it, on the rows its content needs", 139, "max-height: 440px; min-height: 184px; --spare: 34px"],
-        ["over it, on the limit rounded down to the rows", 600, "max-height: 440px; min-height: 440px; --spare: 0px"],
+        ["over it, on the limit rounded down to the rows", 600, "max-height: 440px; min-height: 440px"],
     ])("grows up to a limit on automatic rows %s", async (_name, end, style) => {
         expect(await filled(await card({ max_height: 500 }, "grid"), end)).toBe(style);
     });

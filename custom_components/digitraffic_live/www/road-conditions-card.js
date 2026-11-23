@@ -863,6 +863,10 @@ function filledHeight(content, config, limit = Infinity) {
 function spareRoom(filled, content) {
   return Math.max(0, Math.floor(filled - content + SLACK_PX));
 }
+function heldSpare(held, content) {
+  const spare = spareRoom(held, content);
+  return spare < ROW_PX ? spare : 0;
+}
 function fillLimit(config, layout, minimum = 0) {
   const rows = config.grid_options ? config.grid_options.rows : config.layout_options?.grid_rows;
   if (layout !== "grid" || typeof rows === "number") {
@@ -1391,7 +1395,8 @@ var RoadConditionsCard = class extends i4 {
       return;
     }
     const limit = fillLimit(this.config ?? {}, this.layout, this.minimumHeight());
-    if (!limit) {
+    const held = !limit && Boolean(this.heightStyle());
+    if (!limit && !held) {
       this.filled = 0;
       this.spare = 0;
       return;
@@ -1404,18 +1409,29 @@ var RoadConditionsCard = class extends i4 {
       return;
     }
     const style = getComputedStyle(card);
-    let content = (last.getBoundingClientRect().bottom - card.getBoundingClientRect().top) / drawnScale(card) + px(getComputedStyle(last).marginBottom) + px(style.paddingBottom) + px(style.borderBottomWidth);
+    const scale2 = drawnScale(card);
+    let content = (last.getBoundingClientRect().bottom - card.getBoundingClientRect().top) / scale2 + (card.querySelector(":scope > .rows")?.scrollTop ?? 0) + px(getComputedStyle(last).marginBottom) + px(style.paddingBottom) + px(style.borderBottomWidth);
     const below = card.querySelector(".spare");
     const above = card.querySelector(".spare-top");
     content -= (below ? px(getComputedStyle(below).paddingBottom) : 0) + (above ? px(getComputedStyle(above).paddingTop) : 0);
+    if (held) {
+      this.filled = 0;
+      this.spare = heldSpare(card.getBoundingClientRect().height / scale2, content);
+      return;
+    }
     const filled = filledHeight(content, this.config ?? {}, limit);
     this.filled = filled;
     this.spare = spareRoom(filled, content);
   }
-  /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. */
+  /**
+   * The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room. Above
+   * several stations with no title over them only the upper half of it goes, as the rows are centred.
+   */
   cardStyle() {
     const style = filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled);
-    return this.filled ? `${style}; --spare: ${this.spare}px` : style;
+    const centred = !this.config?.title && stationsOf(this.config?.stations ?? []).length > 1;
+    const spare = centred ? Math.floor(this.spare / 2) : this.spare;
+    return spare ? [style, `--spare: ${spare}px`].filter(Boolean).join("; ") : style;
   }
   /**
    * The whole card for one station: its name, and under it the grade on its scale, the values in a grid and a warning
@@ -1656,7 +1672,7 @@ var RoadConditionsCard = class extends i4 {
                     overflow-wrap: anywhere;
                 }
 
-                /* The room a whole row leaves over, under the name or the title, or above the rows without a title. Padding,
+                /* The room left over, under the name or the title, or its upper half above the rows without a title. Padding,
                    not a margin, which would collapse into its neighbour's. */
                 .spare {
                     padding-bottom: var(--spare, 0px);
