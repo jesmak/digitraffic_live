@@ -598,6 +598,7 @@ function r5(r6) {
 
 // src/const.ts
 var CARD_VERSION = "1.6.0";
+var DEFAULT_SCROLL_INDICATOR = "both";
 var PLATFORM = "digitraffic_live";
 var SENSORS = [
   "road_temperature",
@@ -666,6 +667,146 @@ var PRECIPITATION_ICONS = {
   heavy_snow: ["wi:snow", "heavy_snow_or_sleet"]
 };
 
+// src/fade.ts
+var SCROLL_INDICATORS = ["both", "fade", "scrollbar"];
+function validScrollIndicator(config) {
+  return config.scroll_indicator === void 0 || config.scroll_indicator === null || SCROLL_INDICATORS.includes(config.scroll_indicator);
+}
+function scrollIndicator(config, fallback) {
+  return config.scroll_indicator ?? fallback;
+}
+function scrollIndicatorSchema(text) {
+  return [
+    {
+      name: "scroll_indicator",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: SCROLL_INDICATORS.map((value) => ({ value, label: text(`editor.scroll_indicator_${value}`) }))
+        }
+      }
+    }
+  ];
+}
+function scrollIndicatorData(config, fallback) {
+  return { ...config, scroll_indicator: scrollIndicator(config, fallback) };
+}
+function tidyScrollIndicator(config, fallback) {
+  const tidied = { ...config };
+  if (scrollIndicator(tidied, fallback) === fallback) {
+    delete tidied.scroll_indicator;
+  }
+  return tidied;
+}
+var fadeStyles = i`
+    .fades {
+        --fade-length: min(24px, 25%);
+        scroll-padding-block: calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)) var(--fade-length, 24px);
+    }
+
+    .fade-top {
+        mask-image: linear-gradient(
+            to bottom,
+            #000 var(--fade-top-offset, 0px),
+            transparent var(--fade-top-offset, 0px),
+            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px))
+        );
+    }
+
+    .fade-bottom {
+        mask-image: linear-gradient(to top, transparent, #000 var(--fade-length, 24px));
+    }
+
+    .fade-top.fade-bottom {
+        mask-image: linear-gradient(
+            to bottom,
+            #000 var(--fade-top-offset, 0px),
+            transparent var(--fade-top-offset, 0px),
+            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)),
+            #000 calc(100% - var(--fade-length, 24px)),
+            transparent
+        );
+    }
+
+    /* Over the card's own scrollbar style, whatever its selector. */
+    .scroll-hidden {
+        scrollbar-width: none !important;
+    }
+
+    .scroll-hidden::-webkit-scrollbar {
+        display: none;
+    }
+`;
+function markFade(part) {
+  const hidden = part.scrollHeight - part.clientHeight;
+  part.classList.toggle("fade-top", hidden > 1 && part.scrollTop > 1);
+  part.classList.toggle("fade-bottom", hidden > 1 && hidden - part.scrollTop > 1);
+}
+var onScroll = (event) => markFade(event.currentTarget);
+var ScrollFade = class {
+  constructor(host, parts, indicator) {
+    this.host = host;
+    this.parts = parts;
+    this.indicator = indicator;
+    /** Each followed part with the children whose size it watches. */
+    this.followed = /* @__PURE__ */ new Map();
+    this.resized = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver((entries) => {
+      for (const { target } of entries) {
+        const part = this.followed.has(target) ? target : target.parentElement;
+        if (part && this.followed.has(part)) {
+          markFade(part);
+        }
+      }
+    });
+    host.addController(this);
+  }
+  hostConnected() {
+    if (this.host.hasUpdated) {
+      this.follow();
+    }
+  }
+  hostUpdated() {
+    if (this.host.isConnected) {
+      this.follow();
+    }
+  }
+  hostDisconnected() {
+    for (const part of [...this.followed.keys()]) {
+      this.forget(part);
+    }
+  }
+  follow() {
+    const indicator = this.indicator();
+    const now = new Set(indicator === "scrollbar" ? [] : this.parts());
+    for (const part of [...this.followed.keys()]) {
+      if (!now.has(part)) {
+        this.forget(part);
+      }
+    }
+    for (const part of now) {
+      if (!this.followed.has(part)) {
+        part.addEventListener("scroll", onScroll, { passive: true });
+        this.resized?.observe(part);
+      }
+      part.classList.add("fades");
+      part.classList.toggle("scroll-hidden", indicator === "fade");
+      const before = this.followed.get(part) ?? [];
+      const children = [...part.children];
+      before.filter((child) => !children.includes(child)).forEach((child) => this.resized?.unobserve(child));
+      children.filter((child) => !before.includes(child)).forEach((child) => this.resized?.observe(child));
+      this.followed.set(part, children);
+      markFade(part);
+    }
+  }
+  forget(part) {
+    this.followed.get(part)?.forEach((child) => this.resized?.unobserve(child));
+    this.followed.delete(part);
+    part.removeEventListener("scroll", onScroll);
+    this.resized?.unobserve(part);
+    part.classList.remove("fades", "fade-top", "fade-bottom", "scroll-hidden");
+  }
+};
+
 // src/localize/languages/en.json
 var en_default = {
   common: {
@@ -674,6 +815,7 @@ var en_default = {
     invalid_configuration: "Invalid configuration. Add at least one road weather station.",
     invalid_height: "Invalid height. height and max_height must be positive numbers of pixels, and height_mode auto, fixed or max.",
     invalid_row_step: "Invalid rounding. row_step must be full or half.",
+    invalid_scroll_indicator: "Invalid scroll_indicator. It must be both, fade or scrollbar.",
     station_without_device: "Invalid configuration. Every station needs its device.",
     no_station: "No sensors found for this station",
     no_readings: "No readings from this station right now"
@@ -722,7 +864,12 @@ var en_default = {
     row_step: "Rounding in a sections view",
     row_step_helper: "With automatic row height, the card's height is rounded up to whole rows, or to half rows to save space.",
     row_step_full: "Whole rows",
-    row_step_half: "Half rows"
+    row_step_half: "Half rows",
+    scroll_indicator: "Scrolling",
+    scroll_indicator_helper: "Shown when the card's height is limited and its content doesn't all fit",
+    scroll_indicator_both: "Faded edge and scrollbar",
+    scroll_indicator_fade: "Faded edge",
+    scroll_indicator_scrollbar: "Scrollbar"
   }
 };
 
@@ -734,6 +881,7 @@ var fi_default = {
     invalid_configuration: "Virheellinen konfiguraatio. Lis\xE4\xE4 v\xE4hint\xE4\xE4n yksi ties\xE4\xE4asema.",
     invalid_height: "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikselein\xE4, ja korkeustilan (height_mode) auto, fixed tai max.",
     invalid_row_step: "Virheellinen py\xF6ristys. Py\xF6ristyksen (row_step) on oltava full tai half.",
+    invalid_scroll_indicator: "Virheellinen scroll_indicator. Sen on oltava both, fade tai scrollbar.",
     station_without_device: "Virheellinen konfiguraatio. Jokaiselle asemalle tarvitaan laite (device).",
     no_station: "Asemalta ei l\xF6ytynyt sensoreita",
     no_readings: "Asemalta ei juuri nyt saada lukemia"
@@ -782,7 +930,12 @@ var fi_default = {
     row_step: "Py\xF6ristys osioihin jaetussa n\xE4kym\xE4ss\xE4",
     row_step_helper: "Automaattisella rivikorkeudella kortin korkeus py\xF6ristet\xE4\xE4n yl\xF6sp\xE4in kokonaisiin riveihin, tai tilan s\xE4\xE4st\xE4miseksi puolikkaisiin riveihin.",
     row_step_full: "Kokonaisiin riveihin",
-    row_step_half: "Puolikkaisiin riveihin"
+    row_step_half: "Puolikkaisiin riveihin",
+    scroll_indicator: "Vieritys",
+    scroll_indicator_helper: "N\xE4kyy, kun kortin korkeus on rajattu eik\xE4 koko sis\xE4lt\xF6 mahdu siihen",
+    scroll_indicator_both: "H\xE4ivytetty reuna ja vierityspalkki",
+    scroll_indicator_fade: "H\xE4ivytetty reuna",
+    scroll_indicator_scrollbar: "Vierityspalkki"
   }
 };
 
@@ -1027,8 +1180,8 @@ var RoadConditionsCardEditor = class extends i4 {
             <ha-form
                 class="height"
                 .hass=${this.hass}
-                .data=${rowStepData(this.config)}
-                .schema=${rowStepSchema(this.config, (key) => this.text(key))}
+                .data=${scrollIndicatorData(rowStepData(this.config), DEFAULT_SCROLL_INDICATOR)}
+                .schema=${[...rowStepSchema(this.config, (key) => this.text(key)), ...scrollIndicatorSchema((key) => this.text(key))]}
                 .computeLabel=${(entry) => this.text(`editor.${entry.name}`)}
                 .computeHelper=${(entry) => this.helper(entry.name)}
                 @value-changed=${(event) => this.changed({ ...this.config, ...event.detail.value })}
@@ -1053,7 +1206,7 @@ var RoadConditionsCardEditor = class extends i4 {
         `;
   }
   changed(value) {
-    const config = tidyRowStep(value);
+    const config = tidyScrollIndicator(tidyRowStep(value), DEFAULT_SCROLL_INDICATOR);
     config.stations = compactStations(config.stations ?? []);
     if (!config.title) {
       delete config.title;
@@ -1082,104 +1235,6 @@ __decorateClass([
 if (!customElements.get("road-conditions-card-editor")) {
   customElements.define("road-conditions-card-editor", RoadConditionsCardEditor);
 }
-
-// src/fade.ts
-var fadeStyles = i`
-    .fades {
-        --fade-length: min(24px, 25%);
-        scroll-padding-block: calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)) var(--fade-length, 24px);
-    }
-
-    .fade-top {
-        mask-image: linear-gradient(
-            to bottom,
-            #000 var(--fade-top-offset, 0px),
-            transparent var(--fade-top-offset, 0px),
-            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px))
-        );
-    }
-
-    .fade-bottom {
-        mask-image: linear-gradient(to top, transparent, #000 var(--fade-length, 24px));
-    }
-
-    .fade-top.fade-bottom {
-        mask-image: linear-gradient(
-            to bottom,
-            #000 var(--fade-top-offset, 0px),
-            transparent var(--fade-top-offset, 0px),
-            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)),
-            #000 calc(100% - var(--fade-length, 24px)),
-            transparent
-        );
-    }
-`;
-function markFade(part) {
-  const hidden = part.scrollHeight - part.clientHeight;
-  part.classList.toggle("fade-top", hidden > 1 && part.scrollTop > 1);
-  part.classList.toggle("fade-bottom", hidden > 1 && hidden - part.scrollTop > 1);
-}
-var onScroll = (event) => markFade(event.currentTarget);
-var ScrollFade = class {
-  constructor(host, parts) {
-    this.host = host;
-    this.parts = parts;
-    /** Each followed part with the children whose size it watches. */
-    this.followed = /* @__PURE__ */ new Map();
-    this.resized = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver((entries) => {
-      for (const { target } of entries) {
-        const part = this.followed.has(target) ? target : target.parentElement;
-        if (part && this.followed.has(part)) {
-          markFade(part);
-        }
-      }
-    });
-    host.addController(this);
-  }
-  hostConnected() {
-    if (this.host.hasUpdated) {
-      this.follow();
-    }
-  }
-  hostUpdated() {
-    if (this.host.isConnected) {
-      this.follow();
-    }
-  }
-  hostDisconnected() {
-    for (const part of [...this.followed.keys()]) {
-      this.forget(part);
-    }
-  }
-  follow() {
-    const now = new Set(this.parts());
-    for (const part of [...this.followed.keys()]) {
-      if (!now.has(part)) {
-        this.forget(part);
-      }
-    }
-    for (const part of now) {
-      if (!this.followed.has(part)) {
-        part.addEventListener("scroll", onScroll, { passive: true });
-        this.resized?.observe(part);
-      }
-      part.classList.add("fades");
-      const before = this.followed.get(part) ?? [];
-      const children = [...part.children];
-      before.filter((child) => !children.includes(child)).forEach((child) => this.resized?.unobserve(child));
-      children.filter((child) => !before.includes(child)).forEach((child) => this.resized?.observe(child));
-      this.followed.set(part, children);
-      markFade(part);
-    }
-  }
-  forget(part) {
-    this.followed.get(part)?.forEach((child) => this.resized?.unobserve(child));
-    this.followed.delete(part);
-    part.removeEventListener("scroll", onScroll);
-    this.resized?.unobserve(part);
-    part.classList.remove("fades", "fade-top", "fade-bottom");
-  }
-};
 
 // src/weather-icons.ts
 var WEATHER_ICONS = {
@@ -1238,7 +1293,8 @@ var RoadConditionsCard = class extends i4 {
     this.resizes = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver(() => this.measureSoon());
     new ScrollFade(
       this,
-      () => this.heightStyle() ? this.renderRoot.querySelectorAll("ha-card > .station, ha-card > .rows") : []
+      () => this.heightStyle() ? this.renderRoot.querySelectorAll("ha-card > .station, ha-card > .rows") : [],
+      () => scrollIndicator(this.config ?? {}, DEFAULT_SCROLL_INDICATOR)
     );
   }
   static getConfigElement() {
@@ -1260,6 +1316,9 @@ var RoadConditionsCard = class extends i4 {
     }
     if (!validRowStep(config)) {
       throw new Error(translate(browserLanguage(), "common.invalid_row_step"));
+    }
+    if (!validScrollIndicator(config)) {
+      throw new Error(translate(browserLanguage(), "common.invalid_scroll_indicator"));
     }
     this.config = { ...config };
   }

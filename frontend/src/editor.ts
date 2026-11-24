@@ -1,12 +1,13 @@
 /**
- * The card's visual editor: the title, the stations with the names the card gives them, and the height's rounding. The
- * height mode is set in YAML only.
+ * The card's visual editor: the title, the stations with the names the card gives them, the height's rounding, and how
+ * what scrolls shows that there is more. The height mode is set in YAML only.
  */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 
-import { PLATFORM } from "./const";
+import { DEFAULT_SCROLL_INDICATOR, PLATFORM } from "./const";
+import { scrollIndicatorData, scrollIndicatorSchema, tidyScrollIndicator } from "./fade";
 import type { HomeAssistant } from "./hass";
 import { browserLanguage, translate } from "./localize/localize";
 import { rowStepData, rowStepSchema, tidyRowStep } from "./rows";
@@ -85,8 +86,8 @@ export class RoadConditionsCardEditor extends LitElement {
             <ha-form
                 class="height"
                 .hass=${this.hass}
-                .data=${rowStepData(this.config)}
-                .schema=${rowStepSchema(this.config, (key) => this.text(key))}
+                .data=${scrollIndicatorData(rowStepData(this.config), DEFAULT_SCROLL_INDICATOR)}
+                .schema=${[...rowStepSchema(this.config, (key) => this.text(key)), ...scrollIndicatorSchema((key) => this.text(key))]}
                 .computeLabel=${(entry: SchemaEntry) => this.text(`editor.${entry.name}`)}
                 .computeHelper=${(entry: SchemaEntry) => this.helper(entry.name)}
                 @value-changed=${(event: CustomEvent<{ value: RoadConditionsCardConfig }>) =>
@@ -114,7 +115,7 @@ export class RoadConditionsCardEditor extends LitElement {
     }
 
     private changed(value: RoadConditionsCardConfig): void {
-        const config: RoadConditionsCardConfig = tidyRowStep(value);
+        const config: RoadConditionsCardConfig = tidyScrollIndicator(tidyRowStep(value), DEFAULT_SCROLL_INDICATOR);
         config.stations = compactStations((config.stations ?? []) as StationConfig[]);
         if (!config.title) {
             delete config.title;

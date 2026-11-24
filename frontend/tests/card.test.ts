@@ -426,7 +426,7 @@ describe("editor", () => {
         expect(saved(height)).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"], ...height }]);
     });
 
-    it("puts the rounding in a form of their own after the stations' help, and keeps a height set in YAML", async () => {
+    it("puts the rounding and the scroll indicator in a form of their own after the stations' help, and keeps a height set in YAML", async () => {
         const editor = document.createElement("road-conditions-card-editor");
         editor.hass = { states: {}, entities: {}, devices: {}, locale: { language: "en" } } as unknown as HomeAssistant;
         editor.setConfig({ type: "custom:road-conditions-card", title: "Tiet", stations: ["station-a"], max_height: 500 });
@@ -437,7 +437,7 @@ describe("editor", () => {
         type Form = HTMLElement & { data: Record<string, unknown>; schema: Array<{ name: string }> };
         const [stations, height] = [...root.querySelectorAll<Form>("ha-form")];
         expect(stations.schema.map((entry) => entry.name)).toEqual(["title", "stations"]);
-        expect(height.schema.map((entry) => entry.name)).toEqual(["row_step"]);
+        expect(height.schema.map((entry) => entry.name)).toEqual(["row_step", "scroll_indicator"]);
         expect(height.data).toMatchObject({ max_height: 500, row_step: "full" });
 
         const configs: unknown[] = [];
@@ -457,7 +457,7 @@ describe("editor", () => {
         await editor.updateComplete;
         type Form = HTMLElement & { data: Record<string, unknown>; schema: Array<{ name: string }> };
         const height = editor.shadowRoot!.querySelectorAll<Form>("ha-form")[1];
-        expect(height.schema.map((entry) => entry.name)).toEqual(["row_step"]);
+        expect(height.schema.map((entry) => entry.name)).toEqual(["row_step", "scroll_indicator"]);
         expect(height.data).toMatchObject({ row_step: "full" });
 
         const configs: unknown[] = [];
@@ -470,6 +470,13 @@ describe("editor", () => {
             { type: "custom:road-conditions-card", stations: ["station-a"] },
         ]);
         editor.remove();
+    });
+
+    it("leaves the default scroll indicator out, and keeps another", () => {
+        expect(saved({ scroll_indicator: "both" })).toEqual([{ type: "custom:road-conditions-card", stations: ["station-a"] }]);
+        expect(saved({ scroll_indicator: "fade" })).toEqual([
+            { type: "custom:road-conditions-card", stations: ["station-a"], scroll_indicator: "fade" },
+        ]);
     });
 
     it("drops the rounding of a card held to a height", () => {

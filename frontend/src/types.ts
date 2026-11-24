@@ -1,3 +1,4 @@
+import type { ScrollIndicatorConfig } from "./fade";
 import type { LovelaceCardConfig } from "./hass";
 import type { RowStepConfig } from "./rows";
 
@@ -8,7 +9,7 @@ export interface StationConfig {
     name?: string;
 }
 
-export interface RoadConditionsCardConfig extends LovelaceCardConfig, RowStepConfig {
+export interface RoadConditionsCardConfig extends LovelaceCardConfig, RowStepConfig, ScrollIndicatorConfig {
     /** Road weather station devices of digitraffic_live: a device id, or one with its name. One draws the full card, more a row each. */
     stations: Array<string | StationConfig>;
     /** Shown at the top of the card. */
