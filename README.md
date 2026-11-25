@@ -264,16 +264,20 @@ direction is chosen when the station is added, and can't be changed after. Cargo
 ### Port
 
 Add with **Add port**, and pick the port from winter navigation's ports in Finland and its neighbours and the Finnish
-ports that have ship calls. A foreign port is added straight away, with its restrictions and suspensions. A Finnish
-port asks where its restrictions and its ships are read from, both the port itself by default. The two can differ:
-Hamina's restrictions are under its own code, FIHMN, while its harbours' ships are listed under Kotka's, FIKTK. A
-port can be added once.
+ports that have ship calls. A port without ship calls, as every foreign port is, is added straight away, with its
+restrictions and suspensions. A port with them asks what to follow. A port can be added once.
 
-| Name              | Type   | Description                                                                         | Default  |
-| ----------------- | ------ | ----------------------------------------------------------------------------------- | -------- |
-| Winter navigation | port   | Whose restrictions and suspensions the port has. Empty follows none                 | the port |
-| Ships from        | port   | Whose arriving and leaving ships the port lists, Finnish ports only. Empty for none | the port |
-| Number of ships   | number | How many of the next ships each of the two sensors lists, 1–20                      | 5        |
+| Name                     | Type    | Description                                                                         | Default |
+| ------------------------ | ------- | ----------------------------------------------------------------------------------- | ------- |
+| Follow winter navigation | boolean | The port's traffic restrictions and suspensions, for a port winter navigation lists | on      |
+| Follow ships             | boolean | The port's arriving and leaving ships                                               | on      |
+| Number of ships          | number  | How many of the next ships each of the two sensors lists, 1–20                      | 5       |
+
+A place's restrictions can be under another name than its ships. Kitee's ships are under Kitee and its restrictions
+under Puhos, so following both takes both ports.
+
+Digitraffic lists Hamina's ships under Kotka's code, the two being one port company. Hamina has the ships at its own
+harbours and Kotka the rest. A ship at anchor or at an unknown harbour is listed at both.
 
 A port is updated every ten minutes.
 

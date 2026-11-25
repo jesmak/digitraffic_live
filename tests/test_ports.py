@@ -26,7 +26,8 @@ from custom_components.digitraffic_live.ports import (
 )
 
 NOW = "2026-02-10T12:00:00+00:00"
-CONFIG = PortConfig(port="FIKTK", winter_location="FIKTK", port_calls="FIKTK", count=3)
+CONFIG = PortConfig(port="FIKTK", winter_location="FIKTK", ships=True, count=3)
+HAMINA = PortConfig(port="FIHMN", winter_location="FIHMN", ships=True, count=3)
 NAMES = {"FIKTK": "Kotka", "DEHAM": "Hamburg", "EETLL": "Tallinn"}
 
 
@@ -84,8 +85,14 @@ PORTS = {
             for locode, name in [*NAMES.items(), ("FIHMN", "Hamina"), ("SELLA", "Luleå"), ("FIHEL", "Helsinki")]
         ]
     },
-    # Hamina has port areas of its own, but its harbours' calls are under Kotka's UN/LOCODE.
-    "portAreas": {"features": [{"locode": "FIKTK", "properties": {"portAreaName": "Mussalo"}}, {"locode": "FIHEL"}, {"locode": "FIHMN"}]},
+    # Hamina's calls are under Kotka's UN/LOCODE, whose port areas include Hamina's.
+    "portAreas": {
+        "features": [
+            {"locode": locode, "portAreaCode": code}
+            for locode, codes in [("FIKTK", "MUSKO EU ANK MUU"), ("FIHMN", "EU ANK MUU"), ("FIHEL", "LS MUU")]
+            for code in codes.split()
+        ]
+    },
     "berths": {"berths": []},
 }
 
@@ -98,9 +105,21 @@ def call(call_id: int, vessel: str, area: dict[str, Any], prev_port: str = "DEHA
         "prevPort": prev_port,
         "nextPort": next_port,
         "portAreaDetails": [
-            {"berthCode": "C1", "portAreaName": "MUSSALO (KONTTI)", "eta": None, "ata": None, "etd": None, "atd": None} | area
+            {
+                "berthCode": "C1",
+                "portAreaCode": "MUSKO",
+                "portAreaName": "MUSSALO (KONTTI)",
+                "eta": None,
+                "ata": None,
+                "etd": None,
+                "atd": None,
+            }
+            | area
         ],
     }
+
+
+INDEX = port_index(json.dumps(PORTS).encode())
 
 
 def at(time: str) -> str:
@@ -112,7 +131,7 @@ def calls(*items: dict) -> bytes:
 
 
 def build(raw: bytes, arrivals: bool, config: PortConfig = CONFIG) -> list[dict]:
-    return build_port_calls(raw, config, NAMES, arrivals, datetime.fromisoformat(NOW))
+    return build_port_calls(raw, config, INDEX, arrivals, datetime.fromisoformat(NOW))
 
 
 def test_winter_navigation_is_read_by_locode_with_its_periods_in_order() -> None:
@@ -160,7 +179,42 @@ def test_the_port_list_gives_names_and_the_ports_with_calls() -> None:
     index = port_index(json.dumps(PORTS).encode())
 
     assert index.names["FIHMN"] == "Hamina"
-    assert index.call_ports == {"FIKTK", "FIHEL", "FIHMN"}
+    assert index.harbours == {"FIKTK": {"MUSKO", "EU", "ANK", "MUU"}, "FIHMN": {"EU", "ANK", "MUU"}, "FIHEL": {"LS", "MUU"}}
+
+
+@pytest.mark.parametrize(
+    ("areas", "hamina", "kotka"),
+    [
+        (["EU"], True, False),
+        (["MUSKO"], False, True),
+        (["ANK"], True, True),
+        (["MUU"], True, True),
+        (["EU", "MUSKO"], True, True),
+        ([], False, True),
+    ],
+)
+def test_hamina_has_the_calls_at_its_harbours_and_kotka_the_rest(areas: list[str], hamina: bool, kotka: bool) -> None:
+    ship = call(1, "Example Star", {"eta": at("14:00")}) | {
+        "portAreaDetails": [{"portAreaCode": code, "eta": at("14:00"), "ata": None} for code in areas]
+    }
+
+    assert bool(build(calls(ship), arrivals=True, config=HAMINA)) is hamina
+    assert bool(build(calls(ship), arrivals=True)) is (kotka and bool(areas)), "a call without areas has no time"
+
+
+def test_a_port_with_calls_of_its_own_has_them_all() -> None:
+    helsinki = PortConfig(port="FIHEL", winter_location=None, ships=True, count=3)
+
+    assert len(build(calls(call(1, "Example Star", {"eta": at("14:00"), "portAreaCode": "EU"})), arrivals=True, config=helsinki)) == 1
+
+
+def test_hamina_reads_kotkas_calls_and_neither_names_the_other_as_a_ships_port() -> None:
+    assert (HAMINA.calls_locode, CONFIG.calls_locode) == ("FIKTK", "FIKTK")
+    ship = call(1, "Example Star", {"eta": at("14:00"), "portAreaCode": "EU"}, prev_port="FIKTK")
+
+    [arrival] = build(calls(ship), arrivals=True, config=HAMINA)
+
+    assert arrival["headsign"] == "Example Star"
 
 
 def test_a_ships_arrival_from_the_port_it_comes_from() -> None:
@@ -276,7 +330,7 @@ async def test_a_port_has_its_restriction_suspension_and_ships(
 ) -> None:
     freezer.move_to(NOW)
     mock_api(aioclient_mock, calls(call(1, "Example Star", {"eta": at("14:00")})), calls(call(2, "Example Ferry", {"etd": at("13:00")})))
-    entry = port_entry(hass, port="FIKTK", winter_location="FIKTK", port_calls="FIKTK", departures=5)
+    entry = port_entry(hass, port="FIKTK", winter_location=True, port_calls=True, departures=5)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -307,7 +361,7 @@ async def test_a_port_followed_for_winter_navigation_only_asks_for_no_ships(
 ) -> None:
     freezer.move_to("2026-03-20T12:00:00+00:00")
     mock_api(aioclient_mock, calls(), calls())
-    entry = port_entry(hass, port="SELLA", winter_location="SELLA")
+    entry = port_entry(hass, port="SELLA", winter_location=True)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -341,7 +395,7 @@ async def test_the_ports_on_offer_are_winter_navigations_and_those_with_calls(
     assert [option["label"] for option in options] == ["Hamina (FIHMN)", "Helsinki (FIHEL)", "Kotka (FIKTK)", "Luleå (SELLA)"]
 
 
-async def test_a_finnish_port_reads_its_own_locode_by_default_and_can_read_a_neighbours(
+async def test_a_port_with_calls_follows_its_winter_navigation_and_its_ships_by_default(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     entry = await setup_entry(hass, aioclient_mock)
@@ -351,17 +405,19 @@ async def test_a_finnish_port_reads_its_own_locode_by_default_and_can_read_a_nei
 
     assert result["step_id"] == "port"
     suggested = {str(key): key.description["suggested_value"] for key in result["data_schema"].schema if key.description}
-    assert suggested == {"winter_location": "FIHMN", "port_calls": "FIHMN", "departures": 5}
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"departures": 5})
+    assert suggested == {"winter_location": True, "port_calls": True, "departures": 5}
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"winter_location": False, "port_calls": False, "departures": 5}
+    )
     assert result["errors"] == {"base": "nothing_followed"}
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"winter_location": "FIHMN", "port_calls": "FIKTK", "departures": 4}
+        result["flow_id"], {"winter_location": True, "port_calls": True, "departures": 4}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     [subentry] = entry.subentries.values()
     assert (subentry.title, subentry.unique_id) == ("Hamina", "FIHMN")
-    assert subentry.data == {"port": "FIHMN", "winter_location": "FIHMN", "port_calls": "FIKTK", "departures": 4}
+    assert subentry.data == {"port": "FIHMN", "winter_location": True, "port_calls": True, "departures": 4}
 
 
 async def test_a_foreign_port_is_added_straight_away_and_only_once(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
@@ -371,7 +427,7 @@ async def test_a_foreign_port_is_added_straight_away_and_only_once(hass: HomeAss
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"port": "SELLA"})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
-    assert result["data"] == {"port": "SELLA", "winter_location": "SELLA"}
+    assert result["data"] == {"port": "SELLA", "winter_location": True}
 
     result = await hass.config_entries.subentries.async_init((entry.entry_id, "port"), context={"source": SOURCE_USER})
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"port": "SELLA"})
@@ -380,7 +436,7 @@ async def test_a_foreign_port_is_added_straight_away_and_only_once(hass: HomeAss
 
 async def test_changing_a_foreign_port_offers_no_ships(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     mock_api(aioclient_mock, calls(), calls())
-    entry = port_entry(hass, port="SELLA", winter_location="SELLA")
+    entry = port_entry(hass, port="SELLA", winter_location=True)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     [subentry_id] = entry.subentries
@@ -388,12 +444,13 @@ async def test_changing_a_foreign_port_offers_no_ships(hass: HomeAssistant, aioc
     result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     assert [str(key) for key in result["data_schema"].schema] == ["winter_location"]
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"winter_location": False})
     assert result["errors"] == {"base": "nothing_followed"}
 
 
 async def test_changing_a_finnish_port_keeps_its_choices_and_count(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     mock_api(aioclient_mock, calls(), calls())
+    # A port from before the two were switches named the ports they were read from.
     entry = port_entry(hass, port="FIKTK", winter_location="FIKTK", port_calls="FIKTK", departures=3)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -401,9 +458,11 @@ async def test_changing_a_finnish_port_keeps_its_choices_and_count(hass: HomeAss
 
     result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
     suggested = {str(key): key.description["suggested_value"] for key in result["data_schema"].schema if key.description}
-    assert suggested == {"winter_location": "FIKTK", "port_calls": "FIKTK", "departures": 3}
+    assert suggested == {"winter_location": True, "port_calls": True, "departures": 3}
 
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"port_calls": "FIKTK", "departures": 7})
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"winter_location": False, "port_calls": True, "departures": 7}
+    )
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
-    assert entry.subentries[subentry_id].data == {"port": "FIKTK", "port_calls": "FIKTK", "departures": 7}
+    assert entry.subentries[subentry_id].data == {"port": "FIKTK", "port_calls": True, "departures": 7}

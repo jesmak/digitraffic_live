@@ -525,29 +525,29 @@
         },
         "port": {
           "title": "{port}",
-          "description": "Mistä sataman rajoitukset ja alukset luetaan. Yleensä satamasta itsestään, mutta sataman alukset voivat olla myös naapurisataman alla, kuten Haminan tapauksessa jossa alukset löytyvät Kotkan alta.",
+          "description": "Mitä satamasta seurataan.",
           "data": {
-            "winter_location": "Talvimerenkulku",
-            "port_calls": "Alukset satamasta",
+            "winter_location": "Seuraa talvimerenkulkua",
+            "port_calls": "Seuraa aluksia",
             "departures": "Alusten määrä"
           },
           "data_description": {
-            "winter_location": "Sen rajoitukset ja keskeytykset. Jätä tyhjäksi, jos et halua seurata niitä.",
-            "port_calls": "Sen saapuvat ja lähtevät alukset. Jätä tyhjäksi, jos et halua seurata niitä.",
+            "winter_location": "Sataman liikennerajoitukset ja keskeytykset.",
+            "port_calls": "Sataman saapuvat ja lähtevät alukset.",
             "departures": "Kuinka monta seuraavaa alusta kukin sensori listaa, 1–20. Saapuvissa näytetään lisäksi enintään kaksi viimeksi saapunutta."
           }
         },
         "reconfigure": {
           "title": "{port}",
-          "description": "Mistä sataman rajoitukset ja alukset luetaan.",
+          "description": "Mitä satamasta seurataan.",
           "data": {
-            "winter_location": "Talvimerenkulku",
-            "port_calls": "Alukset satamasta",
+            "winter_location": "Seuraa talvimerenkulkua",
+            "port_calls": "Seuraa aluksia",
             "departures": "Alusten määrä"
           },
           "data_description": {
-            "winter_location": "Sen rajoitukset ja keskeytykset. Jätä tyhjäksi, jos et halua seurata niitä.",
-            "port_calls": "Sen saapuvat ja lähtevät alukset. Jätä tyhjäksi, jos et halua seurata niitä.",
+            "winter_location": "Sataman liikennerajoitukset ja keskeytykset.",
+            "port_calls": "Sataman saapuvat ja lähtevät alukset.",
             "departures": "Kuinka monta seuraavaa alusta kukin sensori listaa, 1–20. Saapuvissa näytetään lisäksi enintään kaksi viimeksi saapunutta."
           }
         }

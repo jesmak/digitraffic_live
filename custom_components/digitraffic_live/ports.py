@@ -16,7 +16,7 @@ from typing import Any
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
 
-from .const import CONF_DEPARTURES, CONF_PORT, CONF_PORT_CALLS, CONF_WINTER_LOCATION, DEFAULT_DEPARTURES
+from .const import CALLS_FILED_UNDER, CONF_DEPARTURES, CONF_PORT, CONF_PORT_CALLS, CONF_WINTER_LOCATION, DEFAULT_DEPARTURES
 from .station_departures import ARRIVAL_PAST, ARRIVED_LISTED, DEPARTURE_PAST, counted, is_over
 
 # The calls asked for: from half a day back, so a ship hours behind its announced time is still found once it comes in,
@@ -27,6 +27,8 @@ CALLS_AHEAD = timedelta(days=7)
 # The port call service's vessel type codes (`port-call/v1/code-descriptions`) of the ships that carry passengers: a
 # passenger vessel, a passenger car ferry and a rail ferry. Every other is a ship.
 FERRY_TYPES = frozenset({10, 20, 30})
+# The port areas that are no harbour, at anchor and unknown. Every port has them, so they don't tell whose a call is.
+SHARED_AREAS = frozenset({"ANK", "MUU"})
 # Berths and port areas with no name of their own.
 UNKNOWN_PLACES = frozenset({"", "MUU", "unknow", "Ei tiedossa"})
 # Winter navigation's reasons for a suspension, as the attribute's states.
@@ -37,7 +39,7 @@ SUSPENSION_REASONS = {"CLOSED_DUE_BAD_WEATHER": "bad_weather", "CLOSED_DUE_CREW_
 class PortConfig:
     port: str
     winter_location: str | None
-    port_calls: str | None
+    ships: bool
     count: int
 
     @classmethod
@@ -45,18 +47,28 @@ class PortConfig:
         """From config subentry data."""
         return cls(
             port=str(data[CONF_PORT]),
-            winter_location=data.get(CONF_WINTER_LOCATION) or None,
-            port_calls=data.get(CONF_PORT_CALLS) or None,
+            winter_location=str(data[CONF_PORT]) if data.get(CONF_WINTER_LOCATION) else None,
+            ships=bool(data.get(CONF_PORT_CALLS)),
             count=int(data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)),
         )
+
+    @property
+    def calls_locode(self) -> str:
+        """The UN/LOCODE the port's calls are filed under."""
+        return CALLS_FILED_UNDER.get(self.port, self.port)
+
+    @property
+    def shares_calls(self) -> bool:
+        """Whether the port's calls are filed together with another port's, so its harbours tell them apart."""
+        return self.port in CALLS_FILED_UNDER or self.port in CALLS_FILED_UNDER.values()
 
 
 @dataclass(frozen=True)
 class PortIndex:
-    """Every location's name by UN/LOCODE, and the Finnish ports that have calls."""
+    """Every location's name by UN/LOCODE, and the port area codes of each Finnish port that has calls."""
 
     names: dict[str, str]
-    call_ports: frozenset[str]
+    harbours: dict[str, frozenset[str]]
 
 
 @dataclass(frozen=True)
@@ -96,10 +108,11 @@ def port_index(raw: bytes) -> PortIndex:
         for feature in (data.get("ssnLocations") or {}).get("features") or []
         if feature.get("locode") and (feature.get("properties") or {}).get("locationName")
     }
-    call_ports = frozenset(
-        str(feature["locode"]) for feature in (data.get("portAreas") or {}).get("features") or [] if feature.get("locode")
-    )
-    return PortIndex(names, call_ports)
+    harbours: dict[str, set[str]] = {}
+    for feature in (data.get("portAreas") or {}).get("features") or []:
+        if feature.get("locode"):
+            harbours.setdefault(str(feature["locode"]), set()).add(str(feature.get("portAreaCode") or ""))
+    return PortIndex(names, {locode: frozenset(codes) for locode, codes in harbours.items()})
 
 
 def winter_locations(data: Mapping[str, Any]) -> dict[str, WinterLocation]:
@@ -147,7 +160,17 @@ def suspension_reason(due_to: Any) -> str:
     return SUSPENSION_REASONS.get(code, code.removeprefix("CLOSED_DUE_").lower())
 
 
-def build_port_calls(raw: bytes, config: PortConfig, names: Mapping[str, str], arrivals: bool, now: datetime) -> list[dict[str, Any]]:
+def is_ports_own(call: Mapping[str, Any], port: str, harbours: Mapping[str, frozenset[str]]) -> bool:
+    """Whether a call filed under the port's UN/LOCODE is at the port itself. A port filed under another's has the calls
+    at its own port areas, and the other has the rest. A call at anchor or at an unknown area is both ports'."""
+    codes = {str(area.get("portAreaCode") or "") for area in call.get("portAreaDetails") or []}
+    if port in CALLS_FILED_UNDER:
+        return bool(codes & harbours.get(port, frozenset()))
+    guests = (harbours.get(guest, frozenset()) for guest, host in CALLS_FILED_UNDER.items() if host == port)
+    return not codes <= frozenset().union(*guests) - SHARED_AREAS
+
+
+def build_port_calls(raw: bytes, config: PortConfig, index: PortIndex, arrivals: bool, now: datetime) -> list[dict[str, Any]]:
     """The arrivals or departures at the port from its calls (parsed in the executor), in order of their time, as the
     station departures are: until a minute past a departure, and the configured count of arrivals still to come, with
     the latest two that have come in within half an hour besides them."""
@@ -156,7 +179,14 @@ def build_port_calls(raw: bytes, config: PortConfig, names: Mapping[str, str], a
     if not isinstance(calls, list):
         raise ValueError("The port calls aren't a list")
     build = build_arrival if arrivals else build_departure
-    rows = sorted((row for call in calls if (row := build(call, config, names)) is not None), key=lambda row: row["estimated"])
+    rows = sorted(
+        (
+            row
+            for call in calls
+            if is_ports_own(call, config.port, index.harbours) and (row := build(call, config, index.names)) is not None
+        ),
+        key=lambda row: row["estimated"],
+    )
     if not arrivals:
         return counted([row for row in rows if dt_util.parse_datetime(row["estimated"]) >= now - DEPARTURE_PAST], config.count)
     rows = [row for row in rows if dt_util.parse_datetime(row["estimated"]) >= now - ARRIVAL_PAST]
@@ -194,7 +224,7 @@ def _row(
     vessel = str(call.get("vesselName") or "").strip()
     # Calls name the port itself as where a ship comes from or goes next, as seen at Kotka and Helsinki.
     port = str(other_port or "")
-    place = names.get(port, port) if port and port != config.port_calls else ""
+    place = names.get(port, port) if port and port not in (config.port, config.calls_locode) else ""
     berth = str(area.get("berthCode") or "").strip()
     harbour = str(area.get("portAreaName") or "").strip()
     row: dict[str, Any] = {

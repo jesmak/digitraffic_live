@@ -473,20 +473,23 @@ class PortCoordinator(SubentryCoordinator[PortData]):
             locations = await runtime.winter_locations.get()
             winter = locations.get(config.winter_location)
         calls: dict[str, list[dict[str, Any]]] = {}
-        if config.port_calls:
-            # Without the names a ship's port is its UN/LOCODE, which is still worth showing.
-            names = (await runtime.port_index.get()).names
+        if config.ships:
+            # Without the names a ship's port is its UN/LOCODE, which is still worth showing. Without the port areas a
+            # port that shares its calls with another can't tell which are its own.
+            index = await runtime.port_index.get()
+            if config.shares_calls and not runtime.port_index.loaded:
+                raise UpdateFailed("Digitraffic's port list couldn't be loaded")
             now = dt_util.utcnow()
             start, end = ((now + offset).strftime("%Y-%m-%dT%H:%M:%SZ") for offset in (-CALLS_BEHIND, CALLS_AHEAD))
             try:
                 arriving, departing = await asyncio.gather(
-                    runtime.client.port_calls(config.port_calls, "eta", start, end),
-                    runtime.client.port_calls(config.port_calls, "etd", start, end),
+                    runtime.client.port_calls(config.calls_locode, "eta", start, end),
+                    runtime.client.port_calls(config.calls_locode, "etd", start, end),
                 )
                 # A busy port's week is a few hundred calls.
                 for direction, raw in ((DIRECTION_ARRIVALS, arriving), (DIRECTION_DEPARTURES, departing)):
                     calls[direction] = await self.hass.async_add_executor_job(
-                        build_port_calls, raw, config, names, direction == DIRECTION_ARRIVALS, now
+                        build_port_calls, raw, config, index, direction == DIRECTION_ARRIVALS, now
                     )
             # build_port_calls raises ValueError for an answer that isn't a list of calls.
             except (DigitrafficError, ValueError) as err:

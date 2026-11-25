@@ -78,11 +78,14 @@ DIRECTION_SENSORS: Final[dict[str, list[str]]] = {
     DIRECTION_BOTH: [DIRECTION_DEPARTURES, DIRECTION_ARRIVALS],
 }
 CONF_CAMERA: Final = "camera"
-# Port settings: the port chosen, the winter navigation location and the port call locode, each a UN/LOCODE. The two
-# usually match the port, but Hamina's restrictions are under FIHMN and its calls under FIKTK.
+# Port settings: the port chosen, a UN/LOCODE, and whether its winter navigation and its ships are followed.
 CONF_PORT: Final = "port"
 CONF_WINTER_LOCATION: Final = "winter_location"
 CONF_PORT_CALLS: Final = "port_calls"
+# The ports whose calls the port call service files under another port's UN/LOCODE. Hamina's are under Kotka's, the two
+# being one port company, and each call's port area tells whose it is. No other two Finnish ports shared port areas in
+# the service's port list.
+CALLS_FILED_UNDER: Final = {"FIHMN": "FIKTK"}
 
 # Digitraffic caches most responses for about a minute, so polling faster only repeats the same data.
 MIN_REFRESH_SECONDS: Final = 30

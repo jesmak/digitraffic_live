@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DigitrafficConfigEntry) 
         camera_details=DetailCache("weather camera", client.weathercam_station),
         station_names=PeriodicValue("railway stations", DAILY_REFRESH_SECONDS, fetch_station_names, {}),
         winter_locations=PeriodicValue("winter navigation", WINTER_LOCATION_REFRESH_SECONDS, fetch_winter_locations, {}),
-        port_index=PeriodicValue("ports", DAILY_REFRESH_SECONDS, fetch_port_index, PortIndex({}, frozenset())),
+        port_index=PeriodicValue("ports", DAILY_REFRESH_SECONDS, fetch_port_index, PortIndex({}, {})),
     )
 
     remove_stale_devices(hass, entry)

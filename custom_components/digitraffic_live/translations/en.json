@@ -525,29 +525,29 @@
         },
         "port": {
           "title": "{port}",
-          "description": "Where the port's restrictions and ships are read from. Usually the port itself, but a port's ships can also be listed under a neighbouring port, as with Hamina, whose ships are found under Kotka.",
+          "description": "What to follow at the port.",
           "data": {
-            "winter_location": "Winter navigation",
-            "port_calls": "Ships from",
+            "winter_location": "Follow winter navigation",
+            "port_calls": "Follow ships",
             "departures": "Number of ships"
           },
           "data_description": {
-            "winter_location": "Its restrictions and suspensions. Leave empty to follow none.",
-            "port_calls": "Its arriving and leaving ships. Leave empty to follow none.",
+            "winter_location": "The port's traffic restrictions and suspensions.",
+            "port_calls": "The port's arriving and leaving ships.",
             "departures": "How many of the next ships each sensor lists, 1–20. Arrivals also show at most the two that came in last."
           }
         },
         "reconfigure": {
           "title": "{port}",
-          "description": "Where the port's restrictions and ships are read from.",
+          "description": "What to follow at the port.",
           "data": {
-            "winter_location": "Winter navigation",
-            "port_calls": "Ships from",
+            "winter_location": "Follow winter navigation",
+            "port_calls": "Follow ships",
             "departures": "Number of ships"
           },
           "data_description": {
-            "winter_location": "Its restrictions and suspensions. Leave empty to follow none.",
-            "port_calls": "Its arriving and leaving ships. Leave empty to follow none.",
+            "winter_location": "The port's traffic restrictions and suspensions.",
+            "port_calls": "The port's arriving and leaving ships.",
             "departures": "How many of the next ships each sensor lists, 1–20. Arrivals also show at most the two that came in last."
           }
         }

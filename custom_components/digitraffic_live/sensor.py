@@ -212,7 +212,7 @@ async def async_setup_entry(
         elif isinstance(coordinator, PortCoordinator):
             config = coordinator.port_config
             sensors: list[SensorEntity] = [PortRestrictionSensor(coordinator)] if config.winter_location else []
-            if config.port_calls:
+            if config.ships:
                 sensors += [PortCallsSensor(coordinator, direction) for direction in (DIRECTION_DEPARTURES, DIRECTION_ARRIVALS)]
             async_add_entities(sensors, config_subentry_id=subentry_id)
         elif isinstance(coordinator, WeatherStationCoordinator):
@@ -428,7 +428,7 @@ class PortCallsSensor(CoordinatorEntity[PortCoordinator], SensorEntity):
         data = self.coordinator.data
         return {
             "departures_version": DEPARTURES_VERSION,
-            "stop_id": self.coordinator.port_config.port_calls,
+            "stop_id": self.coordinator.port_config.port,
             "stop_name": self.coordinator.subentry.title,
             "direction": self.direction,
             "departures": data.calls.get(self.direction, []),
