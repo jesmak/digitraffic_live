@@ -224,14 +224,14 @@ async def test_a_station_from_before_arrivals_stays_departures(hass: HomeAssista
         (
             "arrivals",
             ("0", "10", "4"),
-            {"sensor.lappeenranta_arrivals": ("{id}_arrivals", "Lappeenranta arrivals", "arrivals", "mdi:train")},
+            {"sensor.lappeenranta_arrivals": ("{id}_arrivals", "Lappeenranta Arrivals", "arrivals", "mdi:train")},
         ),
         (
             "both",
             ("10", "10", "4"),
             {
                 "sensor.lappeenranta": ("{id}", "Lappeenranta", "departures", "mdi:train-variant"),
-                "sensor.lappeenranta_arrivals": ("{id}_arrivals", "Lappeenranta arrivals", "arrivals", "mdi:train"),
+                "sensor.lappeenranta_arrivals": ("{id}_arrivals", "Lappeenranta Arrivals", "arrivals", "mdi:train"),
             },
         ),
     ],

@@ -868,25 +868,25 @@
         "name": "Visibility"
       },
       "station_arrivals": {
-        "name": "arrivals"
+        "name": "Arrivals"
       },
       "port_restriction": {
-        "name": "traffic restriction",
+        "name": "Traffic restriction",
         "state": {
           "none": "No restriction",
           "restricted": "Restriction in force"
         }
       },
       "port_departures": {
-        "name": "departures"
+        "name": "Departures"
       },
       "port_arrivals": {
-        "name": "arrivals"
+        "name": "Arrivals"
       }
     },
     "binary_sensor": {
       "port_suspension": {
-        "name": "suspension",
+        "name": "Suspension",
         "state_attributes": {
           "reason": {
             "state": {

@@ -868,25 +868,25 @@
         "name": "Näkyvyys"
       },
       "station_arrivals": {
-        "name": "saapuvat"
+        "name": "Saapuvat"
       },
       "port_restriction": {
-        "name": "liikennerajoitus",
+        "name": "Liikennerajoitus",
         "state": {
           "none": "Ei rajoitusta",
           "restricted": "Rajoitus voimassa"
         }
       },
       "port_departures": {
-        "name": "lähtevät"
+        "name": "Lähtevät"
       },
       "port_arrivals": {
-        "name": "saapuvat"
+        "name": "Saapuvat"
       }
     },
     "binary_sensor": {
       "port_suspension": {
-        "name": "keskeytys",
+        "name": "Keskeytys",
         "state_attributes": {
           "reason": {
             "state": {
