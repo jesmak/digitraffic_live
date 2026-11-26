@@ -42,6 +42,8 @@ describe("languages", () => {
         expect(translate("fi", "common.name")).toBe("Keli");
         expect(translate("xx", "common.name")).toBe(translate("en", "common.name"));
         expect(translate("fi-FI", "common.name")).toBe("Keli");
+        expect(translate("fi_FI", "common.name")).toBe("Keli");
+        expect(translate("xx-YY", "common.name")).toBe(translate("en", "common.name"));
         expect(translate("fi", "no.such.key")).toBe("no.such.key");
     });
 });
